@@ -15,6 +15,8 @@ import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.http.MediaType;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.sprint.mission.monew.domain.user.exception.UserNotFoundException;
+import java.io.IOException;
+import org.apache.catalina.connector.ClientAbortException;
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.NotBlank;
 import java.util.UUID;
@@ -55,6 +57,11 @@ class GlobalExceptionHandlerTest {
     @GetMapping("/server-error")
     void serverError() {
       throw new RuntimeException("unexpected error");
+    }
+
+    @GetMapping("/client-abort")
+    void clientAbort() throws IOException {
+      throw new ClientAbortException(new IOException("connection reset"));
     }
   }
 
@@ -172,6 +179,21 @@ class GlobalExceptionHandlerTest {
           .andExpect(jsonPath("$.status").value(400))
           .andExpect(jsonPath("$.code").value("MESSAGE_NOT_READABLE"))
           .andExpect(jsonPath("$.exceptionType").value("HttpMessageNotReadableException"));
+    }
+  }
+
+  @Nested
+  @DisplayName("클라이언트 연결 끊김 — ClientAbortException")
+  class ClientAbort {
+
+    @Test
+    @DisplayName("클라이언트 연결 끊김 시 응답 바디 없이 조용히 처리")
+    void 클라이언트_연결_끊김_응답_없이_처리() throws Exception {
+      // given & when & then
+      mockMvc
+          .perform(get("/test/client-abort"))
+          .andExpect(status().isOk())
+          .andExpect(jsonPath("$").doesNotExist());
     }
   }
 

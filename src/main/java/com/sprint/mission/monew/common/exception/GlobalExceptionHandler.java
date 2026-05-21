@@ -6,7 +6,9 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.ResponseEntity;
 import java.util.Map;
 import org.springframework.http.converter.HttpMessageNotReadableException;
+import java.util.stream.Collectors;
 import org.springframework.web.HttpRequestMethodNotSupportedException;
+import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.method.annotation.MethodArgumentTypeMismatchException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
@@ -27,6 +29,27 @@ public class GlobalExceptionHandler {
             code.name(),
             code.getMessage(),
             null,
+            e.getClass().getSimpleName(),
+            code.getStatus().value()
+        ));
+  }
+
+  @ExceptionHandler(MethodArgumentNotValidException.class)
+  public ResponseEntity<ErrorResponse> handleValidation(MethodArgumentNotValidException e) {
+    ErrorCode code = ErrorCode.VALIDATION_ERROR;
+    Map<String, Object> details = e.getBindingResult().getFieldErrors().stream()
+        .collect(Collectors.toMap(
+            fe -> fe.getField(),
+            fe -> fe.getDefaultMessage() != null ? fe.getDefaultMessage() : "invalid"
+        ));
+    log.warn("[{}] {}", code.name(), details);
+    return ResponseEntity
+        .status(code.getStatus())
+        .body(new ErrorResponse(
+            Instant.now(),
+            code.name(),
+            code.getMessage(),
+            details,
             e.getClass().getSimpleName(),
             code.getStatus().value()
         ));

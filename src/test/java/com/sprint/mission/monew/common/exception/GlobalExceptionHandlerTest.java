@@ -13,7 +13,9 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.http.MediaType;
+import java.util.UUID;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -33,6 +35,9 @@ class GlobalExceptionHandlerTest {
 
     @PostMapping("/body")
     void body(@RequestBody BodyRequest payload) {}
+
+    @GetMapping("/type-mismatch/{id}")
+    void typeMismatch(@PathVariable UUID id) {}
   }
 
   record BodyRequest(String name) {}
@@ -68,6 +73,24 @@ class GlobalExceptionHandlerTest {
           .andExpect(jsonPath("$.status").value(405))
           .andExpect(jsonPath("$.code").value("METHOD_NOT_ALLOWED"))
           .andExpect(jsonPath("$.exceptionType").value("HttpRequestMethodNotSupportedException"));
+    }
+  }
+
+  @Nested
+  @DisplayName("400 — 타입 변환 실패")
+  class TypeMismatch {
+
+    @Test
+    @DisplayName("UUID 경로 변수에 잘못된 값 전달 시 400 + details 반환")
+    void UUID_경로_변수에_잘못된_값_400_반환() throws Exception {
+      // given & when & then
+      mockMvc
+          .perform(get("/test/type-mismatch/not-a-uuid"))
+          .andExpect(status().isBadRequest())
+          .andExpect(jsonPath("$.status").value(400))
+          .andExpect(jsonPath("$.code").value("TYPE_MISMATCH"))
+          .andExpect(jsonPath("$.details").exists())
+          .andExpect(jsonPath("$.exceptionType").value("MethodArgumentTypeMismatchException"));
     }
   }
 

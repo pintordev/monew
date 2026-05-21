@@ -1,6 +1,6 @@
 package com.sprint.mission.monew.common.config;
 
-import com.sprint.mission.monew.common.filter.MdcLoggingInterceptor;
+import com.sprint.mission.monew.common.interceptor.MdcLoggingInterceptor;
 import lombok.RequiredArgsConstructor;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.web.servlet.config.annotation.InterceptorRegistry;

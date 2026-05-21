@@ -1,4 +1,4 @@
-package com.sprint.mission.monew.common.filter;
+package com.sprint.mission.monew.common.interceptor;
 
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;

@@ -1,4 +1,4 @@
-package com.sprint.mission.monew.common.filter;
+package com.sprint.mission.monew.common.interceptor;
 
 import static org.assertj.core.api.Assertions.assertThat;
 

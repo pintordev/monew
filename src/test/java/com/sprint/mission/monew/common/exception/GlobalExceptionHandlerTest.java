@@ -51,6 +51,11 @@ class GlobalExceptionHandlerTest {
     void monewException() {
       throw UserNotFoundException.withId(UUID.randomUUID());
     }
+
+    @GetMapping("/server-error")
+    void serverError() {
+      throw new RuntimeException("unexpected error");
+    }
   }
 
   record BodyRequest(String name) {}
@@ -167,6 +172,23 @@ class GlobalExceptionHandlerTest {
           .andExpect(jsonPath("$.status").value(400))
           .andExpect(jsonPath("$.code").value("MESSAGE_NOT_READABLE"))
           .andExpect(jsonPath("$.exceptionType").value("HttpMessageNotReadableException"));
+    }
+  }
+
+  @Nested
+  @DisplayName("500 — 서버 오류 fallback")
+  class InternalError {
+
+    @Test
+    @DisplayName("처리되지 않은 예외 발생 시 500 반환")
+    void 처리되지_않은_예외_500_반환() throws Exception {
+      // given & when & then
+      mockMvc
+          .perform(get("/test/server-error"))
+          .andExpect(status().isInternalServerError())
+          .andExpect(jsonPath("$.status").value(500))
+          .andExpect(jsonPath("$.code").value("INTERNAL_ERROR"))
+          .andExpect(jsonPath("$.exceptionType").value("RuntimeException"));
     }
   }
 }

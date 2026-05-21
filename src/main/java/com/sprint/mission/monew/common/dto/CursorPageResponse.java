@@ -1,23 +1,23 @@
 package com.sprint.mission.monew.common.dto;
 
+import java.time.Instant;
 import java.util.List;
-import java.util.UUID;
 
 public record CursorPageResponse<T>(
     List<T> content,
     String nextCursor,
-    UUID nextIdAfter,
+    Instant nextAfter,
+    boolean hasNext,
     int size,
-    Long totalElements,
-    boolean hasNext) {
+    Long totalElements) {
 
   public static <T> CursorPageResponse<T> of(
       List<T> content,
       String nextCursor,
-      UUID nextIdAfter,
+      Instant nextAfter,
+      boolean hasNext,
       int size,
-      Long totalElements,
-      boolean hasNext) {
-    return new CursorPageResponse<>(content, nextCursor, nextIdAfter, size, totalElements, hasNext);
+      Long totalElements) {
+    return new CursorPageResponse<>(content, nextCursor, nextAfter, hasNext, size, totalElements);
   }
 }

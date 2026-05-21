@@ -490,10 +490,10 @@ throw UserNotFoundException.withEmail(email);
 public record CursorPageResponse<T>(
     List<T> content,
     String nextCursor,      // 다음 페이지 없으면 null
-    String nextAfter,       // 다음 페이지 없으면 null
+    Instant nextAfter,      // 다음 페이지 없으면 null
     boolean hasNext,
     int size,
-    long totalElements
+    Long totalElements      // count 쿼리 생략 시 null
 ) {}
 ```
 
@@ -504,7 +504,7 @@ Controller에서 개별 `@RequestParam`을 받아 record로 조합한 뒤 Servic
 // dto/ArticleQueryCondition.java
 public record ArticleQueryCondition(
     String cursor,
-    String after,
+    Instant after,
     int limit,
     ArticleOrderBy orderBy,
     SortDirection direction,

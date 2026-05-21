@@ -2,6 +2,7 @@ package com.sprint.mission.monew.common.exception;
 
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.delete;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
@@ -11,7 +12,10 @@ import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
 import org.springframework.test.web.servlet.MockMvc;
+import org.springframework.http.MediaType;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
@@ -26,6 +30,9 @@ class GlobalExceptionHandlerTest {
 
     @GetMapping("/ok")
     void ok() {}
+
+    @PostMapping("/body")
+    void body(@RequestBody String payload) {}
   }
 
   @Nested
@@ -59,6 +66,25 @@ class GlobalExceptionHandlerTest {
           .andExpect(jsonPath("$.status").value(405))
           .andExpect(jsonPath("$.code").value("METHOD_NOT_ALLOWED"))
           .andExpect(jsonPath("$.exceptionType").value("HttpRequestMethodNotSupportedException"));
+    }
+  }
+
+  @Nested
+  @DisplayName("400 — 본문 파싱 실패")
+  class MessageNotReadable {
+
+    @Test
+    @DisplayName("잘못된 JSON 본문 전달 시 400 반환")
+    void 잘못된_JSON_본문_400_반환() throws Exception {
+      // given & when & then
+      mockMvc
+          .perform(post("/test/body")
+              .contentType(MediaType.APPLICATION_JSON)
+              .content("{ invalid json }"))
+          .andExpect(status().isBadRequest())
+          .andExpect(jsonPath("$.status").value(400))
+          .andExpect(jsonPath("$.code").value("MESSAGE_NOT_READABLE"))
+          .andExpect(jsonPath("$.exceptionType").value("HttpMessageNotReadableException"));
     }
   }
 }

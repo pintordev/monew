@@ -1,5 +1,6 @@
 package com.sprint.mission.monew.common.exception;
 
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.delete;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
@@ -41,6 +42,23 @@ class GlobalExceptionHandlerTest {
           .andExpect(jsonPath("$.status").value(404))
           .andExpect(jsonPath("$.code").value("RESOURCE_NOT_FOUND"))
           .andExpect(jsonPath("$.exceptionType").value("NoResourceFoundException"));
+    }
+  }
+
+  @Nested
+  @DisplayName("405 — HTTP 메서드 미지원")
+  class MethodNotAllowed {
+
+    @Test
+    @DisplayName("지원하지 않는 HTTP 메서드로 요청 시 405 반환")
+    void 지원하지_않는_HTTP_메서드_405_반환() throws Exception {
+      // given & when & then
+      mockMvc
+          .perform(delete("/test/ok"))
+          .andExpect(status().isMethodNotAllowed())
+          .andExpect(jsonPath("$.status").value(405))
+          .andExpect(jsonPath("$.code").value("METHOD_NOT_ALLOWED"))
+          .andExpect(jsonPath("$.exceptionType").value("HttpRequestMethodNotSupportedException"));
     }
   }
 }

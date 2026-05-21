@@ -6,20 +6,20 @@ import static org.springframework.test.web.servlet.request.MockMvcRequestBuilder
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.sprint.mission.monew.domain.user.exception.UserNotFoundException;
+import jakarta.validation.Valid;
+import jakarta.validation.constraints.NotBlank;
+import java.io.IOException;
+import java.util.UUID;
+import org.apache.catalina.connector.ClientAbortException;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
-import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.http.MediaType;
-import com.fasterxml.jackson.databind.ObjectMapper;
-import com.sprint.mission.monew.domain.user.exception.UserNotFoundException;
-import java.io.IOException;
-import org.apache.catalina.connector.ClientAbortException;
-import jakarta.validation.Valid;
-import jakarta.validation.constraints.NotBlank;
-import java.util.UUID;
+import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -43,25 +43,25 @@ class GlobalExceptionHandlerTest {
     @PostMapping("/body")
     void body(@RequestBody BodyRequest payload) {}
 
-    @PostMapping("/valid")
-    void valid(@Valid @RequestBody ValidRequest payload) {}
-
     @GetMapping("/type-mismatch/{id}")
     void typeMismatch(@PathVariable UUID id) {}
+
+    @PostMapping("/valid")
+    void valid(@Valid @RequestBody ValidRequest payload) {}
 
     @GetMapping("/monew-exception")
     void monewException() {
       throw UserNotFoundException.withId(UUID.randomUUID());
     }
 
-    @GetMapping("/server-error")
-    void serverError() {
-      throw new RuntimeException("unexpected error");
-    }
-
     @GetMapping("/client-abort")
     void clientAbort() throws IOException {
       throw new ClientAbortException(new IOException("connection reset"));
+    }
+
+    @GetMapping("/server-error")
+    void serverError() {
+      throw new RuntimeException("unexpected error");
     }
   }
 
@@ -104,21 +104,39 @@ class GlobalExceptionHandlerTest {
   }
 
   @Nested
-  @DisplayName("비즈니스 예외 — MonewException")
-  class MonewExceptionHandler {
+  @DisplayName("400 — 본문 파싱 실패")
+  class MessageNotReadable {
 
     @Test
-    @DisplayName("MonewException 발생 시 ErrorCode 기반 상태코드와 응답 반환")
-    void MonewException_ErrorCode_기반_응답_반환() throws Exception {
+    @DisplayName("잘못된 JSON 본문 전달 시 400 반환")
+    void 잘못된_JSON_본문_400_반환() throws Exception {
       // given & when & then
       mockMvc
-          .perform(get("/test/monew-exception"))
-          .andExpect(status().isNotFound())
-          .andExpect(jsonPath("$.status").value(404))
-          .andExpect(jsonPath("$.code").value("USER_NOT_FOUND"))
-          .andExpect(jsonPath("$.message").value("사용자를 찾을 수 없습니다."))
+          .perform(post("/test/body")
+              .contentType(MediaType.APPLICATION_JSON)
+              .content("{ invalid json }"))
+          .andExpect(status().isBadRequest())
+          .andExpect(jsonPath("$.status").value(400))
+          .andExpect(jsonPath("$.code").value("MESSAGE_NOT_READABLE"))
+          .andExpect(jsonPath("$.exceptionType").value("HttpMessageNotReadableException"));
+    }
+  }
+
+  @Nested
+  @DisplayName("400 — 타입 변환 실패")
+  class TypeMismatch {
+
+    @Test
+    @DisplayName("UUID 경로 변수에 잘못된 값 전달 시 400 + details 반환")
+    void UUID_경로_변수에_잘못된_값_400_반환() throws Exception {
+      // given & when & then
+      mockMvc
+          .perform(get("/test/type-mismatch/not-a-uuid"))
+          .andExpect(status().isBadRequest())
+          .andExpect(jsonPath("$.status").value(400))
+          .andExpect(jsonPath("$.code").value("TYPE_MISMATCH"))
           .andExpect(jsonPath("$.details").exists())
-          .andExpect(jsonPath("$.exceptionType").value("UserNotFoundException"));
+          .andExpect(jsonPath("$.exceptionType").value("MethodArgumentTypeMismatchException"));
     }
   }
 
@@ -146,39 +164,21 @@ class GlobalExceptionHandlerTest {
   }
 
   @Nested
-  @DisplayName("400 — 타입 변환 실패")
-  class TypeMismatch {
+  @DisplayName("비즈니스 예외 — MonewException")
+  class MonewExceptionHandler {
 
     @Test
-    @DisplayName("UUID 경로 변수에 잘못된 값 전달 시 400 + details 반환")
-    void UUID_경로_변수에_잘못된_값_400_반환() throws Exception {
+    @DisplayName("MonewException 발생 시 ErrorCode 기반 상태코드와 응답 반환")
+    void MonewException_ErrorCode_기반_응답_반환() throws Exception {
       // given & when & then
       mockMvc
-          .perform(get("/test/type-mismatch/not-a-uuid"))
-          .andExpect(status().isBadRequest())
-          .andExpect(jsonPath("$.status").value(400))
-          .andExpect(jsonPath("$.code").value("TYPE_MISMATCH"))
+          .perform(get("/test/monew-exception"))
+          .andExpect(status().isNotFound())
+          .andExpect(jsonPath("$.status").value(404))
+          .andExpect(jsonPath("$.code").value("USER_NOT_FOUND"))
+          .andExpect(jsonPath("$.message").value("사용자를 찾을 수 없습니다."))
           .andExpect(jsonPath("$.details").exists())
-          .andExpect(jsonPath("$.exceptionType").value("MethodArgumentTypeMismatchException"));
-    }
-  }
-
-  @Nested
-  @DisplayName("400 — 본문 파싱 실패")
-  class MessageNotReadable {
-
-    @Test
-    @DisplayName("잘못된 JSON 본문 전달 시 400 반환")
-    void 잘못된_JSON_본문_400_반환() throws Exception {
-      // given & when & then
-      mockMvc
-          .perform(post("/test/body")
-              .contentType(MediaType.APPLICATION_JSON)
-              .content("{ invalid json }"))
-          .andExpect(status().isBadRequest())
-          .andExpect(jsonPath("$.status").value(400))
-          .andExpect(jsonPath("$.code").value("MESSAGE_NOT_READABLE"))
-          .andExpect(jsonPath("$.exceptionType").value("HttpMessageNotReadableException"));
+          .andExpect(jsonPath("$.exceptionType").value("UserNotFoundException"));
     }
   }
 

@@ -4,8 +4,10 @@ import com.sprint.mission.monew.common.response.ErrorResponse;
 import java.time.Instant;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.ResponseEntity;
+import java.util.Map;
 import org.springframework.http.converter.HttpMessageNotReadableException;
 import org.springframework.web.HttpRequestMethodNotSupportedException;
+import org.springframework.web.method.annotation.MethodArgumentTypeMismatchException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
 import org.springframework.web.servlet.resource.NoResourceFoundException;
@@ -25,6 +27,26 @@ public class GlobalExceptionHandler {
             code.name(),
             code.getMessage(),
             null,
+            e.getClass().getSimpleName(),
+            code.getStatus().value()
+        ));
+  }
+
+  @ExceptionHandler(MethodArgumentTypeMismatchException.class)
+  public ResponseEntity<ErrorResponse> handleTypeMismatch(MethodArgumentTypeMismatchException e) {
+    ErrorCode code = ErrorCode.TYPE_MISMATCH;
+    Map<String, Object> details = Map.of(
+        e.getName(),
+        e.getRequiredType() != null ? e.getRequiredType().getSimpleName() + " 타입이어야 합니다" : "invalid type"
+    );
+    log.warn("[{}] {}", code.name(), details);
+    return ResponseEntity
+        .status(code.getStatus())
+        .body(new ErrorResponse(
+            Instant.now(),
+            code.name(),
+            code.getMessage(),
+            details,
             e.getClass().getSimpleName(),
             code.getStatus().value()
         ));

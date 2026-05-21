@@ -125,6 +125,9 @@ domain/
       User.java                  # JPA Entity
     event/
       UserDeletedEvent.java      # ApplicationEvent 구현체 (발행 도메인에 위치)
+    exception/
+      UserException.java         # 추상 중간 예외
+      UserNotFoundException.java # 팩토리 메서드 포함
     mapper/
       UserMapper.java
     repository/

@@ -13,6 +13,9 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.http.MediaType;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import jakarta.validation.Valid;
+import jakarta.validation.constraints.NotBlank;
 import java.util.UUID;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -25,6 +28,7 @@ import org.springframework.web.bind.annotation.RestController;
 class GlobalExceptionHandlerTest {
 
   @Autowired MockMvc mockMvc;
+  @Autowired ObjectMapper objectMapper;
 
   @RestController
   @RequestMapping("/test")
@@ -36,11 +40,16 @@ class GlobalExceptionHandlerTest {
     @PostMapping("/body")
     void body(@RequestBody BodyRequest payload) {}
 
+    @PostMapping("/valid")
+    void valid(@Valid @RequestBody ValidRequest payload) {}
+
     @GetMapping("/type-mismatch/{id}")
     void typeMismatch(@PathVariable UUID id) {}
   }
 
   record BodyRequest(String name) {}
+
+  record ValidRequest(@NotBlank String name) {}
 
   @Nested
   @DisplayName("404 — 경로 없음")
@@ -73,6 +82,29 @@ class GlobalExceptionHandlerTest {
           .andExpect(jsonPath("$.status").value(405))
           .andExpect(jsonPath("$.code").value("METHOD_NOT_ALLOWED"))
           .andExpect(jsonPath("$.exceptionType").value("HttpRequestMethodNotSupportedException"));
+    }
+  }
+
+  @Nested
+  @DisplayName("400 — Bean Validation 실패")
+  class ValidationError {
+
+    @Test
+    @DisplayName("@Valid 검증 실패 시 400 + details(필드명) 반환")
+    void Valid_검증_실패_400_반환() throws Exception {
+      // given
+      String body = objectMapper.writeValueAsString(new ValidRequest(""));
+
+      // when & then
+      mockMvc
+          .perform(post("/test/valid")
+              .contentType(MediaType.APPLICATION_JSON)
+              .content(body))
+          .andExpect(status().isBadRequest())
+          .andExpect(jsonPath("$.status").value(400))
+          .andExpect(jsonPath("$.code").value("VALIDATION_ERROR"))
+          .andExpect(jsonPath("$.details.name").exists())
+          .andExpect(jsonPath("$.exceptionType").value("MethodArgumentNotValidException"));
     }
   }
 

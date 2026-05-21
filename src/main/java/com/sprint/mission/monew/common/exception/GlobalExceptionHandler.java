@@ -4,6 +4,7 @@ import com.sprint.mission.monew.common.response.ErrorResponse;
 import java.time.Instant;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.ResponseEntity;
+import org.springframework.web.HttpRequestMethodNotSupportedException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
 import org.springframework.web.servlet.resource.NoResourceFoundException;
@@ -11,6 +12,22 @@ import org.springframework.web.servlet.resource.NoResourceFoundException;
 @Slf4j
 @RestControllerAdvice
 public class GlobalExceptionHandler {
+
+  @ExceptionHandler(HttpRequestMethodNotSupportedException.class)
+  public ResponseEntity<ErrorResponse> handleMethodNotSupported(HttpRequestMethodNotSupportedException e) {
+    ErrorCode code = ErrorCode.METHOD_NOT_ALLOWED;
+    log.warn("[{}] {}", code.name(), e.getMessage());
+    return ResponseEntity
+        .status(code.getStatus())
+        .body(new ErrorResponse(
+            Instant.now(),
+            code.name(),
+            code.getMessage(),
+            null,
+            e.getClass().getSimpleName(),
+            code.getStatus().value()
+        ));
+  }
 
   @ExceptionHandler(NoResourceFoundException.class)
   public ResponseEntity<ErrorResponse> handleNoResourceFound(NoResourceFoundException e) {

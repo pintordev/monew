@@ -60,7 +60,7 @@
 | #16 | `[DOCS] README 커버리지 배지 연동` | 팀장 |
 | #17 | `[FEAT] 공통 에러 응답 ErrorResponse 및 GlobalExceptionHandler 구현` ⚠️ 블락커 | 팀장 |
 | #18 | `[FEAT] 커스텀 예외 클래스 구현` | 팀장 |
-| #19 | `[FEAT] MDC 필터 구현 (요청 ID + IP)` | 팀장 |
+| #19 | `[FEAT] MDC 로깅 인터셉터 구현 (요청 ID + IP)` | 팀장 |
 | #20 | `[FEAT] 커서 페이지네이션 공통 유틸 CursorPageResponse<T> 구현` | 팀장 |
 | #21 | `[ADR] ADR-01 테스트 환경 DB 전략 결정` | 전체 — 기한 **05/21** |
 

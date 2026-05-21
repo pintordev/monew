@@ -29,7 +29,7 @@ class GlobalExceptionHandlerTest {
 
   @Nested
   @DisplayName("404 — 경로 없음")
-  class 경로_없음 {
+  class NoResourceFound {
 
     @Test
     @DisplayName("존재하지 않는 경로 요청 시 404 반환")

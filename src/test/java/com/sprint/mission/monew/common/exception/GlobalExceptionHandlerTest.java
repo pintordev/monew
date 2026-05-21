@@ -32,8 +32,10 @@ class GlobalExceptionHandlerTest {
     void ok() {}
 
     @PostMapping("/body")
-    void body(@RequestBody String payload) {}
+    void body(@RequestBody BodyRequest payload) {}
   }
+
+  record BodyRequest(String name) {}
 
   @Nested
   @DisplayName("404 — 경로 없음")

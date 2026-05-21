@@ -107,6 +107,23 @@ public class GlobalExceptionHandler {
         ));
   }
 
+  @ExceptionHandler(Exception.class)
+  public ResponseEntity<ErrorResponse> handleException(Exception e) {
+    ErrorCode code = ErrorCode.INTERNAL_ERROR;
+    log.error("[{}] cause: {}, message: {}", code.name(), e.getClass().getSimpleName(),
+        e.getCause() != null ? e.getCause().getMessage() : e.getMessage(), e);
+    return ResponseEntity
+        .status(code.getStatus())
+        .body(new ErrorResponse(
+            Instant.now(),
+            code.name(),
+            code.getMessage(),
+            null,
+            e.getClass().getSimpleName(),
+            code.getStatus().value()
+        ));
+  }
+
   @ExceptionHandler(NoResourceFoundException.class)
   public ResponseEntity<ErrorResponse> handleNoResourceFound(NoResourceFoundException e) {
     ErrorCode code = ErrorCode.RESOURCE_NOT_FOUND;

@@ -75,6 +75,22 @@ public class GlobalExceptionHandler {
         ));
   }
 
+  @ExceptionHandler(MonewException.class)
+  public ResponseEntity<ErrorResponse> handleMonewException(MonewException e) {
+    ErrorCode code = e.getErrorCode();
+    log.warn("[{}] {}", code.name(), e.getMessage());
+    return ResponseEntity
+        .status(code.getStatus())
+        .body(new ErrorResponse(
+            Instant.now(),
+            code.name(),
+            code.getMessage(),
+            e.getDetails(),
+            e.getClass().getSimpleName(),
+            code.getStatus().value()
+        ));
+  }
+
   @ExceptionHandler(HttpMessageNotReadableException.class)
   public ResponseEntity<ErrorResponse> handleMessageNotReadable(HttpMessageNotReadableException e) {
     ErrorCode code = ErrorCode.MESSAGE_NOT_READABLE;

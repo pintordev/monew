@@ -7,6 +7,7 @@ import org.springframework.http.ResponseEntity;
 import java.util.Map;
 import org.springframework.http.converter.HttpMessageNotReadableException;
 import java.util.stream.Collectors;
+import org.apache.catalina.connector.ClientAbortException;
 import org.springframework.web.HttpRequestMethodNotSupportedException;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.method.annotation.MethodArgumentTypeMismatchException;
@@ -105,6 +106,11 @@ public class GlobalExceptionHandler {
             e.getClass().getSimpleName(),
             code.getStatus().value()
         ));
+  }
+
+  @ExceptionHandler(ClientAbortException.class)
+  public void handleClientAbort(ClientAbortException e) {
+    log.warn("[ClientAbort] message: {}", e.getMessage());
   }
 
   @ExceptionHandler(Exception.class)

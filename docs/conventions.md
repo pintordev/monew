@@ -32,9 +32,9 @@ com.sprint.mission.monew/
 │   │   ├── MonewException.java          # 추상 기본 예외
 │   │   ├── ErrorCode.java               # 에러 코드 enum
 │   │   └── GlobalExceptionHandler.java  # @ControllerAdvice
-│   ├── response/
-│   │   ├── ErrorResponse.java
-│   │   └── CursorPageResponse.java
+│   ├── dto/
+│   │   ├── CursorPageResponse.java
+│   │   └── ErrorResponse.java
 │   └── filter/
 │       └── MdcLoggingFilter.java        # 요청 ID + IP MDC 주입
 ├── domain/

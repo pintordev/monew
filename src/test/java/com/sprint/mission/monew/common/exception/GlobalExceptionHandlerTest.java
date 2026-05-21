@@ -14,6 +14,7 @@ import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.http.MediaType;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.sprint.mission.monew.domain.user.exception.UserNotFoundException;
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.NotBlank;
 import java.util.UUID;
@@ -45,6 +46,11 @@ class GlobalExceptionHandlerTest {
 
     @GetMapping("/type-mismatch/{id}")
     void typeMismatch(@PathVariable UUID id) {}
+
+    @GetMapping("/monew-exception")
+    void monewException() {
+      throw UserNotFoundException.withId(UUID.randomUUID());
+    }
   }
 
   record BodyRequest(String name) {}
@@ -82,6 +88,25 @@ class GlobalExceptionHandlerTest {
           .andExpect(jsonPath("$.status").value(405))
           .andExpect(jsonPath("$.code").value("METHOD_NOT_ALLOWED"))
           .andExpect(jsonPath("$.exceptionType").value("HttpRequestMethodNotSupportedException"));
+    }
+  }
+
+  @Nested
+  @DisplayName("비즈니스 예외 — MonewException")
+  class MonewExceptionHandler {
+
+    @Test
+    @DisplayName("MonewException 발생 시 ErrorCode 기반 상태코드와 응답 반환")
+    void MonewException_ErrorCode_기반_응답_반환() throws Exception {
+      // given & when & then
+      mockMvc
+          .perform(get("/test/monew-exception"))
+          .andExpect(status().isNotFound())
+          .andExpect(jsonPath("$.status").value(404))
+          .andExpect(jsonPath("$.code").value("USER_NOT_FOUND"))
+          .andExpect(jsonPath("$.message").value("사용자를 찾을 수 없습니다."))
+          .andExpect(jsonPath("$.details").exists())
+          .andExpect(jsonPath("$.exceptionType").value("UserNotFoundException"));
     }
   }
 

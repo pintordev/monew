@@ -50,7 +50,7 @@ reviews:
         - 요청 파라미터 유효성 검사 (@Valid)
         - UUID 파라미터는 String이 아닌 UUID 타입 직접 사용
         - 헤더 이름 오타 주의: 반드시 `Monew-Request-User-ID` (대소문자 정확히)
-        - 성공 응답을 래퍼로 감싸지 말 것 → DTO 직접 반환, 에러만 ErrorResponse
+        - 성공 응답을 ApiResponse<T> 같은 커스텀 래퍼로 감싸지 말 것 → DTO 직접 반환, 에러만 ErrorResponse. ResponseEntity는 상태코드 제어 목적으로 허용
 
     - path: "src/main/java/**/entity/**"
       instructions: |
@@ -122,7 +122,7 @@ reviews:
     - String으로 UUID 파라미터 받는 것 금지 → UUID 타입 직접 사용
     - 커밋에 AI co-author 문구 포함 금지 (Co-authored-by 등)
     - jakarta.* 임포트 사용 (javax.* 금지, Spring Boot 3.x)
-    - 성공 응답을 공통 래퍼로 감싸지 말 것 → DTO 직접 반환
+    - 성공 응답을 ApiResponse<T> 같은 커스텀 래퍼로 감싸지 말 것 → DTO 직접 반환. ResponseEntity는 상태코드 제어 목적으로 허용
 
 chat:
   auto_reply: true

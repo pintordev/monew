@@ -56,7 +56,8 @@ class InterestIntegrationTest {
                   .header("Monew-Request-User-ID", UUID.randomUUID())
                   .contentType(MediaType.APPLICATION_JSON)
                   .content(objectMapper.writeValueAsString(request)))
-          .andExpect(status().isConflict());
+          .andExpect(status().isConflict())
+          .andExpect(jsonPath("$.code").value("INTEREST_ALREADY_EXISTS"));
     }
 
     @Test

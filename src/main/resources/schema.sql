@@ -126,6 +126,7 @@ CREATE TABLE IF NOT EXISTS article_views
     article_id UUID                     NOT NULL,
     created_at TIMESTAMP WITH TIME ZONE NOT NULL,
     PRIMARY KEY (id),
+    UNIQUE (user_id, article_id),
     FOREIGN KEY (user_id) REFERENCES users (id) ON DELETE SET NULL,
     FOREIGN KEY (article_id) REFERENCES articles (id) ON DELETE CASCADE
 );
@@ -172,6 +173,7 @@ CREATE TABLE IF NOT EXISTS comment_likes
     comment_id UUID                     NOT NULL,
     created_at TIMESTAMP WITH TIME ZONE NOT NULL,
     PRIMARY KEY (id),
+    UNIQUE (user_id, comment_id),
     FOREIGN KEY (user_id) REFERENCES users (id) ON DELETE SET NULL,
     FOREIGN KEY (comment_id) REFERENCES comments (id) ON DELETE CASCADE
 );

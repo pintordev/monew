@@ -16,9 +16,15 @@ RUN ./gradlew clean bootJar -x test --no-daemon
 # ============ Stage 2: Runtime ============
 FROM amazoncorretto:17-alpine
 
+RUN addgroup -S app && adduser -S app -G app
+
 WORKDIR /app
 
 COPY --from=builder /app/build/libs/*.jar app.jar
+
+RUN chown -R app:app /app
+
+USER app
 
 EXPOSE 80
 

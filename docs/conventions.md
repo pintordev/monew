@@ -144,15 +144,27 @@ domain/
       UserService.java
 ```
 
-Swagger 어노테이션(`@Tag`, `@Operation`)은 `controller/api/*Api` 인터페이스에만 작성합니다. Controller는 인터페이스를 구현하고 비즈니스 로직에만 집중합니다.
+Swagger 어노테이션(`@Tag`, `@Operation`, `@ApiResponses`)은 `controller/api/*Api` 인터페이스에만 작성합니다. Controller는 인터페이스를 구현하고 비즈니스 로직에만 집중합니다.
+
+`@Operation` summary/description과 `@ApiResponse` responseCode·description은 반드시 `docs/api-docs.json` 해당 엔드포인트 기준으로 작성합니다.
 
 ```java
 // controller/api/UserApi.java
 @Tag(name = "User", description = "사용자 API")
 public interface UserApi {
 
-    @Operation(summary = "회원가입")
-    ResponseEntity<UserResponse> register(@Valid @RequestBody UserRegisterRequest request);
+    @Operation(summary = "회원가입", description = "새로운 사용자를 등록합니다.")
+    @ApiResponses({
+        @ApiResponse(responseCode = "201", description = "회원가입 성공",
+            content = @Content(schema = @Schema(implementation = UserDto.class))),
+        @ApiResponse(responseCode = "400", description = "잘못된 요청 (입력값 검증 실패)",
+            content = @Content(schema = @Schema(implementation = ErrorResponse.class))),
+        @ApiResponse(responseCode = "409", description = "이메일 중복",
+            content = @Content(schema = @Schema(implementation = ErrorResponse.class))),
+        @ApiResponse(responseCode = "500", description = "서버 내부 오류",
+            content = @Content(schema = @Schema(implementation = ErrorResponse.class)))
+    })
+    ResponseEntity<UserDto> register(@Valid @RequestBody UserRegisterRequest request);
 }
 
 // controller/UserController.java

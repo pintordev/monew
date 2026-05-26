@@ -27,7 +27,7 @@ Monew-Request-User-ID: {userId}
 | 파라미터 | 타입 | 필수 | 설명 |
 |---------|------|------|------|
 | `cursor` | string | N | 정렬 기준값 커서 |
-| `after` | string | N | ID 기반 커서 (동일 정렬값 구분용) |
+| `after` | string (date-time) | N | Instant 기반 커서 — 동일 정렬값 tie-break용 (`createdAt` ISO-8601) |
 | `limit` | number | Y | 페이지 크기 |
 | `orderBy` | string | Y | 정렬 기준 (도메인별 상이) |
 | `direction` | `ASC` \| `DESC` | Y | 정렬 방향 |
@@ -165,7 +165,7 @@ InterestListItem {
 | `orderBy` | `name` \| `subscriberCount` | Y | 정렬 기준 |
 | `direction` | `ASC` \| `DESC` | Y | 정렬 방향 |
 | `cursor` | string | N | 커서 |
-| `after` | string | N | ID 커서 |
+| `after` | string (date-time) | N | Instant 커서 (tie-break) |
 | `limit` | number | Y | 페이지 크기 |
 
 **Response `200`** — `CursorPageResponse<InterestListItem>`
@@ -268,7 +268,7 @@ ArticleListItem {
 | `orderBy` | `publishDate` \| `viewCount` \| `commentCount` | Y | 정렬 기준 |
 | `direction` | `ASC` \| `DESC` | Y | 정렬 방향 |
 | `cursor` | string | N | 커서 |
-| `after` | string | N | ID 커서 |
+| `after` | string (date-time) | N | Instant 커서 (tie-break) |
 | `limit` | number | Y | 페이지 크기 |
 
 **Response `200`** — `CursorPageResponse<ArticleListItem>`
@@ -379,7 +379,7 @@ CommentItem {
 | `orderBy` | `createdAt` \| `likeCount` | Y | 정렬 기준 |
 | `direction` | `ASC` \| `DESC` | Y | 정렬 방향 |
 | `cursor` | string | N | 커서 |
-| `after` | string | N | ID 커서 |
+| `after` | string (date-time) | N | Instant 커서 (tie-break) |
 | `limit` | number | Y | 페이지 크기 |
 
 **Response `200`** — `CursorPageResponse<CommentItem>`
@@ -488,7 +488,7 @@ NotificationsItem {
 | 파라미터 | 타입 | 필수 | 설명 |
 |---------|------|------|------|
 | `cursor` | string | N | 커서 |
-| `after` | string | N | ID 커서 |
+| `after` | string (date-time) | N | Instant 커서 (tie-break) |
 | `limit` | number | Y | 페이지 크기 |
 
 **Response `200`** — `CursorPageResponse<NotificationsItem>`

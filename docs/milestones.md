@@ -6,16 +6,16 @@
 
 ## 마일스톤 구조
 
-| Phase | 명칭 | 기간 | Due Date |
-|-------|------|------|----------|
-| Phase 0 | 사전기간 | ~05/21 | 05/21 |
-| Phase 1 | 1차 스프린트 | 05/22~05/27 | 05/27 |
-| Phase 2 | 2차 스프린트 | 05/28~06/03 오전 | 06/03 |
-| Phase 3 | 중간 발표 준비 | 06/03 오후 | 06/03 |
-| Phase 4 | 중간 발표 | 06/04 | 06/04 |
-| Phase 5 | 3차 스프린트 | 06/05~06/14 | 06/14 |
-| Phase 6 | 최종 발표 준비 | 06/15 | 06/15 |
-| Phase 7 | 최종 발표 | 06/16 | 06/16 |
+| Phase | 명칭 | 기간          | Due Date |
+|-------|------|-------------|----------|
+| Phase 0 | 사전기간 | ~05/21      | 05/21    |
+| Phase 1 | 1차 스프린트 | 05/22~05/29 | 05/29    |
+| Phase 2 | 2차 스프린트 | 06/01~06/05 | 06/05    |
+| Phase 3 | 중간 발표 준비 | 06/03 오후    | 06/03    |
+| Phase 4 | 중간 발표 | 06/04       | 06/04    |
+| Phase 5 | 3차 스프린트 | 06/05~06/14 | 06/14    |
+| Phase 6 | 최종 발표 준비 | 06/15       | 06/15    |
+| Phase 7 | 최종 발표 | 06/16       | 06/16    |
 
 ---
 
@@ -68,46 +68,46 @@
 
 ## Phase 1 — 1차 스프린트 (05/22~05/27)
 
-| # | 제목 | 담당 |
-|---|------|------|
-| #22 | `[ADR] ADR-02 User 삭제 cascade 처리 범위 결정` | 전체 — 기한 **05/22** |
-| #23 | `[ADR] ADR-03 기사 조회수 중복 제거 기준 결정` | 전체 — 기한 **05/22** |
-| #24 | `[ADR] ADR-04 뉴스 수집 기존 기사 처리 방식 결정` | 전체 — 기한 **05/22** |
-| #25 | `[ADR] ADR-05 알림 생성 트리거 인터페이스 결정` | 전체 — 기한 **05/22** |
-| #26 | `[ADR] ADR-06 QueryDSL 커서 페이지네이션 패턴 표준화 결정` | 전체 — 기한 **05/22** |
-| #27 | `[CHORE] ERD 작성 및 schema.sql 생성 (ADR-02, ADR-03 반영)` | 팀장 — 기한 **05/22** |
-| #28 | `[FEAT] 회원가입 API 구현 (POST /api/users)` | 최우준 |
-| #29 | `[FEAT] 로그인 API 구현 (POST /api/users/login)` | 최우준 |
-| #30 | `[FEAT] 닉네임 수정 API 구현 (PATCH /api/users/{userId})` | 최우준 |
-| #31 | `[FEAT] 논리 삭제 및 물리 삭제 스케줄러 구현 (DELETE /api/users/{userId})` | 최우준 |
-| #32 | `[FEAT] 물리 삭제 API 구현 (DELETE /api/users/{userId}/hard)` | 최우준 |
-| #33 | `[FEAT] 관심사 등록 API 구현 (POST /api/interests)` | 김호현 |
-| #34 | `[FEAT] 관심사 목록 조회 API 구현 (GET /api/interests)` | 김호현 |
-| #35 | `[FEAT] 관심사 키워드 수정 API 구현 (PATCH /api/interests/{interestId})` | 김호현 |
-| #36 | `[FEAT] 관심사 물리 삭제 API 구현 (DELETE /api/interests/{interestId})` | 김호현 |
-| #37 | `[FEAT] 구독 API 구현 (POST /api/interests/{interestId}/subscriptions)` | 김호현 |
-| #38 | `[FEAT] 구독 취소 API 구현 (DELETE /api/interests/{interestId}/subscriptions)` | 김호현 |
-| #39 | `[FEAT] 뉴스 기사 목록 조회 API 구현 (GET /api/articles)` | 안준영 |
-| #40 | `[FEAT] 뉴스 기사 단건 조회 API 구현 (GET /api/articles/{articleId})` | 안준영 |
-| #41 | `[FEAT] 출처 목록 조회 API 구현 (GET /api/articles/sources)` | 안준영 |
-| #42 | `[FEAT] 기사 조회수 등록 API 구현 (POST /api/articles/{articleId}/article-views)` | 안준영 |
-| #43 | `[FEAT] 뉴스 기사 논리 삭제 API 구현 (DELETE /api/articles/{articleId})` | 안준영 |
-| #44 | `[FEAT] 뉴스 기사 물리 삭제 API 구현 (DELETE /api/articles/{articleId}/hard)` | 안준영 |
-| #45 | `[BATCH] 뉴스 수집 배치 구현 (매 시간, Naver API + RSS 4곳)` | 안준영 |
-| #46 | `[FEAT] 댓글 등록 API 구현 (POST /api/comments)` | 김명근 |
-| #47 | `[FEAT] 댓글 목록 조회 API 구현 (GET /api/comments)` | 김명근 |
-| #48 | `[FEAT] 댓글 수정 API 구현 (PATCH /api/comments/{commentId})` | 김명근 |
-| #49 | `[FEAT] 댓글 논리 삭제 API 구현 (DELETE /api/comments/{commentId})` | 김명근 |
-| #50 | `[FEAT] 댓글 물리 삭제 API 구현 (DELETE /api/comments/{commentId}/hard)` | 김명근 |
-| #51 | `[FEAT] 댓글 좋아요 API 구현 (POST /api/comments/{commentId}/comment-likes)` | 김명근 |
+| # | 제목                                                                         | 담당 |
+|---|----------------------------------------------------------------------------|------|
+| #22 | `[ADR] ADR-02 User 삭제 cascade 처리 범위 결정`                                    | 전체 — 기한 **05/22** |
+| #23 | `[ADR] ADR-03 기사 조회수 중복 제거 기준 결정`                                          | 전체 — 기한 **05/22** |
+| #24 | `[ADR] ADR-04 뉴스 수집 기존 기사 처리 방식 결정`                                        | 전체 — 기한 **05/22** |
+| #25 | `[ADR] ADR-05 알림 생성 트리거 인터페이스 결정`                                          | 전체 — 기한 **05/22** |
+| #26 | `[ADR] ADR-06 QueryDSL 커서 페이지네이션 패턴 표준화 결정`                                | 전체 — 기한 **05/22** |
+| #27 | `[CHORE] ERD 작성 및 schema.sql 생성 (ADR-02, ADR-03 반영)`                       | 팀장 — 기한 **05/22** |
+| #28 | `[FEAT] 회원가입 API 구현 (POST /api/users)`                                     | 최우준 |
+| #29 | `[FEAT] 로그인 API 구현 (POST /api/auth/login)`                                 | 최우준 |
+| #30 | `[FEAT] 닉네임 수정 API 구현 (PATCH /api/users/{userId})`                         | 최우준 |
+| #31 | `[FEAT] 논리 삭제 및 물리 삭제 스케줄러 구현 (DELETE /api/users/{userId})`                | 최우준 |
+| #32 | `[FEAT] 물리 삭제 API 구현 (DELETE /api/users/{userId}/hard)`                    | 최우준 |
+| #33 | `[FEAT] 관심사 등록 API 구현 (POST /api/interests)`                               | 김호현 |
+| #34 | `[FEAT] 관심사 목록 조회 API 구현 (GET /api/interests)`                             | 김호현 |
+| #35 | `[FEAT] 관심사 키워드 수정 API 구현 (PATCH /api/interests/{interestId})`             | 김호현 |
+| #36 | `[FEAT] 관심사 물리 삭제 API 구현 (DELETE /api/interests/{interestId})`             | 김호현 |
+| #37 | `[FEAT] 구독 API 구현 (POST /api/interests/{interestId}/subscriptions)`        | 김호현 |
+| #38 | `[FEAT] 구독 취소 API 구현 (DELETE /api/interests/{interestId}/subscriptions)`   | 김호현 |
+| #39 | `[FEAT] 뉴스 기사 목록 조회 API 구현 (GET /api/articles)`                            | 안준영 |
+| #40 | `[FEAT] 뉴스 기사 단건 조회 API 구현 (GET /api/articles/{articleId})`                | 안준영 |
+| #41 | `[FEAT] 출처 목록 조회 API 구현 (GET /api/articles/sources)`                       | 안준영 |
+| #42 | `[FEAT] 기사 조회수 등록 API 구현 (POST /api/articles/{articleId}/article-views)`   | 안준영 |
+| #43 | `[FEAT] 뉴스 기사 논리 삭제 API 구현 (DELETE /api/articles/{articleId})`             | 안준영 |
+| #44 | `[FEAT] 뉴스 기사 물리 삭제 API 구현 (DELETE /api/articles/{articleId}/hard)`        | 안준영 |
+| #45 | `[BATCH] 뉴스 수집 배치 구현 (매 시간, Naver API + RSS 4곳)`                           | 안준영 |
+| #46 | `[FEAT] 댓글 등록 API 구현 (POST /api/comments)`                                 | 김명근 |
+| #47 | `[FEAT] 댓글 목록 조회 API 구현 (GET /api/comments)`                               | 김명근 |
+| #48 | `[FEAT] 댓글 수정 API 구현 (PATCH /api/comments/{commentId})`                    | 김명근 |
+| #49 | `[FEAT] 댓글 논리 삭제 API 구현 (DELETE /api/comments/{commentId})`                | 김명근 |
+| #50 | `[FEAT] 댓글 물리 삭제 API 구현 (DELETE /api/comments/{commentId}/hard)`           | 김명근 |
+| #51 | `[FEAT] 댓글 좋아요 API 구현 (POST /api/comments/{commentId}/comment-likes)`      | 김명근 |
 | #52 | `[FEAT] 댓글 좋아요 취소 API 구현 (DELETE /api/comments/{commentId}/comment-likes)` | 김명근 |
-| #53 | `[FEAT] 미확인 알림 목록 조회 API 구현 (GET /api/notifications)` | 엄주혁 |
-| #54 | `[FEAT] 알림 단건 확인 API 구현 (PATCH /api/notifications/{notificationId})` | 엄주혁 |
-| #55 | `[FEAT] 알림 전체 확인 API 구현 (PATCH /api/notifications)` | 엄주혁 |
-| #56 | `[FEAT] 알림 생성 로직 구현 (기사 등록 / 댓글 좋아요 이벤트)` | 엄주혁 |
-| #57 | `[BATCH] 알림 자동 삭제 배치 구현 (매일, 확인 후 1주일 경과)` | 엄주혁 |
-| #58 | `[FEAT] 활동 내역 조회 API 구현 (GET /api/user-activities/{userId})` | 노정빈 |
-| #59 | `[ADR] ADR-07 구독자 조회 인터페이스 결정` | 전체 — 기한 **05/26** |
+| #53 | `[FEAT] 미확인 알림 목록 조회 API 구현 (GET /api/notifications)`                      | 엄주혁 |
+| #54 | `[FEAT] 알림 단건 확인 API 구현 (PATCH /api/notifications/{notificationId})`       | 엄주혁 |
+| #55 | `[FEAT] 알림 전체 확인 API 구현 (PATCH /api/notifications)`                        | 엄주혁 |
+| #56 | `[FEAT] 알림 생성 로직 구현 (기사 등록 / 댓글 좋아요 이벤트)`                                  | 엄주혁 |
+| #57 | `[BATCH] 알림 자동 삭제 배치 구현 (매일, 확인 후 1주일 경과)`                                 | 엄주혁 |
+| #58 | `[FEAT] 활동 내역 조회 API 구현 (GET /api/user-activities/{userId})`               | 노정빈 |
+| #59 | `[ADR] ADR-07 구독자 조회 인터페이스 결정`                                             | 전체 — 기한 **05/26** |
 
 ---
 

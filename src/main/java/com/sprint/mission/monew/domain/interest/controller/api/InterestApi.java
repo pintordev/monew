@@ -16,6 +16,5 @@ public interface InterestApi {
   @Operation(summary = "관심사 등록")
   ResponseEntity<InterestDto> create(
       @Valid @RequestBody InterestCreateRequest request,
-      @RequestHeader("Monew-Request-User-ID") UUID requestUserId
-  );
+      @RequestHeader("Monew-Request-User-ID") UUID requestUserId);
 }

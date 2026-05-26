@@ -26,8 +26,8 @@ public class InterestController implements InterestApi {
   @Override
   public ResponseEntity<InterestDto> create(
       @Valid @RequestBody InterestCreateRequest request,
-      @RequestHeader("Monew-Request-User-ID") UUID requestUserId
-  ) {
-    return ResponseEntity.status(HttpStatus.CREATED).body(interestService.create(request, requestUserId));
+      @RequestHeader("Monew-Request-User-ID") UUID requestUserId) {
+    return ResponseEntity.status(HttpStatus.CREATED)
+        .body(interestService.create(request, requestUserId));
   }
 }

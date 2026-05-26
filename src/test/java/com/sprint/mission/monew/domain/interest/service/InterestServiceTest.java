@@ -5,8 +5,8 @@ import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.BDDMockito.given;
 
-import com.sprint.mission.monew.domain.interest.dto.InterestDto;
 import com.sprint.mission.monew.domain.interest.dto.InterestCreateRequest;
+import com.sprint.mission.monew.domain.interest.dto.InterestDto;
 import com.sprint.mission.monew.domain.interest.entity.Interest;
 import com.sprint.mission.monew.domain.interest.exception.InterestAlreadyExistsException;
 import com.sprint.mission.monew.domain.interest.mapper.InterestMapper;
@@ -54,7 +54,8 @@ class InterestServiceTest {
       UUID requestUserId = UUID.randomUUID();
       InterestCreateRequest request = new InterestCreateRequest("인공지능", List.of("AI", "머신러닝"));
       Interest saved = Interest.create("인공지능", List.of("AI", "머신러닝"));
-      InterestDto expectedDto = new InterestDto(saved.getId(), "인공지능", List.of("AI", "머신러닝"), 0L, false);
+      InterestDto expectedDto =
+          new InterestDto(saved.getId(), "인공지능", List.of("AI", "머신러닝"), 0L, false);
 
       given(interestRepository.findAll()).willReturn(List.of());
       given(interestRepository.save(any(Interest.class))).willReturn(saved);

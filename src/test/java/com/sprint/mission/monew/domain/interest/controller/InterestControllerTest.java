@@ -39,10 +39,12 @@ class InterestControllerTest {
       InterestCreateRequest request = new InterestCreateRequest("", List.of("AI"));
 
       // when & then
-      mockMvc.perform(post("/api/interests")
-              .header("Monew-Request-User-ID", UUID.randomUUID())
-              .contentType(MediaType.APPLICATION_JSON)
-              .content(objectMapper.writeValueAsString(request)))
+      mockMvc
+          .perform(
+              post("/api/interests")
+                  .header("Monew-Request-User-ID", UUID.randomUUID())
+                  .contentType(MediaType.APPLICATION_JSON)
+                  .content(objectMapper.writeValueAsString(request)))
           .andExpect(status().isBadRequest());
     }
 
@@ -52,15 +54,19 @@ class InterestControllerTest {
       // given
       UUID requestUserId = UUID.randomUUID();
       InterestCreateRequest request = new InterestCreateRequest("인공지능", List.of("AI", "머신러닝"));
-      InterestDto response = new InterestDto(UUID.randomUUID(), "인공지능", List.of("AI", "머신러닝"), 0L, false);
+      InterestDto response =
+          new InterestDto(UUID.randomUUID(), "인공지능", List.of("AI", "머신러닝"), 0L, false);
 
-      given(interestService.create(any(InterestCreateRequest.class), any(UUID.class))).willReturn(response);
+      given(interestService.create(any(InterestCreateRequest.class), any(UUID.class)))
+          .willReturn(response);
 
       // when & then
-      mockMvc.perform(post("/api/interests")
-              .header("Monew-Request-User-ID", requestUserId)
-              .contentType(MediaType.APPLICATION_JSON)
-              .content(objectMapper.writeValueAsString(request)))
+      mockMvc
+          .perform(
+              post("/api/interests")
+                  .header("Monew-Request-User-ID", requestUserId)
+                  .contentType(MediaType.APPLICATION_JSON)
+                  .content(objectMapper.writeValueAsString(request)))
           .andExpect(status().isCreated())
           .andExpect(jsonPath("$.name").value("인공지능"));
     }

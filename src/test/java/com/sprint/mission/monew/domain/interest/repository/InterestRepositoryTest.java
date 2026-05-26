@@ -18,8 +18,7 @@ import org.springframework.test.context.ActiveProfiles;
 @AutoConfigureTestDatabase(replace = AutoConfigureTestDatabase.Replace.NONE)
 class InterestRepositoryTest {
 
-  @Autowired
-  InterestRepository interestRepository;
+  @Autowired InterestRepository interestRepository;
 
   @Nested
   @DisplayName("관심사 저장")

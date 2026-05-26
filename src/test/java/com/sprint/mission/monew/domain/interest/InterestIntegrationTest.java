@@ -50,10 +50,12 @@ class InterestIntegrationTest {
       InterestCreateRequest request = new InterestCreateRequest("인공지능", List.of("AI"));
 
       // when & then
-      mockMvc.perform(post("/api/interests")
-              .header("Monew-Request-User-ID", UUID.randomUUID())
-              .contentType(MediaType.APPLICATION_JSON)
-              .content(objectMapper.writeValueAsString(request)))
+      mockMvc
+          .perform(
+              post("/api/interests")
+                  .header("Monew-Request-User-ID", UUID.randomUUID())
+                  .contentType(MediaType.APPLICATION_JSON)
+                  .content(objectMapper.writeValueAsString(request)))
           .andExpect(status().isConflict());
     }
 
@@ -64,10 +66,12 @@ class InterestIntegrationTest {
       InterestCreateRequest request = new InterestCreateRequest("인공지능", List.of("AI", "머신러닝"));
 
       // when & then
-      mockMvc.perform(post("/api/interests")
-              .header("Monew-Request-User-ID", UUID.randomUUID())
-              .contentType(MediaType.APPLICATION_JSON)
-              .content(objectMapper.writeValueAsString(request)))
+      mockMvc
+          .perform(
+              post("/api/interests")
+                  .header("Monew-Request-User-ID", UUID.randomUUID())
+                  .contentType(MediaType.APPLICATION_JSON)
+                  .content(objectMapper.writeValueAsString(request)))
           .andExpect(status().isCreated())
           .andExpect(jsonPath("$.name").value("인공지능"))
           .andExpect(jsonPath("$.subscriberCount").value(0))

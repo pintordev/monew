@@ -1,0 +1,117 @@
+name: Review Discord Notification
+
+on:
+  workflow_run:
+    workflows: ["Collect Review Data"]
+    types: [completed]
+
+permissions:
+  actions: read
+  contents: read
+
+jobs:
+  notify:
+    if: ${{ github.event.workflow_run.conclusion == 'success' }}
+    runs-on: ubuntu-latest
+    steps:
+      - name: Download review data
+        uses: actions/download-artifact@v4
+        with:
+          name: review-data
+          run-id: ${{ github.event.workflow_run.id }}
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Send review embed
+        env:
+          DISCORD_WEBHOOK_URL: ${{ secrets.DISCORD_WEBHOOK_URL }}
+        run: |
+          STATE=$(jq -r '.review_state' review-data.json)
+          COUNT=$(jq -r '.comment_count' review-data.json)
+          REVIEWER=$(jq -r '.reviewer' review-data.json)
+          PR_NUM=$(jq -r '.pr_number' review-data.json)
+          PR_TITLE=$(jq -r '.pr_title' review-data.json)
+          REVIEW_URL=$(jq -r '.review_html_url' review-data.json)
+
+          case "$STATE" in
+            approved)           STATE_LABEL="✅ 승인" ;;
+            changes_requested)  STATE_LABEL="🔄 수정 요청" ;;
+            commented)          STATE_LABEL="💬 코멘트" ;;
+            dismissed)          STATE_LABEL="❌ 기각" ;;
+            *)                  STATE_LABEL="$STATE" ;;
+          esac
+
+          if [[ "$STATE" == "approved" ]] && [[ "$COUNT" == "0" ]]; then
+            SHOW_HINT=false
+          else
+            SHOW_HINT=true
+          fi
+
+          jq -n \
+            --arg title "💬 리뷰 등록 | PR #${PR_NUM}" \
+            --arg url "$REVIEW_URL" \
+            --arg desc "$PR_TITLE" \
+            --arg reviewer "$REVIEWER" \
+            --arg state_label "$STATE_LABEL" \
+            --argjson count "$COUNT" \
+            --arg hint "/fix-review ${PR_NUM}" \
+            --argjson show_hint "$SHOW_HINT" \
+            '{
+              embeds: [{
+                title: $title,
+                url: $url,
+                description: $desc,
+                color: 15105570,
+                fields: (if $show_hint then [
+                  {"name": "👤 리뷰어", "value": $reviewer, "inline": true},
+                  {"name": "📊 상태", "value": $state_label, "inline": true},
+                  {"name": "💬 코멘트", "value": ($count | tostring), "inline": true},
+                  {"name": "💡 힌트", "value": $hint, "inline": false}
+                ] else [
+                  {"name": "👤 리뷰어", "value": $reviewer, "inline": true},
+                  {"name": "📊 상태", "value": $state_label, "inline": true},
+                  {"name": "💬 코멘트", "value": ($count | tostring), "inline": true}
+                ] end),
+                footer: {"text": "Code Breakers Bot"}
+              }]
+            }' \
+          | curl -s -H "Content-Type: application/json" -d @- "$DISCORD_WEBHOOK_URL"
+
+      - name: Delete artifact
+        if: always()
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          gh api \
+            "repos/${{ github.repository }}/actions/artifacts" \
+            --jq ".artifacts[] | select(.workflow_run.id == ${{ github.event.workflow_run.id }}) | .id" \
+          | xargs -I{} gh api -X DELETE "repos/${{ github.repository }}/actions/artifacts/{}"
+
+      - name: Send merge-ready embed (2 approvals)
+        env:
+          DISCORD_WEBHOOK_URL: ${{ secrets.DISCORD_WEBHOOK_URL }}
+        run: |
+          APPROVAL_COUNT=$(jq -r '.approval_count' review-data.json)
+          PR_NUM=$(jq -r '.pr_number' review-data.json)
+          PR_TITLE=$(jq -r '.pr_title' review-data.json)
+          PR_URL=$(jq -r '.pr_html_url' review-data.json)
+
+          if [[ "$APPROVAL_COUNT" -ge 2 ]]; then
+            jq -n \
+              --arg title "✅ 2명 승인 완료 | 머지 가능" \
+              --arg url "$PR_URL" \
+              --arg desc "$PR_TITLE" \
+              --arg pr_num "#${PR_NUM}" \
+              '{
+                embeds: [{
+                  title: $title,
+                  url: $url,
+                  description: $desc,
+                  color: 5763719,
+                  fields: [
+                    {name: "🔢 PR", value: $pr_num, inline: true}
+                  ],
+                  footer: {text: "Code Breakers Bot"}
+                }]
+              }' \
+            | curl -s -H "Content-Type: application/json" -d @- "$DISCORD_WEBHOOK_URL"
+          fi

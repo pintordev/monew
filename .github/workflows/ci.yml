@@ -43,8 +43,8 @@ jobs:
 
       - name: Download config files from S3
         run: |
-          aws s3 cp s3://${{ secrets.AWS_S3_BUCKET }}/config/application.yaml src/main/resources/application.yaml
-          aws s3 cp s3://${{ secrets.AWS_S3_BUCKET }}/config/application-test.yaml src/test/resources/application-test.yaml
+          aws s3 cp s3://${{ secrets.AWS_S3_BUCKET }}/config/test/application.yaml src/main/resources/application.yaml
+          aws s3 cp s3://${{ secrets.AWS_S3_BUCKET }}/config/test/application-test.yaml src/test/resources/application-test.yaml
           aws s3 cp s3://${{ secrets.AWS_S3_BUCKET }}/config/.env .env
 
       - name: Grant execute permission for gradlew

@@ -33,7 +33,7 @@ class InterestServiceTest {
       // given
       UUID requestUserId = UUID.randomUUID();
       InterestRegisterRequest request = new InterestRegisterRequest("인공지능", List.of("AI"));
-      Interest existing = Interest.create("인공지능AI", List.of("머신러닝")); // 유사도 80% 이상
+      Interest existing = Interest.create("인공지능X", List.of("머신러닝")); // 유사도 80% (거리 1, maxLen 5)
 
       given(interestRepository.findAll()).willReturn(List.of(existing));
 

@@ -5,6 +5,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 import com.sprint.mission.monew.domain.interest.entity.Interest;
 import java.util.List;
 import java.util.Optional;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
@@ -19,6 +20,11 @@ import org.springframework.test.context.ActiveProfiles;
 class InterestRepositoryTest {
 
   @Autowired InterestRepository interestRepository;
+
+  @BeforeEach
+  void setUp() {
+    interestRepository.deleteAll();
+  }
 
   @Nested
   @DisplayName("관심사 저장")

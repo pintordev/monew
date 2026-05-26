@@ -13,6 +13,7 @@ import com.sprint.mission.monew.domain.interest.mapper.InterestMapper;
 import com.sprint.mission.monew.domain.interest.repository.InterestRepository;
 import java.util.List;
 import java.util.UUID;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
@@ -28,6 +29,13 @@ class InterestServiceTest {
   @Mock InterestRepository interestRepository;
   @Mock InterestMapper interestMapper;
 
+  UUID requestUserId;
+
+  @BeforeEach
+  void setUp() {
+    requestUserId = UUID.randomUUID();
+  }
+
   @Nested
   @DisplayName("관심사 등록")
   class Register {
@@ -36,7 +44,6 @@ class InterestServiceTest {
     @DisplayName("80% 이상 유사한 이름이 존재하면 InterestAlreadyExistsException이 발생한다")
     void 유사한_이름이_존재하면_예외가_발생한다() {
       // given
-      UUID requestUserId = UUID.randomUUID();
       InterestCreateRequest request = new InterestCreateRequest("인공지능", List.of("AI"));
       Interest existing = Interest.create("인공지능X", List.of("머신러닝")); // 유사도 80% (거리 1, maxLen 5)
 
@@ -51,7 +58,6 @@ class InterestServiceTest {
     @DisplayName("유사한 관심사가 없으면 저장 후 InterestDto를 반환한다")
     void 유사한_관심사가_없으면_저장_후_InterestDto를_반환한다() {
       // given
-      UUID requestUserId = UUID.randomUUID();
       InterestCreateRequest request = new InterestCreateRequest("인공지능", List.of("AI", "머신러닝"));
       Interest saved = Interest.create("인공지능", List.of("AI", "머신러닝"));
       InterestDto expectedDto =

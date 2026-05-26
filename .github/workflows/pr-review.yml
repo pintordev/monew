@@ -1,7 +1,7 @@
 name: PR Review & Discord Notification
 
 on:
-  pull_request:
+  pull_request_target:
     types: [opened, synchronize, reopened]
     branches: [dev, main]
   pull_request_review:
@@ -13,7 +13,7 @@ permissions:
 
 jobs:
   discord-pr-notify:
-    if: github.event_name == 'pull_request' && github.event.pull_request.draft == false
+    if: github.event_name == 'pull_request_target' && github.event.pull_request.draft == false
     runs-on: ubuntu-latest
     steps:
       - name: Send Discord embed
@@ -51,13 +51,14 @@ jobs:
 
   claude-review:
     if: >
-      github.event_name == 'pull_request' &&
+      github.event_name == 'pull_request_target' &&
       github.event.pull_request.draft == false &&
       vars.CLAUDE_REVIEW_ENABLED == 'true'
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
         with:
+          ref: ${{ github.event.pull_request.head.sha }}
           fetch-depth: 0
 
       - name: Extract diff

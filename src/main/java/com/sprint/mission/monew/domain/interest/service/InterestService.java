@@ -4,6 +4,7 @@ import com.sprint.mission.monew.domain.interest.dto.InterestDto;
 import com.sprint.mission.monew.domain.interest.dto.InterestRegisterRequest;
 import com.sprint.mission.monew.domain.interest.entity.Interest;
 import com.sprint.mission.monew.domain.interest.exception.InterestAlreadyExistsException;
+import com.sprint.mission.monew.domain.interest.mapper.InterestMapper;
 import com.sprint.mission.monew.domain.interest.repository.InterestRepository;
 import java.util.List;
 import java.util.UUID;
@@ -17,6 +18,7 @@ import org.springframework.transaction.annotation.Transactional;
 public class InterestService {
 
   private final InterestRepository interestRepository;
+  private final InterestMapper interestMapper;
 
   @Transactional
   public InterestDto register(InterestRegisterRequest request, UUID requestUserId) {
@@ -26,7 +28,8 @@ public class InterestService {
     if (hasSimilar) {
       throw InterestAlreadyExistsException.withName(request.name());
     }
-    return null;
+    Interest saved = interestRepository.save(Interest.create(request.name(), request.keywords()));
+    return interestMapper.toResponse(saved);
   }
 
   private double similarity(String a, String b) {

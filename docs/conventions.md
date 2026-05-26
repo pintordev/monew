@@ -164,7 +164,7 @@ public interface UserApi {
         @ApiResponse(responseCode = "500", description = "서버 내부 오류",
             content = @Content(schema = @Schema(implementation = ErrorResponse.class)))
     })
-    ResponseEntity<UserDto> register(@Valid @RequestBody UserRegisterRequest request);
+    ResponseEntity<UserResponse> register(@Valid @RequestBody UserRegisterRequest request);
 }
 
 // controller/UserController.java

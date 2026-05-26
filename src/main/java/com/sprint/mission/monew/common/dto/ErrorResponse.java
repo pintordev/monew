@@ -1,4 +1,4 @@
-package com.sprint.mission.monew.common.response;
+package com.sprint.mission.monew.common.dto;
 
 import java.time.Instant;
 import java.util.Map;

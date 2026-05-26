@@ -1,6 +1,6 @@
 package com.sprint.mission.monew.common.exception;
 
-import com.sprint.mission.monew.common.response.ErrorResponse;
+import com.sprint.mission.monew.common.dto.ErrorResponse;
 import java.time.Instant;
 import java.util.Map;
 import java.util.stream.Collectors;

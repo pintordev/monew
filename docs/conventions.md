@@ -26,17 +26,21 @@ com.sprint.mission.monew/
 │   │   ├── JpaConfig.java               # @EnableJpaAuditing
 │   │   ├── QuerydslConfig.java          # JPAQueryFactory bean
 │   │   ├── MongoConfig.java             # MongoDB 설정 (심화)
-│   │   ├── S3Config.java                # AWS S3
-│   │   └── SwaggerConfig.java          # springdoc-openapi
+│   │   ├── SwaggerConfig.java           # springdoc-openapi
+│   │   └── WebMvcConfig.java            # 인터셉터 등록
+│   ├── dto/
+│   │   ├── CursorPageResponse.java
+│   │   └── ErrorResponse.java
+│   ├── entity/
+│   │   ├── BaseEntity.java              # id + createdAt
+│   │   ├── BaseUpdatableEntity.java     # + updatedAt
+│   │   └── BaseSoftDeletableEntity.java # + deletedAt, isDeleted(), softDelete()
 │   ├── exception/
 │   │   ├── MonewException.java          # 추상 기본 예외
 │   │   ├── ErrorCode.java               # 에러 코드 enum
 │   │   └── GlobalExceptionHandler.java  # @ControllerAdvice
-│   ├── dto/
-│   │   ├── CursorPageResponse.java
-│   │   └── ErrorResponse.java
-│   └── filter/
-│       └── MdcLoggingFilter.java        # 요청 ID + IP MDC 주입
+│   └── interceptor/
+│       └── MdcLoggingInterceptor.java   # 요청 ID + IP MDC 주입
 ├── domain/
 │   ├── user/
 │   ├── interest/
@@ -89,7 +93,7 @@ src/test/java/com/sprint/mission/monew/
 | 위치 | 어노테이션 | 특징 |
 |------|-----------|------|
 | `service/` | `@ExtendWith(MockitoExtension.class)` | Mock 의존성, 빠름 |
-| `repository/` | `@DataJpaTest` | 실제 DB(H2/TestContainers), JPA 레이어만 로드 |
+| `repository/` | `@DataJpaTest` | 실제 DB(TestContainers PostgreSQL 18.3), JPA 레이어만 로드 |
 | `controller/` | `@WebMvcTest` | MockMvc, 서비스는 `@MockBean` |
 | `batch/` | `@SpringBatchTest` | Job/Step 단위 테스트 |
 
@@ -224,20 +228,20 @@ PK는 UUID를 사용합니다. Long 시퀀스는 값 추측이 가능하고 분�
 
 Spring Data Auditing을 사용합니다. `@EnableJpaAuditing`을 설정 클래스에 추가해야 합니다.
 
-모든 엔티티는 `BaseEntity` 또는 `BaseUpdatableEntity`를 상속합니다.
-- `BaseEntity` — id + createdAt만 필요한 불변형 엔티티 (예: Notification)
-- `BaseUpdatableEntity` — updatedAt이 추가되는 수정 가능 엔티티 (예: User, Article, Comment)
+모든 엔티티는 아래 3단계 계층 중 하나를 상속합니다.
+- `BaseEntity` — id + createdAt만 필요한 불변형 엔티티 (Subscription, ArticleView, CommentLike)
+- `BaseUpdatableEntity` — updatedAt이 추가되는 수정 가능 엔티티 (Interest, Notification)
+- `BaseSoftDeletableEntity` — 소프트딜리트가 필요한 엔티티 (User, Article, Comment)
 
 ```java
 // common/entity/BaseEntity.java
 @Getter
-@NoArgsConstructor(access = AccessLevel.PROTECTED)
-@EntityListeners(AuditingEntityListener.class)
 @MappedSuperclass
+@EntityListeners(AuditingEntityListener.class)
 public abstract class BaseEntity {
 
-    @Column(columnDefinition = "uuid", nullable = false, updatable = false)
     @Id
+    @Column(columnDefinition = "uuid", nullable = false, updatable = false)
     private UUID id = UUID.randomUUID();
 
     @CreatedDate
@@ -247,12 +251,23 @@ public abstract class BaseEntity {
 
 // common/entity/BaseUpdatableEntity.java
 @Getter
-@NoArgsConstructor(access = AccessLevel.PROTECTED)
 @MappedSuperclass
 public abstract class BaseUpdatableEntity extends BaseEntity {
 
     @LastModifiedDate
     private Instant updatedAt;
+}
+
+// common/entity/BaseSoftDeletableEntity.java
+@Getter
+@MappedSuperclass
+public abstract class BaseSoftDeletableEntity extends BaseUpdatableEntity {
+
+    private Instant deletedAt;
+
+    public boolean isDeleted() { return deletedAt != null; }
+
+    public void softDelete() { this.deletedAt = Instant.now(); }
 }
 ```
 
@@ -265,7 +280,7 @@ public abstract class BaseUpdatableEntity extends BaseEntity {
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
 @Table(name = "users")   // 테이블명: 소문자 복수형
 @Entity
-public class User extends BaseUpdatableEntity {
+public class User extends BaseSoftDeletableEntity {
 
     @Column(nullable = false, unique = true)
     private String email;
@@ -273,17 +288,11 @@ public class User extends BaseUpdatableEntity {
     @Column(nullable = false)
     private String nickname;
 
-    private Instant deletedAt;
-
     public static User create(String email, String nickname) {
         User user = new User();
         user.email = email;
         user.nickname = nickname;
         return user;
-    }
-
-    public boolean isDeleted() {
-        return deletedAt != null;
     }
 }
 ```
@@ -773,6 +782,8 @@ prefix: `feat`, `fix`, `refactor`, `docs`, `test`, `chore`, `batch`, `deploy`
 [BATCH] 뉴스 수집 배치 구현
 [CHORE] 의존성 버전 업그레이드
 [DEPLOY] AWS ECS 배포 설정
+[ADR] 아키텍처 결정 기록
+[DONE] 완료 마커 (최종 머지 등)
 ```
 
 ### PR 제목 / 커밋 메시지
@@ -845,3 +856,4 @@ refactor: UserService 예외 처리 공통화
 ### 커밋
 
 - AI co-author 커밋 금지 — `Co-authored-by: Claude` 등 AI 귀속 문구를 커밋 메시지에 포함하지 않습니다.
+- `.gitignore` 대상 파일 커밋 금지 — `git add` 전 반드시 확인하고, `.gitignore`에 포함된 파일은 스테이징에서 제외합니다.

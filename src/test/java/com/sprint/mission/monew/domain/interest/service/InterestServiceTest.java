@@ -1,11 +1,15 @@
 package com.sprint.mission.monew.domain.interest.service;
 
+import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
+import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.BDDMockito.given;
 
+import com.sprint.mission.monew.domain.interest.dto.InterestDto;
 import com.sprint.mission.monew.domain.interest.dto.InterestRegisterRequest;
 import com.sprint.mission.monew.domain.interest.entity.Interest;
 import com.sprint.mission.monew.domain.interest.exception.InterestAlreadyExistsException;
+import com.sprint.mission.monew.domain.interest.mapper.InterestMapper;
 import com.sprint.mission.monew.domain.interest.repository.InterestRepository;
 import java.util.List;
 import java.util.UUID;
@@ -22,6 +26,7 @@ class InterestServiceTest {
 
   @InjectMocks InterestService interestService;
   @Mock InterestRepository interestRepository;
+  @Mock InterestMapper interestMapper;
 
   @Nested
   @DisplayName("관심사 등록")
@@ -40,6 +45,27 @@ class InterestServiceTest {
       // when & then
       assertThatThrownBy(() -> interestService.register(request, requestUserId))
           .isInstanceOf(InterestAlreadyExistsException.class);
+    }
+
+    @Test
+    @DisplayName("유사한 관심사가 없으면 저장 후 InterestDto를 반환한다")
+    void 유사한_관심사가_없으면_저장_후_InterestDto를_반환한다() {
+      // given
+      UUID requestUserId = UUID.randomUUID();
+      InterestRegisterRequest request = new InterestRegisterRequest("인공지능", List.of("AI", "머신러닝"));
+      Interest saved = Interest.create("인공지능", List.of("AI", "머신러닝"));
+      InterestDto expectedDto = new InterestDto(saved.getId(), "인공지능", List.of("AI", "머신러닝"), 0L, false);
+
+      given(interestRepository.findAll()).willReturn(List.of());
+      given(interestRepository.save(any(Interest.class))).willReturn(saved);
+      given(interestMapper.toResponse(any(Interest.class))).willReturn(expectedDto);
+
+      // when
+      InterestDto result = interestService.register(request, requestUserId);
+
+      // then
+      assertThat(result.name()).isEqualTo("인공지능");
+      assertThat(result.keywords()).containsExactlyInAnyOrderElementsOf(request.keywords());
     }
   }
 }

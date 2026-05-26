@@ -3,12 +3,10 @@ name: CI
 on:
   pull_request_target:
     branches: [dev, main]
-    paths-ignore:
-      - '**.md'
-      - 'docs/**'
-      - '.github/workflows/*.yml'
-      - '.coderabbit.yaml'
-      - '.gitignore'
+
+permissions:
+  contents: read
+  id-token: write
 
 jobs:
   test:
@@ -19,6 +17,7 @@ jobs:
         uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4
         with:
           ref: ${{ github.event.pull_request.head.sha }}
+          persist-credentials: false
 
       - name: Set up JDK 17 (Corretto)
         uses: actions/setup-java@c1e323688fd81a25caa38c78aa6df2d33d3e20d9 # v4
@@ -36,15 +35,17 @@ jobs:
           restore-keys: |
             ${{ runner.os }}-gradle-
 
+      - name: Configure AWS credentials (OIDC)
+        uses: aws-actions/configure-aws-credentials@7474bc4690e29a8392af63c5b98e7449536d5c3a # v4
+        with:
+          role-to-assume: ${{ secrets.AWS_ROLE_TO_ASSUME }}
+          aws-region: ${{ vars.AWS_REGION }}
+
       - name: Download config files from S3
         run: |
           aws s3 cp s3://${{ secrets.AWS_S3_BUCKET }}/config/application.yaml src/main/resources/application.yaml
           aws s3 cp s3://${{ secrets.AWS_S3_BUCKET }}/config/application-test.yaml src/test/resources/application-test.yaml
           aws s3 cp s3://${{ secrets.AWS_S3_BUCKET }}/config/.env .env
-        env:
-          AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY }}
-          AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_KEY }}
-          AWS_DEFAULT_REGION: ${{ vars.AWS_REGION }}
 
       - name: Grant execute permission for gradlew
         run: chmod +x gradlew

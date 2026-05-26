@@ -1,7 +1,7 @@
 package com.sprint.mission.monew.domain.interest.service;
 
 import com.sprint.mission.monew.domain.interest.dto.InterestDto;
-import com.sprint.mission.monew.domain.interest.dto.InterestRegisterRequest;
+import com.sprint.mission.monew.domain.interest.dto.InterestCreateRequest;
 import com.sprint.mission.monew.domain.interest.entity.Interest;
 import com.sprint.mission.monew.domain.interest.exception.InterestAlreadyExistsException;
 import com.sprint.mission.monew.domain.interest.mapper.InterestMapper;
@@ -21,7 +21,7 @@ public class InterestService {
   private final InterestMapper interestMapper;
 
   @Transactional
-  public InterestDto register(InterestRegisterRequest request, UUID requestUserId) {
+  public InterestDto create(InterestCreateRequest request, UUID requestUserId) {
     List<Interest> existingInterests = interestRepository.findAll();
     boolean hasSimilar = existingInterests.stream()
         .anyMatch(existing -> similarity(request.name(), existing.getName()) >= 0.8);

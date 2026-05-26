@@ -20,7 +20,7 @@ import lombok.NoArgsConstructor;
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
 public class Interest extends BaseUpdatableEntity {
 
-  @Column(nullable = false, length = 80)
+  @Column(nullable = false, length = 50)
   private String name;
 
   @ElementCollection(fetch = FetchType.LAZY)

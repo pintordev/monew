@@ -89,7 +89,7 @@ User {
 
 ---
 
-### `POST /api/users/login` — 로그인
+### `POST /api/auth/login` — 로그인
 
 **Request Body**
 ```json

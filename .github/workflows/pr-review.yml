@@ -58,22 +58,15 @@ jobs:
     steps:
       - uses: actions/checkout@v4
         with:
-          ref: ${{ github.event.pull_request.head.sha }}
+          ref: ${{ github.event.pull_request.base.sha }}
           fetch-depth: 0
 
       - name: Extract diff
         run: |
-          git fetch origin ${{ github.event.pull_request.base.ref }}
-          ACTION="${{ github.event.action }}"
-          BEFORE="${{ github.event.before }}"
-          AFTER="${{ github.event.after }}"
-          BASE="${{ github.event.pull_request.base.ref }}"
-
-          if [[ "$ACTION" == "synchronize" ]] && [[ "$BEFORE" != "0000000000000000000000000000000000000000" ]]; then
-            git diff "$BEFORE"..."$AFTER" > pr_diff.txt
-          else
-            git diff "origin/$BASE"...HEAD > pr_diff.txt
-          fi
+          BASE_SHA="${{ github.event.pull_request.base.sha }}"
+          HEAD_SHA="${{ github.event.pull_request.head.sha }}"
+          git fetch origin "$HEAD_SHA"
+          git diff "$BASE_SHA...$HEAD_SHA" > pr_diff.txt
 
           SIZE=$(wc -c < pr_diff.txt)
           if [[ "$SIZE" -gt 153600 ]]; then

@@ -42,8 +42,8 @@ CREATE TABLE IF NOT EXISTS interest_keywords
 (
     interest_id UUID         NOT NULL,
     keyword     VARCHAR(255) NOT NULL,
-    FOREIGN KEY (interest_id) REFERENCES interests (id) ON DELETE CASCADE,
-    UNIQUE (interest_id, keyword)
+    PRIMARY KEY (interest_id, keyword),
+    FOREIGN KEY (interest_id) REFERENCES interests (id) ON DELETE CASCADE
 );
 
 CREATE INDEX IF NOT EXISTS idx_interest_keywords_interest_id ON interest_keywords (interest_id);

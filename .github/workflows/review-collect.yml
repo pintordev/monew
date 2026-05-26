@@ -9,6 +9,7 @@ permissions:
 
 jobs:
   collect:
+    if: github.event.review.user.login != github.event.pull_request.user.login
     runs-on: ubuntu-latest
     steps:
       - name: Collect review metadata

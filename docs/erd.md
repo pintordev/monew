@@ -136,7 +136,7 @@ erDiagram
 ---
 
 ### interest_keywords
-`@ElementCollection` 매핑. 복합키 `(interest_id, keyword)`, 별도 PK 없음.
+`@ElementCollection` 매핑. 복합 PK `(interest_id, keyword)`.
 
 ---
 

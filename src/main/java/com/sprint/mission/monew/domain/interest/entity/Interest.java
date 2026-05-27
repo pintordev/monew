@@ -37,4 +37,8 @@ public class Interest extends BaseUpdatableEntity {
     interest.keywords = new ArrayList<>(keywords);
     return interest;
   }
+
+  public void updateKeywords(List<String> newKeywords) {
+    this.keywords = newKeywords;
+  }
 }

@@ -3,24 +3,34 @@ name: CI
 on:
   pull_request_target:
     branches: [dev, main]
-    paths-ignore:
-      - '**/*.md'
-      - 'docs/**'
-      - 'scripts/**'
-      - '.gitignore'
-      - '.coderabbit.yaml'
 
 concurrency:
   group: ci-${{ github.event.pull_request.number }}
   cancel-in-progress: true
 
-permissions:
-  contents: read
-  id-token: write
-
 jobs:
-  test:
+  filter:
     runs-on: ubuntu-latest
+    outputs:
+      src: ${{ steps.f.outputs.src }}
+    steps:
+      - uses: dorny/paths-filter@v3
+        id: f
+        with:
+          filters: |
+            src:
+              - '**/*.java'
+              - '**/*.gradle'
+              - 'src/**'
+
+  test:
+    needs: filter
+    if: needs.filter.outputs.src == 'true'
+    runs-on: ubuntu-latest
+
+    permissions:
+      contents: read
+      id-token: write
 
     steps:
       - name: Checkout code
@@ -69,3 +79,11 @@ jobs:
           token: ${{ secrets.CODECOV_TOKEN }}
           files: build/reports/jacoco/test/jacocoTestReport.xml
           fail_ci_if_error: true
+
+  skip:
+    needs: filter
+    if: needs.filter.outputs.src != 'true'
+    runs-on: ubuntu-latest
+    steps:
+      - name: CI skipped
+        run: echo "CI skipped — no code changes"

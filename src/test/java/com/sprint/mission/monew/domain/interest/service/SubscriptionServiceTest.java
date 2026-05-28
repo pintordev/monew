@@ -3,10 +3,13 @@ package com.sprint.mission.monew.domain.interest.service;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.BDDMockito.given;
 
+import com.sprint.mission.monew.domain.interest.entity.Interest;
 import com.sprint.mission.monew.domain.interest.exception.InterestNotFoundException;
 import com.sprint.mission.monew.domain.interest.repository.InterestRepository;
+import com.sprint.mission.monew.domain.user.exception.UserNotFoundException;
 import com.sprint.mission.monew.domain.interest.repository.SubscriptionRepository;
 import com.sprint.mission.monew.domain.user.repository.UserRepository;
+import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
 import org.junit.jupiter.api.BeforeEach;
@@ -55,6 +58,19 @@ class SubscriptionServiceTest {
       // when & then
       assertThatThrownBy(() -> subscriptionService.subscribe(interestId, userId))
           .isInstanceOf(InterestNotFoundException.class);
+    }
+
+    @Test
+    @DisplayName("존재하지 않는 사용자 구독 시 UserNotFoundException이 발생한다")
+    void 존재하지_않는_사용자_구독_시_UserNotFoundException이_발생한다() {
+      // given
+      Interest interest = Interest.create("인공지능", List.of("AI"));
+      given(interestRepository.findById(interestId)).willReturn(Optional.of(interest));
+      given(userRepository.findById(userId)).willReturn(Optional.empty());
+
+      // when & then
+      assertThatThrownBy(() -> subscriptionService.subscribe(interestId, userId))
+          .isInstanceOf(UserNotFoundException.class);
     }
   }
 }

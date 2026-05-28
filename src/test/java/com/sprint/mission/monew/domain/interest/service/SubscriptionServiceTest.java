@@ -4,6 +4,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.BDDMockito.given;
+import static org.mockito.BDDMockito.then;
 
 import com.sprint.mission.monew.domain.interest.dto.SubscriptionResponse;
 import com.sprint.mission.monew.domain.interest.entity.Interest;
@@ -106,7 +107,7 @@ class SubscriptionServiceTest {
       Interest interest = Interest.create("인공지능", List.of("AI"));
       User user = User.create("test@test.com", "테스터", "password123!");
       SubscriptionResponse expected = new SubscriptionResponse(
-          user.getId(), interest.getId(), "인공지능", List.of("AI"), 0L, null);
+          user.getId(), interest.getId(), "인공지능", List.of("AI"), 1L, null);
 
       given(interestRepository.findById(interestId)).willReturn(Optional.of(interest));
       given(userRepository.findById(userId)).willReturn(Optional.of(user));
@@ -120,8 +121,36 @@ class SubscriptionServiceTest {
       SubscriptionResponse result = subscriptionService.subscribe(interestId, userId);
 
       // then
-      assertThat(result.interestId()).isEqualTo(interest.getId());
+      assertThat(result.interestSubscriberCount()).isEqualTo(1L);
       assertThat(result.interestName()).isEqualTo("인공지능");
+    }
+
+    @Test
+    @DisplayName("정상 구독 시 interest의 subscriberCount가 1 증가한다")
+    void 정상_구독_시_interest의_subscriberCount가_1_증가한다() {
+      // given
+      Interest interest = Interest.create("인공지능", List.of("AI"));
+      User user = User.create("test@test.com", "테스터", "password123!");
+
+      given(interestRepository.findById(interestId)).willReturn(Optional.of(interest));
+      given(userRepository.findById(userId)).willReturn(Optional.of(user));
+      given(subscriptionRepository.existsByInterestIdAndUserId(interestId, userId))
+          .willReturn(false);
+      given(subscriptionRepository.save(any(Subscription.class)))
+          .willAnswer(inv -> inv.getArgument(0));
+      given(subscriptionMapper.toResponse(any(Subscription.class)))
+          .willAnswer(inv -> {
+            Subscription s = inv.getArgument(0);
+            return new SubscriptionResponse(
+                s.getId(), s.getInterest().getId(), s.getInterest().getName(),
+                List.of("AI"), s.getInterest().getSubscriberCount(), null);
+          });
+
+      // when
+      subscriptionService.subscribe(interestId, userId);
+
+      // then
+      assertThat(interest.getSubscriberCount()).isEqualTo(1L);
     }
   }
 }

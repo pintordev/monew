@@ -28,9 +28,14 @@ import org.mockito.junit.jupiter.MockitoExtension;
 @ExtendWith(MockitoExtension.class)
 class InterestServiceTest {
 
-  @InjectMocks InterestService interestService;
-  @Mock InterestRepository interestRepository;
-  @Mock InterestMapper interestMapper;
+  @InjectMocks
+  InterestService interestService;
+
+  @Mock
+  InterestRepository interestRepository;
+
+  @Mock
+  InterestMapper interestMapper;
 
   UUID requestUserId;
 

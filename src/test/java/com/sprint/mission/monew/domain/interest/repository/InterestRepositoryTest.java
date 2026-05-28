@@ -22,7 +22,8 @@ import org.springframework.test.context.ActiveProfiles;
 @Import(QuerydslConfig.class)
 class InterestRepositoryTest {
 
-  @Autowired InterestRepository interestRepository;
+  @Autowired
+  InterestRepository interestRepository;
 
   @BeforeEach
   void setUp() {

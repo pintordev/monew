@@ -2,7 +2,9 @@ package com.sprint.mission.monew.domain.interest.controller;
 
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.BDDMockito.given;
+import static org.mockito.BDDMockito.willThrow;
 import static org.mockito.Mockito.verifyNoInteractions;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.delete;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.patch;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
@@ -12,6 +14,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.sprint.mission.monew.domain.interest.dto.InterestCreateRequest;
 import com.sprint.mission.monew.domain.interest.dto.InterestResponse;
 import com.sprint.mission.monew.domain.interest.dto.InterestUpdateRequest;
+import com.sprint.mission.monew.domain.interest.exception.InterestNotFoundException;
 import com.sprint.mission.monew.domain.interest.service.InterestService;
 import java.util.List;
 import java.util.UUID;
@@ -20,8 +23,8 @@ import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
-import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.http.MediaType;
+import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.web.servlet.MockMvc;
 
 @WebMvcTest(InterestController.class)
@@ -124,6 +127,28 @@ class InterestControllerTest {
                   .content(objectMapper.writeValueAsString(request)))
           .andExpect(status().isOk())
           .andExpect(jsonPath("$.keywords[0]").value("자연어처리"));
+    }
+  }
+
+  @Nested
+  @DisplayName("DELETE /api/interests/{interestId} — 관심사 물리 삭제")
+  class HardDelete {
+
+    @Test
+    @DisplayName("존재하지 않는 관심사 삭제 시 404를 반환한다")
+    void 존재하지_않는_관심사_삭제_시_404를_반환한다() throws Exception {
+      // given
+      UUID interestId = UUID.randomUUID();
+      UUID requestUserId = UUID.randomUUID();
+      willThrow(InterestNotFoundException.withId(interestId))
+          .given(interestService).hardDelete(interestId, requestUserId);
+
+      // when & then
+      mockMvc
+          .perform(
+              delete("/api/interests/{interestId}", interestId)
+                  .header("Monew-Request-User-ID", requestUserId))
+          .andExpect(status().isNotFound());
     }
   }
 }

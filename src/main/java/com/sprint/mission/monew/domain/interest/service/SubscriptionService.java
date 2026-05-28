@@ -3,6 +3,7 @@ package com.sprint.mission.monew.domain.interest.service;
 import com.sprint.mission.monew.domain.interest.exception.InterestNotFoundException;
 import com.sprint.mission.monew.domain.interest.repository.InterestRepository;
 import com.sprint.mission.monew.domain.interest.repository.SubscriptionRepository;
+import com.sprint.mission.monew.domain.user.exception.UserNotFoundException;
 import com.sprint.mission.monew.domain.user.repository.UserRepository;
 import java.util.UUID;
 import lombok.RequiredArgsConstructor;
@@ -22,6 +23,8 @@ public class SubscriptionService {
   public Object subscribe(UUID interestId, UUID userId) {
     interestRepository.findById(interestId)
         .orElseThrow(() -> InterestNotFoundException.withId(interestId));
+    userRepository.findById(userId)
+        .orElseThrow(() -> UserNotFoundException.withId(userId));
     return null;
   }
 }

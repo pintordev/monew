@@ -32,7 +32,9 @@ class InterestTest {
       // then
       assertThat(interest.getId()).isNotNull();
       assertThat(interest.getName()).isEqualTo(name);
-      assertThat(interest.getKeywords()).containsExactlyElementsOf(keywords);
+      assertThat(interest.getKeywords())
+          .extracting(InterestKeyword::getKeyword)
+          .containsExactlyElementsOf(keywords);
       assertThat(interest.getSubscriberCount()).isZero();
     }
   }
@@ -58,7 +60,9 @@ class InterestTest {
       interest.updateKeywords(newKeywords);
 
       // then
-      assertThat(interest.getKeywords()).containsExactlyElementsOf(newKeywords);
+      assertThat(interest.getKeywords())
+          .extracting(InterestKeyword::getKeyword)
+          .containsExactlyElementsOf(newKeywords);
     }
   }
 }

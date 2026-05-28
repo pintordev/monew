@@ -2,7 +2,7 @@ package com.sprint.mission.monew.domain.interest.controller.api;
 
 import com.sprint.mission.monew.common.dto.ErrorResponse;
 import com.sprint.mission.monew.domain.interest.dto.InterestCreateRequest;
-import com.sprint.mission.monew.domain.interest.dto.InterestDto;
+import com.sprint.mission.monew.domain.interest.dto.InterestResponse;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.media.Content;
 import io.swagger.v3.oas.annotations.media.Schema;
@@ -23,7 +23,7 @@ public interface InterestApi {
     @ApiResponse(
         responseCode = "201",
         description = "등록 성공",
-        content = @Content(schema = @Schema(implementation = InterestDto.class))),
+        content = @Content(schema = @Schema(implementation = InterestResponse.class))),
     @ApiResponse(
         responseCode = "400",
         description = "잘못된 요청 (입력값 검증 실패)",
@@ -37,7 +37,7 @@ public interface InterestApi {
         description = "서버 내부 오류",
         content = @Content(schema = @Schema(implementation = ErrorResponse.class)))
   })
-  ResponseEntity<InterestDto> create(
+  ResponseEntity<InterestResponse> create(
       @Valid @RequestBody InterestCreateRequest request,
       @RequestHeader("Monew-Request-User-ID") UUID requestUserId);
 }

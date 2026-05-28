@@ -9,7 +9,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.sprint.mission.monew.domain.interest.dto.InterestCreateRequest;
-import com.sprint.mission.monew.domain.interest.dto.InterestDto;
+import com.sprint.mission.monew.domain.interest.dto.InterestResponse;
 import com.sprint.mission.monew.domain.interest.service.InterestService;
 import java.util.List;
 import java.util.UUID;
@@ -56,8 +56,8 @@ class InterestControllerTest {
       // given
       UUID requestUserId = UUID.randomUUID();
       InterestCreateRequest request = new InterestCreateRequest("인공지능", List.of("AI", "머신러닝"));
-      InterestDto response =
-          new InterestDto(UUID.randomUUID(), "인공지능", List.of("AI", "머신러닝"), 0L, false);
+      InterestResponse response =
+          new InterestResponse(UUID.randomUUID(), "인공지능", List.of("AI", "머신러닝"), 0L, false);
 
       given(interestService.create(any(InterestCreateRequest.class), any(UUID.class)))
           .willReturn(response);

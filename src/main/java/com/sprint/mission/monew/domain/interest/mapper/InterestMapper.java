@@ -1,6 +1,6 @@
 package com.sprint.mission.monew.domain.interest.mapper;
 
-import com.sprint.mission.monew.domain.interest.dto.InterestDto;
+import com.sprint.mission.monew.domain.interest.dto.InterestResponse;
 import com.sprint.mission.monew.domain.interest.entity.Interest;
 import org.mapstruct.Mapper;
 import org.mapstruct.Mapping;
@@ -9,5 +9,6 @@ import org.mapstruct.Mapping;
 public interface InterestMapper {
 
   @Mapping(target = "subscribedByMe", constant = "false")
-  InterestDto toResponse(Interest interest);
+  @Mapping(target = "keywords", expression = "java(interest.getKeywords().stream().map(k -> k.getKeyword()).collect(java.util.stream.Collectors.toList()))")
+  InterestResponse toResponse(Interest interest);
 }

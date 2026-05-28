@@ -2,7 +2,7 @@ package com.sprint.mission.monew.domain.interest.controller;
 
 import com.sprint.mission.monew.domain.interest.controller.api.InterestApi;
 import com.sprint.mission.monew.domain.interest.dto.InterestCreateRequest;
-import com.sprint.mission.monew.domain.interest.dto.InterestDto;
+import com.sprint.mission.monew.domain.interest.dto.InterestResponse;
 import com.sprint.mission.monew.domain.interest.service.InterestService;
 import jakarta.validation.Valid;
 import java.util.UUID;
@@ -24,7 +24,7 @@ public class InterestController implements InterestApi {
 
   @PostMapping
   @Override
-  public ResponseEntity<InterestDto> create(
+  public ResponseEntity<InterestResponse> create(
       @Valid @RequestBody InterestCreateRequest request,
       @RequestHeader("Monew-Request-User-ID") UUID requestUserId) {
     return ResponseEntity.status(HttpStatus.CREATED)

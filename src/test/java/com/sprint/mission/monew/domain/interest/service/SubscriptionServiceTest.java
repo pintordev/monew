@@ -1,0 +1,60 @@
+package com.sprint.mission.monew.domain.interest.service;
+
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
+import static org.mockito.BDDMockito.given;
+
+import com.sprint.mission.monew.domain.interest.exception.InterestNotFoundException;
+import com.sprint.mission.monew.domain.interest.repository.InterestRepository;
+import com.sprint.mission.monew.domain.interest.repository.SubscriptionRepository;
+import com.sprint.mission.monew.domain.user.repository.UserRepository;
+import java.util.Optional;
+import java.util.UUID;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.DisplayName;
+import org.junit.jupiter.api.Nested;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.InjectMocks;
+import org.mockito.Mock;
+import org.mockito.junit.jupiter.MockitoExtension;
+
+@ExtendWith(MockitoExtension.class)
+class SubscriptionServiceTest {
+
+  @InjectMocks
+  SubscriptionService subscriptionService;
+
+  @Mock
+  InterestRepository interestRepository;
+
+  @Mock
+  UserRepository userRepository;
+
+  @Mock
+  SubscriptionRepository subscriptionRepository;
+
+  UUID interestId;
+  UUID userId;
+
+  @BeforeEach
+  void setUp() {
+    interestId = UUID.randomUUID();
+    userId = UUID.randomUUID();
+  }
+
+  @Nested
+  @DisplayName("관심사 구독")
+  class Subscribe {
+
+    @Test
+    @DisplayName("존재하지 않는 관심사 구독 시 InterestNotFoundException이 발생한다")
+    void 존재하지_않는_관심사_구독_시_InterestNotFoundException이_발생한다() {
+      // given
+      given(interestRepository.findById(interestId)).willReturn(Optional.empty());
+
+      // when & then
+      assertThatThrownBy(() -> subscriptionService.subscribe(interestId, userId))
+          .isInstanceOf(InterestNotFoundException.class);
+    }
+  }
+}

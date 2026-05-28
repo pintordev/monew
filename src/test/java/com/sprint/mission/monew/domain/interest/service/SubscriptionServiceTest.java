@@ -113,7 +113,7 @@ class SubscriptionServiceTest {
       given(userRepository.findById(userId)).willReturn(Optional.of(user));
       given(subscriptionRepository.existsByInterestIdAndUserId(interestId, userId))
           .willReturn(false);
-      given(subscriptionRepository.save(any(Subscription.class)))
+      given(subscriptionRepository.saveAndFlush(any(Subscription.class)))
           .willAnswer(inv -> inv.getArgument(0));
       given(subscriptionMapper.toResponse(any(Subscription.class))).willReturn(expected);
 
@@ -136,7 +136,7 @@ class SubscriptionServiceTest {
       given(userRepository.findById(userId)).willReturn(Optional.of(user));
       given(subscriptionRepository.existsByInterestIdAndUserId(interestId, userId))
           .willReturn(false);
-      given(subscriptionRepository.save(any(Subscription.class)))
+      given(subscriptionRepository.saveAndFlush(any(Subscription.class)))
           .willAnswer(inv -> inv.getArgument(0));
       given(subscriptionMapper.toResponse(any(Subscription.class)))
           .willAnswer(inv -> {

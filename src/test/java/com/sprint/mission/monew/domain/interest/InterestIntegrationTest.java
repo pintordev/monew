@@ -50,14 +50,12 @@ class InterestIntegrationTest {
     void 유사한_관심사가_이미_존재하면_409를_반환한다() throws Exception {
       // given
       interestRepository.save(Interest.create("인공지능X", List.of("머신러닝")));
-
       InterestCreateRequest request = new InterestCreateRequest("인공지능", List.of("AI"));
 
       // when & then
       mockMvc
           .perform(
               post("/api/interests")
-                  .header("Monew-Request-User-ID", UUID.randomUUID())
                   .contentType(MediaType.APPLICATION_JSON)
                   .content(objectMapper.writeValueAsString(request)))
           .andExpect(status().isConflict())
@@ -74,7 +72,6 @@ class InterestIntegrationTest {
       mockMvc
           .perform(
               post("/api/interests")
-                  .header("Monew-Request-User-ID", UUID.randomUUID())
                   .contentType(MediaType.APPLICATION_JSON)
                   .content(objectMapper.writeValueAsString(request)))
           .andExpect(status().isCreated())
@@ -98,7 +95,6 @@ class InterestIntegrationTest {
       mockMvc
           .perform(
               patch("/api/interests/{id}", UUID.randomUUID())
-                  .header("Monew-Request-User-ID", UUID.randomUUID())
                   .contentType(MediaType.APPLICATION_JSON)
                   .content(objectMapper.writeValueAsString(request)))
           .andExpect(status().isNotFound())
@@ -116,7 +112,6 @@ class InterestIntegrationTest {
       mockMvc
           .perform(
               patch("/api/interests/{id}", interest.getId())
-                  .header("Monew-Request-User-ID", UUID.randomUUID())
                   .contentType(MediaType.APPLICATION_JSON)
                   .content(objectMapper.writeValueAsString(request)))
           .andExpect(status().isOk())
@@ -135,8 +130,7 @@ class InterestIntegrationTest {
       // when & then
       mockMvc
           .perform(
-              delete("/api/interests/{id}", UUID.randomUUID())
-                  .header("Monew-Request-User-ID", UUID.randomUUID()))
+              delete("/api/interests/{id}", UUID.randomUUID()))
           .andExpect(status().isNotFound())
           .andExpect(jsonPath("$.code").value("INTEREST_NOT_FOUND"));
     }
@@ -150,8 +144,7 @@ class InterestIntegrationTest {
       // when & then
       mockMvc
           .perform(
-              delete("/api/interests/{id}", interest.getId())
-                  .header("Monew-Request-User-ID", UUID.randomUUID()))
+              delete("/api/interests/{id}", interest.getId()))
           .andExpect(status().isNoContent());
 
       assertThat(interestRepository.findById(interest.getId())).isEmpty();

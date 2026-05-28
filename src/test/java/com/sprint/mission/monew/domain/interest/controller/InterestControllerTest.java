@@ -53,7 +53,6 @@ class InterestControllerTest {
       mockMvc
           .perform(
               post("/api/interests")
-                  .header("Monew-Request-User-ID", UUID.randomUUID())
                   .contentType(MediaType.APPLICATION_JSON)
                   .content(objectMapper.writeValueAsString(request)))
           .andExpect(status().isBadRequest());
@@ -64,19 +63,16 @@ class InterestControllerTest {
     @DisplayName("정상 요청이면 201과 InterestDto를 반환한다")
     void 정상_요청이면_201과_InterestDto를_반환한다() throws Exception {
       // given
-      UUID requestUserId = UUID.randomUUID();
       InterestCreateRequest request = new InterestCreateRequest("인공지능", List.of("AI", "머신러닝"));
       InterestResponse response =
           new InterestResponse(UUID.randomUUID(), "인공지능", List.of("AI", "머신러닝"), 0L, false);
 
-      given(interestService.create(any(InterestCreateRequest.class), any(UUID.class)))
-          .willReturn(response);
+      given(interestService.create(any(InterestCreateRequest.class))).willReturn(response);
 
       // when & then
       mockMvc
           .perform(
               post("/api/interests")
-                  .header("Monew-Request-User-ID", requestUserId)
                   .contentType(MediaType.APPLICATION_JSON)
                   .content(objectMapper.writeValueAsString(request)))
           .andExpect(status().isCreated())
@@ -98,7 +94,6 @@ class InterestControllerTest {
       mockMvc
           .perform(
               patch("/api/interests/{interestId}", UUID.randomUUID())
-                  .header("Monew-Request-User-ID", UUID.randomUUID())
                   .contentType(MediaType.APPLICATION_JSON)
                   .content(objectMapper.writeValueAsString(request)))
           .andExpect(status().isBadRequest());
@@ -110,19 +105,17 @@ class InterestControllerTest {
     void 정상_요청이면_200과_InterestResponse를_반환한다() throws Exception {
       // given
       UUID interestId = UUID.randomUUID();
-      UUID requestUserId = UUID.randomUUID();
       InterestUpdateRequest request = new InterestUpdateRequest(List.of("자연어처리", "GPT"));
       InterestResponse response =
           new InterestResponse(interestId, "인공지능", List.of("자연어처리", "GPT"), 0L, false);
 
-      given(interestService.updateKeywords(any(UUID.class), any(InterestUpdateRequest.class), any(UUID.class)))
+      given(interestService.updateKeywords(any(UUID.class), any(InterestUpdateRequest.class)))
           .willReturn(response);
 
       // when & then
       mockMvc
           .perform(
               patch("/api/interests/{interestId}", interestId)
-                  .header("Monew-Request-User-ID", requestUserId)
                   .contentType(MediaType.APPLICATION_JSON)
                   .content(objectMapper.writeValueAsString(request)))
           .andExpect(status().isOk())
@@ -139,30 +132,23 @@ class InterestControllerTest {
     void 존재하지_않는_관심사_삭제_시_404를_반환한다() throws Exception {
       // given
       UUID interestId = UUID.randomUUID();
-      UUID requestUserId = UUID.randomUUID();
       willThrow(InterestNotFoundException.withId(interestId))
-          .given(interestService).hardDelete(interestId, requestUserId);
+          .given(interestService).hardDelete(interestId);
 
       // when & then
       mockMvc
           .perform(
-              delete("/api/interests/{interestId}", interestId)
-                  .header("Monew-Request-User-ID", requestUserId))
+              delete("/api/interests/{interestId}", interestId))
           .andExpect(status().isNotFound());
     }
 
     @Test
     @DisplayName("정상 요청이면 204를 반환한다")
     void 정상_요청이면_204를_반환한다() throws Exception {
-      // given
-      UUID interestId = UUID.randomUUID();
-      UUID requestUserId = UUID.randomUUID();
-
       // when & then
       mockMvc
           .perform(
-              delete("/api/interests/{interestId}", interestId)
-                  .header("Monew-Request-User-ID", requestUserId))
+              delete("/api/interests/{interestId}", UUID.randomUUID()))
           .andExpect(status().isNoContent());
     }
   }

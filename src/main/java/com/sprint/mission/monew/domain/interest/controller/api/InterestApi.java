@@ -13,10 +13,8 @@ import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import java.util.UUID;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestHeader;
 
 @Tag(name = "Interest", description = "관심사 API")
 public interface InterestApi {
@@ -41,9 +39,7 @@ public interface InterestApi {
         content = @Content(schema = @Schema(implementation = ErrorResponse.class)))
   })
   ResponseEntity<InterestResponse> create(
-      @Valid @RequestBody InterestCreateRequest request,
-      @RequestHeader("Monew-Request-User-ID") UUID requestUserId);
-
+      @Valid @RequestBody InterestCreateRequest request);
 
   @Operation(summary = "관심사 정보 수정", description = "관심사의 키워드를 수정합니다.")
   @ApiResponses({
@@ -66,8 +62,7 @@ public interface InterestApi {
   })
   ResponseEntity<InterestResponse> updateKeywords(
       @PathVariable UUID id,
-      @Valid @RequestBody InterestUpdateRequest request,
-      @RequestHeader("Monew-Request-User-ID") UUID requestUserId);
+      @Valid @RequestBody InterestUpdateRequest request);
 
   @Operation(summary = "관심사 물리 삭제", description = "관심사를 물리적으로 삭제합니다.")
   @ApiResponses({
@@ -81,8 +76,6 @@ public interface InterestApi {
         description = "서버 내부 오류",
         content = @Content(schema = @Schema(implementation = ErrorResponse.class)))
   })
-  @DeleteMapping("{id}")
   ResponseEntity<Void> hardDelete(
-      @PathVariable UUID id,
-      @RequestHeader("Monew-Request-User-ID") UUID requestUserId);
+      @PathVariable UUID id);
 }

@@ -9,13 +9,13 @@ import static org.mockito.BDDMockito.then;
 import com.sprint.mission.monew.domain.interest.dto.InterestCreateRequest;
 import com.sprint.mission.monew.domain.interest.dto.InterestResponse;
 import com.sprint.mission.monew.domain.interest.dto.InterestUpdateRequest;
-import com.sprint.mission.monew.domain.interest.exception.InterestNotFoundException;
 import com.sprint.mission.monew.domain.interest.entity.Interest;
 import com.sprint.mission.monew.domain.interest.exception.InterestAlreadyExistsException;
-import java.util.Optional;
+import com.sprint.mission.monew.domain.interest.exception.InterestNotFoundException;
 import com.sprint.mission.monew.domain.interest.mapper.InterestMapper;
 import com.sprint.mission.monew.domain.interest.repository.InterestRepository;
 import java.util.List;
+import java.util.Optional;
 import java.util.UUID;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
@@ -38,13 +38,6 @@ class InterestServiceTest {
   @Mock
   InterestMapper interestMapper;
 
-  UUID requestUserId;
-
-  @BeforeEach
-  void setUp() {
-    requestUserId = UUID.randomUUID();
-  }
-
   @Nested
   @DisplayName("관심사 등록")
   class Register {
@@ -59,7 +52,7 @@ class InterestServiceTest {
       given(interestRepository.findAll()).willReturn(List.of(existing));
 
       // when & then
-      assertThatThrownBy(() -> interestService.create(request, requestUserId))
+      assertThatThrownBy(() -> interestService.create(request))
           .isInstanceOf(InterestAlreadyExistsException.class);
     }
 
@@ -77,7 +70,7 @@ class InterestServiceTest {
       given(interestMapper.toResponse(any(Interest.class))).willReturn(expectedDto);
 
       // when
-      InterestResponse result = interestService.create(request, requestUserId);
+      InterestResponse result = interestService.create(request);
 
       // then
       assertThat(result.name()).isEqualTo("인공지능");
@@ -105,7 +98,7 @@ class InterestServiceTest {
       given(interestRepository.findById(interestId)).willReturn(Optional.empty());
 
       // when & then
-      assertThatThrownBy(() -> interestService.updateKeywords(interestId, request, requestUserId))
+      assertThatThrownBy(() -> interestService.updateKeywords(interestId, request))
           .isInstanceOf(InterestNotFoundException.class);
     }
 
@@ -121,7 +114,7 @@ class InterestServiceTest {
       given(interestMapper.toResponse(interest)).willReturn(expected);
 
       // when
-      InterestResponse result = interestService.updateKeywords(interestId, request, requestUserId);
+      InterestResponse result = interestService.updateKeywords(interestId, request);
 
       // then
       assertThat(result.keywords()).containsExactlyElementsOf(request.keywords());
@@ -146,7 +139,7 @@ class InterestServiceTest {
       given(interestRepository.findById(interestId)).willReturn(Optional.empty());
 
       // when & then
-      assertThatThrownBy(() -> interestService.hardDelete(interestId, requestUserId))
+      assertThatThrownBy(() -> interestService.hardDelete(interestId))
           .isInstanceOf(InterestNotFoundException.class);
     }
 
@@ -158,7 +151,7 @@ class InterestServiceTest {
       given(interestRepository.findById(interestId)).willReturn(Optional.of(interest));
 
       // when
-      interestService.hardDelete(interestId, requestUserId);
+      interestService.hardDelete(interestId);
 
       // then
       then(interestRepository).should().delete(interest);

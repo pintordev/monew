@@ -12,7 +12,7 @@ public record InterestCreateRequest(
 
     @NotNull
     @Size(min = 1, max = 10)
-    List<@NotBlank String> keywords
+    List<@NotBlank @Size(max = 50) String> keywords
 ) {
 
 }

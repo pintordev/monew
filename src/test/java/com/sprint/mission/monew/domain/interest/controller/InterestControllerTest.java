@@ -96,5 +96,29 @@ class InterestControllerTest {
           .andExpect(status().isBadRequest());
       verifyNoInteractions(interestService);
     }
+
+    @Test
+    @DisplayName("정상 요청이면 200과 InterestResponse를 반환한다")
+    void 정상_요청이면_200과_InterestResponse를_반환한다() throws Exception {
+      // given
+      UUID interestId = UUID.randomUUID();
+      UUID requestUserId = UUID.randomUUID();
+      InterestUpdateRequest request = new InterestUpdateRequest(List.of("자연어처리", "GPT"));
+      InterestResponse response =
+          new InterestResponse(interestId, "인공지능", List.of("자연어처리", "GPT"), 0L, false);
+
+      given(interestService.updateKeywords(any(UUID.class), any(InterestUpdateRequest.class), any(UUID.class)))
+          .willReturn(response);
+
+      // when & then
+      mockMvc
+          .perform(
+              patch("/api/interests/{interestId}", interestId)
+                  .header("Monew-Request-User-ID", requestUserId)
+                  .contentType(MediaType.APPLICATION_JSON)
+                  .content(objectMapper.writeValueAsString(request)))
+          .andExpect(status().isOk())
+          .andExpect(jsonPath("$.keywords[0]").value("자연어처리"));
+    }
   }
 }

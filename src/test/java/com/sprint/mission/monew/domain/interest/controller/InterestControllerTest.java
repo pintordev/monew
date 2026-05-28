@@ -150,5 +150,20 @@ class InterestControllerTest {
                   .header("Monew-Request-User-ID", requestUserId))
           .andExpect(status().isNotFound());
     }
+
+    @Test
+    @DisplayName("정상 요청이면 204를 반환한다")
+    void 정상_요청이면_204를_반환한다() throws Exception {
+      // given
+      UUID interestId = UUID.randomUUID();
+      UUID requestUserId = UUID.randomUUID();
+
+      // when & then
+      mockMvc
+          .perform(
+              delete("/api/interests/{interestId}", interestId)
+                  .header("Monew-Request-User-ID", requestUserId))
+          .andExpect(status().isNoContent());
+    }
   }
 }

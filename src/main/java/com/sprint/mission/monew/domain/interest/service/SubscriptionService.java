@@ -13,6 +13,7 @@ import com.sprint.mission.monew.domain.user.exception.UserNotFoundException;
 import com.sprint.mission.monew.domain.user.repository.UserRepository;
 import java.util.UUID;
 import lombok.RequiredArgsConstructor;
+import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -35,8 +36,12 @@ public class SubscriptionService {
     if (subscriptionRepository.existsByInterestIdAndUserId(interestId, userId)) {
       throw SubscriptionAlreadyExistsException.of(interestId, userId);
     }
-    interest.increaseSubscriberCount();
-    Subscription saved = subscriptionRepository.save(Subscription.create(interest, user));
-    return subscriptionMapper.toResponse(saved);
+    try {
+      Subscription saved = subscriptionRepository.save(Subscription.create(interest, user));
+      interest.increaseSubscriberCount();
+      return subscriptionMapper.toResponse(saved);
+    } catch (DataIntegrityViolationException e) {
+      throw SubscriptionAlreadyExistsException.of(interestId, userId);
+    }
   }
 }

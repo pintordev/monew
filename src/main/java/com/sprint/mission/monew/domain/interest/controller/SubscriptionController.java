@@ -5,6 +5,7 @@ import com.sprint.mission.monew.domain.interest.dto.SubscriptionResponse;
 import com.sprint.mission.monew.domain.interest.service.SubscriptionService;
 import java.util.UUID;
 import lombok.RequiredArgsConstructor;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -20,10 +21,10 @@ public class SubscriptionController implements SubscriptionApi {
   private final SubscriptionService subscriptionService;
 
   @Override
-  @PostMapping("{id}/subscriptions")
+  @PostMapping("{interestId}/subscriptions")
   public ResponseEntity<SubscriptionResponse> subscribe(
-      @PathVariable UUID id,
+      @PathVariable UUID interestId,
       @RequestHeader("Monew-Request-User-ID") UUID userId) {
-    return ResponseEntity.ok(subscriptionService.subscribe(id, userId));
+    return ResponseEntity.status(HttpStatus.CREATED).body(subscriptionService.subscribe(interestId, userId));
   }
 }

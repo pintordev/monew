@@ -77,8 +77,8 @@ class SubscriptionControllerTest {
     }
 
     @Test
-    @DisplayName("정상 요청이면 200과 SubscriptionResponse를 반환한다")
-    void 정상_요청이면_200과_SubscriptionResponse를_반환한다() throws Exception {
+    @DisplayName("정상 요청이면 201과 SubscriptionResponse를 반환한다")
+    void 정상_요청이면_201과_SubscriptionResponse를_반환한다() throws Exception {
       // given
       UUID interestId = UUID.randomUUID();
       UUID userId = UUID.randomUUID();
@@ -91,7 +91,7 @@ class SubscriptionControllerTest {
       mockMvc
           .perform(post("/api/interests/{interestId}/subscriptions", interestId)
               .header("Monew-Request-User-ID", userId))
-          .andExpect(status().isOk())
+          .andExpect(status().isCreated())
           .andExpect(jsonPath("$.interestName").value("인공지능"))
           .andExpect(jsonPath("$.interestSubscriberCount").value(1));
     }

@@ -198,13 +198,13 @@ class InterestIntegrationTest {
     }
 
     @Test
-    @DisplayName("정상 구독 시 200과 SubscriptionResponse를 반환하고 subscriberCount가 증가한다")
-    void 정상_구독_시_200과_SubscriptionResponse를_반환하고_subscriberCount가_증가한다() throws Exception {
+    @DisplayName("정상 구독 시 201과 SubscriptionResponse를 반환하고 subscriberCount가 증가한다")
+    void 정상_구독_시_201과_SubscriptionResponse를_반환하고_subscriberCount가_증가한다() throws Exception {
       // when & then
       mockMvc
           .perform(post("/api/interests/{interestId}/subscriptions", interest.getId())
               .header("Monew-Request-User-ID", user.getId()))
-          .andExpect(status().isOk())
+          .andExpect(status().isCreated())
           .andExpect(jsonPath("$.interestId").value(interest.getId().toString()))
           .andExpect(jsonPath("$.interestName").value("인공지능"))
           .andExpect(jsonPath("$.interestSubscriberCount").value(1));

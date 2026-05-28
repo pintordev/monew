@@ -8,16 +8,12 @@ import static org.mockito.BDDMockito.then;
 import static org.mockito.Mockito.never;
 
 import com.sprint.mission.monew.domain.user.dto.UserCreateRequest;
-import com.sprint.mission.monew.domain.user.dto.UserLoginRequest;
 import com.sprint.mission.monew.domain.user.dto.UserResponse;
 import com.sprint.mission.monew.domain.user.entity.User;
 import com.sprint.mission.monew.domain.user.exception.UserEmailDuplicateException;
-import com.sprint.mission.monew.domain.user.exception.UserInvalidPasswordException;
-import com.sprint.mission.monew.domain.user.exception.UserNotFoundException;
 import com.sprint.mission.monew.domain.user.mapper.UserMapper;
 import com.sprint.mission.monew.domain.user.repository.UserRepository;
 import java.time.Instant;
-import java.util.Optional;
 import java.util.UUID;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;

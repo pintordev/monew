@@ -19,7 +19,7 @@ public interface SubscriptionApi {
   @Operation(summary = "관심사 구독", description = "관심사를 구독합니다.")
   @ApiResponses({
       @ApiResponse(
-          responseCode = "200",
+          responseCode = "201",
           description = "구독 성공",
           content = @Content(schema = @Schema(implementation = SubscriptionResponse.class))),
       @ApiResponse(

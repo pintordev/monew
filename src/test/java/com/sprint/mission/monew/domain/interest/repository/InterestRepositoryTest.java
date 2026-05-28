@@ -2,6 +2,7 @@ package com.sprint.mission.monew.domain.interest.repository;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
+import com.sprint.mission.monew.common.config.JpaConfig;
 import com.sprint.mission.monew.common.config.QuerydslConfig;
 import com.sprint.mission.monew.domain.interest.entity.Interest;
 import com.sprint.mission.monew.domain.interest.entity.InterestKeyword;
@@ -22,7 +23,7 @@ import org.springframework.test.context.ActiveProfiles;
 @DataJpaTest
 @ActiveProfiles("test")
 @AutoConfigureTestDatabase(replace = AutoConfigureTestDatabase.Replace.NONE)
-@Import(QuerydslConfig.class)
+@Import({JpaConfig.class, QuerydslConfig.class})
 class InterestRepositoryTest {
 
   @Autowired
@@ -91,6 +92,8 @@ class InterestRepositoryTest {
 
       // when — save 시 PC에 올라온 keyword 엔티티들에 cascade REMOVE가 전파된다
       interestRepository.deleteById(saved.getId());
+      em.flush();
+      em.clear();
 
       // then — REMOVED 상태의 엔티티는 em.find()에서 null 반환
       keywordIds.forEach(id ->

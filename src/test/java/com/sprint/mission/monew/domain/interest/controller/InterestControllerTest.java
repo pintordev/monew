@@ -3,6 +3,7 @@ package com.sprint.mission.monew.domain.interest.controller;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.BDDMockito.given;
 import static org.mockito.BDDMockito.willThrow;
+import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.verifyNoInteractions;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.delete;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.patch;
@@ -145,11 +146,15 @@ class InterestControllerTest {
     @Test
     @DisplayName("정상 요청이면 204를 반환한다")
     void 정상_요청이면_204를_반환한다() throws Exception {
+      UUID interestId = UUID.randomUUID();
+
       // when & then
       mockMvc
           .perform(
-              delete("/api/interests/{interestId}", UUID.randomUUID()))
+              delete("/api/interests/{interestId}", interestId))
           .andExpect(status().isNoContent());
+
+      verify(interestService).hardDelete(interestId);
     }
   }
 }

@@ -68,6 +68,10 @@ public interface InterestApi {
   @ApiResponses({
     @ApiResponse(responseCode = "204", description = "삭제 성공"),
     @ApiResponse(
+        responseCode = "400",
+        description = "잘못된 요청 (UUID 형식 오류)",
+        content = @Content(schema = @Schema(implementation = ErrorResponse.class))),
+    @ApiResponse(
         responseCode = "404",
         description = "관심사 정보 없음",
         content = @Content(schema = @Schema(implementation = ErrorResponse.class))),

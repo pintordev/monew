@@ -3,6 +3,7 @@ package com.sprint.mission.monew.domain.interest.controller;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.BDDMockito.given;
 import static org.mockito.Mockito.verifyNoInteractions;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.patch;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
@@ -10,6 +11,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.sprint.mission.monew.domain.interest.dto.InterestCreateRequest;
 import com.sprint.mission.monew.domain.interest.dto.InterestResponse;
+import com.sprint.mission.monew.domain.interest.dto.InterestUpdateRequest;
 import com.sprint.mission.monew.domain.interest.service.InterestService;
 import java.util.List;
 import java.util.UUID;
@@ -71,6 +73,28 @@ class InterestControllerTest {
                   .content(objectMapper.writeValueAsString(request)))
           .andExpect(status().isCreated())
           .andExpect(jsonPath("$.name").value("인공지능"));
+    }
+  }
+
+  @Nested
+  @DisplayName("PATCH /api/interests/{interestId} — 관심사 키워드 수정")
+  class UpdateKeywords {
+
+    @Test
+    @DisplayName("keywords가 null이면 400을 반환한다")
+    void keywords가_null이면_400을_반환한다() throws Exception {
+      // given
+      InterestUpdateRequest request = new InterestUpdateRequest(null);
+
+      // when & then
+      mockMvc
+          .perform(
+              patch("/api/interests/{interestId}", UUID.randomUUID())
+                  .header("Monew-Request-User-ID", UUID.randomUUID())
+                  .contentType(MediaType.APPLICATION_JSON)
+                  .content(objectMapper.writeValueAsString(request)))
+          .andExpect(status().isBadRequest());
+      verifyNoInteractions(interestService);
     }
   }
 }

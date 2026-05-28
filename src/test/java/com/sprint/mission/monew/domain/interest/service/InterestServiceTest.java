@@ -102,5 +102,23 @@ class InterestServiceTest {
       assertThatThrownBy(() -> interestService.updateKeywords(interestId, request, requestUserId))
           .isInstanceOf(InterestNotFoundException.class);
     }
+
+    @Test
+    @DisplayName("유효한 관심사 키워드 수정 시 InterestResponse를 반환한다")
+    void 유효한_관심사_키워드_수정_시_InterestResponse를_반환한다() {
+      // given
+      Interest interest = Interest.create("인공지능", List.of("AI"));
+      InterestResponse expected =
+          new InterestResponse(interest.getId(), "인공지능", List.of("자연어처리", "GPT"), 0L, false);
+
+      given(interestRepository.findById(interestId)).willReturn(Optional.of(interest));
+      given(interestMapper.toResponse(interest)).willReturn(expected);
+
+      // when
+      InterestResponse result = interestService.updateKeywords(interestId, request, requestUserId);
+
+      // then
+      assertThat(result.keywords()).containsExactlyElementsOf(request.keywords());
+    }
   }
 }

@@ -35,6 +35,7 @@ public class SubscriptionService {
     if (subscriptionRepository.existsByInterestIdAndUserId(interestId, userId)) {
       throw SubscriptionAlreadyExistsException.of(interestId, userId);
     }
+    interest.increaseSubscriberCount();
     Subscription saved = subscriptionRepository.save(Subscription.create(interest, user));
     return subscriptionMapper.toResponse(saved);
   }

@@ -126,4 +126,27 @@ class InterestServiceTest {
       assertThat(result.keywords()).containsExactlyElementsOf(request.keywords());
     }
   }
+
+  @Nested
+  @DisplayName("관심사 물리 삭제")
+  class HardDelete {
+
+    private UUID interestId;
+
+    @BeforeEach
+    void setUp() {
+      interestId = UUID.randomUUID();
+    }
+
+    @Test
+    @DisplayName("존재하지 않는 관심사 삭제 시 InterestNotFoundException이 발생한다")
+    void 존재하지_않는_관심사_삭제_시_InterestNotFoundException이_발생한다() {
+      // given
+      given(interestRepository.findById(interestId)).willReturn(Optional.empty());
+
+      // when & then
+      assertThatThrownBy(() -> interestService.hardDelete(interestId, requestUserId))
+          .isInstanceOf(InterestNotFoundException.class);
+    }
+  }
 }

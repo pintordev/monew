@@ -27,9 +27,14 @@ import org.springframework.test.web.servlet.MockMvc;
 @WebMvcTest(InterestController.class)
 class InterestControllerTest {
 
-  @Autowired MockMvc mockMvc;
-  @Autowired ObjectMapper objectMapper;
-  @MockitoBean InterestService interestService;
+  @Autowired
+  MockMvc mockMvc;
+
+  @Autowired
+  ObjectMapper objectMapper;
+
+  @MockitoBean
+  InterestService interestService;
 
   @Nested
   @DisplayName("POST /api/interests — 관심사 등록")

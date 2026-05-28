@@ -1,9 +1,14 @@
 package com.sprint.mission.monew.domain.interest.service;
 
+import com.sprint.mission.monew.domain.interest.dto.SubscriptionResponse;
+import com.sprint.mission.monew.domain.interest.entity.Interest;
+import com.sprint.mission.monew.domain.interest.entity.Subscription;
 import com.sprint.mission.monew.domain.interest.exception.InterestNotFoundException;
 import com.sprint.mission.monew.domain.interest.exception.SubscriptionAlreadyExistsException;
+import com.sprint.mission.monew.domain.interest.mapper.SubscriptionMapper;
 import com.sprint.mission.monew.domain.interest.repository.InterestRepository;
 import com.sprint.mission.monew.domain.interest.repository.SubscriptionRepository;
+import com.sprint.mission.monew.domain.user.entity.User;
 import com.sprint.mission.monew.domain.user.exception.UserNotFoundException;
 import com.sprint.mission.monew.domain.user.repository.UserRepository;
 import java.util.UUID;
@@ -19,16 +24,18 @@ public class SubscriptionService {
   private final InterestRepository interestRepository;
   private final UserRepository userRepository;
   private final SubscriptionRepository subscriptionRepository;
+  private final SubscriptionMapper subscriptionMapper;
 
   @Transactional
-  public Object subscribe(UUID interestId, UUID userId) {
-    interestRepository.findById(interestId)
+  public SubscriptionResponse subscribe(UUID interestId, UUID userId) {
+    Interest interest = interestRepository.findById(interestId)
         .orElseThrow(() -> InterestNotFoundException.withId(interestId));
-    userRepository.findById(userId)
+    User user = userRepository.findById(userId)
         .orElseThrow(() -> UserNotFoundException.withId(userId));
     if (subscriptionRepository.existsByInterestIdAndUserId(interestId, userId)) {
       throw SubscriptionAlreadyExistsException.of(interestId, userId);
     }
-    return null;
+    Subscription saved = subscriptionRepository.save(Subscription.create(interest, user));
+    return subscriptionMapper.toResponse(saved);
   }
 }

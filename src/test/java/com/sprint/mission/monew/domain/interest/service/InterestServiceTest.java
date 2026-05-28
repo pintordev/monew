@@ -7,8 +7,11 @@ import static org.mockito.BDDMockito.given;
 
 import com.sprint.mission.monew.domain.interest.dto.InterestCreateRequest;
 import com.sprint.mission.monew.domain.interest.dto.InterestResponse;
+import com.sprint.mission.monew.domain.interest.dto.InterestUpdateRequest;
+import com.sprint.mission.monew.domain.interest.exception.InterestNotFoundException;
 import com.sprint.mission.monew.domain.interest.entity.Interest;
 import com.sprint.mission.monew.domain.interest.exception.InterestAlreadyExistsException;
+import java.util.Optional;
 import com.sprint.mission.monew.domain.interest.mapper.InterestMapper;
 import com.sprint.mission.monew.domain.interest.repository.InterestRepository;
 import java.util.List;
@@ -73,6 +76,31 @@ class InterestServiceTest {
       // then
       assertThat(result.name()).isEqualTo("인공지능");
       assertThat(result.keywords()).containsExactlyInAnyOrderElementsOf(request.keywords());
+    }
+  }
+
+  @Nested
+  @DisplayName("관심사 키워드 수정")
+  class UpdateKeywords {
+
+    private UUID interestId;
+    private InterestUpdateRequest request;
+
+    @BeforeEach
+    void setUp() {
+      interestId = UUID.randomUUID();
+      request = new InterestUpdateRequest(List.of("자연어처리", "GPT"));
+    }
+
+    @Test
+    @DisplayName("존재하지 않는 관심사 수정 시 InterestNotFoundException이 발생한다")
+    void 존재하지_않는_관심사_수정_시_예외가_발생한다() {
+      // given
+      given(interestRepository.findById(interestId)).willReturn(Optional.empty());
+
+      // when & then
+      assertThatThrownBy(() -> interestService.updateKeywords(interestId, request, requestUserId))
+          .isInstanceOf(InterestNotFoundException.class);
     }
   }
 }

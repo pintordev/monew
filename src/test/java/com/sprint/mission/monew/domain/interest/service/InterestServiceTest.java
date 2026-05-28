@@ -4,6 +4,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.BDDMockito.given;
+import static org.mockito.BDDMockito.then;
 
 import com.sprint.mission.monew.domain.interest.dto.InterestCreateRequest;
 import com.sprint.mission.monew.domain.interest.dto.InterestResponse;
@@ -147,6 +148,20 @@ class InterestServiceTest {
       // when & then
       assertThatThrownBy(() -> interestService.hardDelete(interestId, requestUserId))
           .isInstanceOf(InterestNotFoundException.class);
+    }
+
+    @Test
+    @DisplayName("존재하는 관심사 삭제 시 interestRepository.delete()가 호출된다")
+    void 존재하는_관심사_삭제_시_repository_delete가_호출된다() {
+      // given
+      Interest interest = Interest.create("인공지능", List.of("AI"));
+      given(interestRepository.findById(interestId)).willReturn(Optional.of(interest));
+
+      // when
+      interestService.hardDelete(interestId, requestUserId);
+
+      // then
+      then(interestRepository).should().delete(interest);
     }
   }
 }

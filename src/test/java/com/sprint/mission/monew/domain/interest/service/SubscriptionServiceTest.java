@@ -5,7 +5,9 @@ import static org.mockito.BDDMockito.given;
 
 import com.sprint.mission.monew.domain.interest.entity.Interest;
 import com.sprint.mission.monew.domain.interest.exception.InterestNotFoundException;
+import com.sprint.mission.monew.domain.interest.exception.SubscriptionAlreadyExistsException;
 import com.sprint.mission.monew.domain.interest.repository.InterestRepository;
+import com.sprint.mission.monew.domain.user.entity.User;
 import com.sprint.mission.monew.domain.user.exception.UserNotFoundException;
 import com.sprint.mission.monew.domain.interest.repository.SubscriptionRepository;
 import com.sprint.mission.monew.domain.user.repository.UserRepository;
@@ -71,6 +73,22 @@ class SubscriptionServiceTest {
       // when & then
       assertThatThrownBy(() -> subscriptionService.subscribe(interestId, userId))
           .isInstanceOf(UserNotFoundException.class);
+    }
+
+    @Test
+    @DisplayName("이미 구독 중인 경우 SubscriptionAlreadyExistsException이 발생한다")
+    void 이미_구독_중인_경우_SubscriptionAlreadyExistsException이_발생한다() {
+      // given
+      Interest interest = Interest.create("인공지능", List.of("AI"));
+      User user = User.create("test@test.com", "테스터", "password123!");
+      given(interestRepository.findById(interestId)).willReturn(Optional.of(interest));
+      given(userRepository.findById(userId)).willReturn(Optional.of(user));
+      given(subscriptionRepository.existsByInterestIdAndUserId(interestId, userId))
+          .willReturn(true);
+
+      // when & then
+      assertThatThrownBy(() -> subscriptionService.subscribe(interestId, userId))
+          .isInstanceOf(SubscriptionAlreadyExistsException.class);
     }
   }
 }

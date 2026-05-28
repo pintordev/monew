@@ -7,6 +7,7 @@ import static org.mockito.BDDMockito.given;
 import static org.mockito.BDDMockito.then;
 
 import com.sprint.mission.monew.domain.interest.dto.SubscriptionResponse;
+import org.springframework.dao.DataIntegrityViolationException;
 import com.sprint.mission.monew.domain.interest.entity.Interest;
 import com.sprint.mission.monew.domain.interest.entity.Subscription;
 import com.sprint.mission.monew.domain.interest.exception.InterestNotFoundException;
@@ -94,6 +95,24 @@ class SubscriptionServiceTest {
       given(userRepository.findById(userId)).willReturn(Optional.of(user));
       given(subscriptionRepository.existsByInterestIdAndUserId(interestId, userId))
           .willReturn(true);
+
+      // when & then
+      assertThatThrownBy(() -> subscriptionService.subscribe(interestId, userId))
+          .isInstanceOf(SubscriptionAlreadyExistsException.class);
+    }
+
+    @Test
+    @DisplayName("저장 시 유니크 충돌이 나면 SubscriptionAlreadyExistsException으로 변환한다")
+    void 저장_유니크충돌_시_SubscriptionAlreadyExistsException으로_변환한다() {
+      // given
+      Interest interest = Interest.create("인공지능", List.of("AI"));
+      User user = User.create("test@test.com", "테스터", "password123!");
+      given(interestRepository.findById(interestId)).willReturn(Optional.of(interest));
+      given(userRepository.findById(userId)).willReturn(Optional.of(user));
+      given(subscriptionRepository.existsByInterestIdAndUserId(interestId, userId))
+          .willReturn(false);
+      given(subscriptionRepository.saveAndFlush(any(Subscription.class)))
+          .willThrow(new DataIntegrityViolationException("unique constraint"));
 
       // when & then
       assertThatThrownBy(() -> subscriptionService.subscribe(interestId, userId))

@@ -40,6 +40,6 @@ public class InterestController implements InterestApi {
       @PathVariable UUID id,
       @Valid @RequestBody InterestUpdateRequest request,
       @RequestHeader("Monew-Request-User-ID") UUID requestUserId) {
-    return null;
+    return ResponseEntity.ok(interestService.updateKeywords(id, request, requestUserId));
   }
 }

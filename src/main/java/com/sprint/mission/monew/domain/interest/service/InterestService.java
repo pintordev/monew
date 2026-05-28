@@ -37,8 +37,9 @@ public class InterestService {
 
   @Transactional
   public void hardDelete(UUID id, UUID requestUserId) {
-    interestRepository.findById(id)
+    Interest interest = interestRepository.findById(id)
         .orElseThrow(() -> InterestNotFoundException.withId(id));
+    interestRepository.delete(interest);
   }
 
   @Transactional

@@ -37,7 +37,7 @@ public class SubscriptionService {
       throw SubscriptionAlreadyExistsException.of(interestId, userId);
     }
     try {
-      Subscription saved = subscriptionRepository.save(Subscription.create(interest, user));
+      Subscription saved = subscriptionRepository.saveAndFlush(Subscription.create(interest, user));
       interest.increaseSubscriberCount();
       return subscriptionMapper.toResponse(saved);
     } catch (DataIntegrityViolationException e) {

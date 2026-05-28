@@ -1,11 +1,16 @@
 package com.sprint.mission.monew.domain.interest.service;
 
+import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
+import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.BDDMockito.given;
 
+import com.sprint.mission.monew.domain.interest.dto.SubscriptionResponse;
 import com.sprint.mission.monew.domain.interest.entity.Interest;
+import com.sprint.mission.monew.domain.interest.entity.Subscription;
 import com.sprint.mission.monew.domain.interest.exception.InterestNotFoundException;
 import com.sprint.mission.monew.domain.interest.exception.SubscriptionAlreadyExistsException;
+import com.sprint.mission.monew.domain.interest.mapper.SubscriptionMapper;
 import com.sprint.mission.monew.domain.interest.repository.InterestRepository;
 import com.sprint.mission.monew.domain.user.entity.User;
 import com.sprint.mission.monew.domain.user.exception.UserNotFoundException;
@@ -37,6 +42,9 @@ class SubscriptionServiceTest {
 
   @Mock
   SubscriptionRepository subscriptionRepository;
+
+  @Mock
+  SubscriptionMapper subscriptionMapper;
 
   UUID interestId;
   UUID userId;
@@ -89,6 +97,31 @@ class SubscriptionServiceTest {
       // when & then
       assertThatThrownBy(() -> subscriptionService.subscribe(interestId, userId))
           .isInstanceOf(SubscriptionAlreadyExistsException.class);
+    }
+
+    @Test
+    @DisplayName("정상 구독 시 SubscriptionResponse를 반환한다")
+    void 정상_구독_시_SubscriptionResponse를_반환한다() {
+      // given
+      Interest interest = Interest.create("인공지능", List.of("AI"));
+      User user = User.create("test@test.com", "테스터", "password123!");
+      SubscriptionResponse expected = new SubscriptionResponse(
+          user.getId(), interest.getId(), "인공지능", List.of("AI"), 0L, null);
+
+      given(interestRepository.findById(interestId)).willReturn(Optional.of(interest));
+      given(userRepository.findById(userId)).willReturn(Optional.of(user));
+      given(subscriptionRepository.existsByInterestIdAndUserId(interestId, userId))
+          .willReturn(false);
+      given(subscriptionRepository.save(any(Subscription.class)))
+          .willAnswer(inv -> inv.getArgument(0));
+      given(subscriptionMapper.toResponse(any(Subscription.class))).willReturn(expected);
+
+      // when
+      SubscriptionResponse result = subscriptionService.subscribe(interestId, userId);
+
+      // then
+      assertThat(result.interestId()).isEqualTo(interest.getId());
+      assertThat(result.interestName()).isEqualTo("인공지능");
     }
   }
 }

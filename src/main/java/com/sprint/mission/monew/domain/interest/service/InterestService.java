@@ -36,6 +36,12 @@ public class InterestService {
   }
 
   @Transactional
+  public void hardDelete(UUID id, UUID requestUserId) {
+    interestRepository.findById(id)
+        .orElseThrow(() -> InterestNotFoundException.withId(id));
+  }
+
+  @Transactional
   public InterestResponse updateKeywords(UUID id, InterestUpdateRequest request, UUID requestUserId) {
     Interest interest = interestRepository.findById(id)
         .orElseThrow(() -> InterestNotFoundException.withId(id));

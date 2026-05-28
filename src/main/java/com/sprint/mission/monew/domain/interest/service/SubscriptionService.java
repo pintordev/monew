@@ -1,6 +1,7 @@
 package com.sprint.mission.monew.domain.interest.service;
 
 import com.sprint.mission.monew.domain.interest.exception.InterestNotFoundException;
+import com.sprint.mission.monew.domain.interest.exception.SubscriptionAlreadyExistsException;
 import com.sprint.mission.monew.domain.interest.repository.InterestRepository;
 import com.sprint.mission.monew.domain.interest.repository.SubscriptionRepository;
 import com.sprint.mission.monew.domain.user.exception.UserNotFoundException;
@@ -25,6 +26,9 @@ public class SubscriptionService {
         .orElseThrow(() -> InterestNotFoundException.withId(interestId));
     userRepository.findById(userId)
         .orElseThrow(() -> UserNotFoundException.withId(userId));
+    if (subscriptionRepository.existsByInterestIdAndUserId(interestId, userId)) {
+      throw SubscriptionAlreadyExistsException.of(interestId, userId);
+    }
     return null;
   }
 }

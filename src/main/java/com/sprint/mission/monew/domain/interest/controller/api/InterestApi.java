@@ -13,6 +13,7 @@ import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import java.util.UUID;
 import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestHeader;
@@ -66,5 +67,22 @@ public interface InterestApi {
   ResponseEntity<InterestResponse> updateKeywords(
       @PathVariable UUID id,
       @Valid @RequestBody InterestUpdateRequest request,
+      @RequestHeader("Monew-Request-User-ID") UUID requestUserId);
+
+  @Operation(summary = "관심사 물리 삭제", description = "관심사를 물리적으로 삭제합니다.")
+  @ApiResponses({
+    @ApiResponse(responseCode = "204", description = "삭제 성공"),
+    @ApiResponse(
+        responseCode = "404",
+        description = "관심사 정보 없음",
+        content = @Content(schema = @Schema(implementation = ErrorResponse.class))),
+    @ApiResponse(
+        responseCode = "500",
+        description = "서버 내부 오류",
+        content = @Content(schema = @Schema(implementation = ErrorResponse.class)))
+  })
+  @DeleteMapping("{id}")
+  ResponseEntity<Void> hardDelete(
+      @PathVariable UUID id,
       @RequestHeader("Monew-Request-User-ID") UUID requestUserId);
 }

@@ -39,7 +39,8 @@ public class InterestService {
   public InterestResponse updateKeywords(UUID id, InterestUpdateRequest request, UUID requestUserId) {
     Interest interest = interestRepository.findById(id)
         .orElseThrow(() -> InterestNotFoundException.withId(id));
-    return null;
+    interest.updateKeywords(request.keywords());
+    return interestMapper.toResponse(interest);
   }
 
   private double similarity(String a, String b) {

@@ -44,4 +44,10 @@ public class SubscriptionService {
       throw SubscriptionAlreadyExistsException.of(interestId, userId);
     }
   }
+
+  @Transactional
+  public void unsubscribe(UUID interestId, UUID userId) {
+    Interest interest = interestRepository.findById(interestId)
+        .orElseThrow(() -> InterestNotFoundException.withId(interestId));
+  }
 }

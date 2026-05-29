@@ -19,7 +19,6 @@ import com.sprint.mission.monew.domain.interest.dto.InterestQueryCondition;
 import com.sprint.mission.monew.domain.interest.dto.InterestResponse;
 import com.sprint.mission.monew.domain.interest.entity.Interest;
 import com.sprint.mission.monew.domain.interest.entity.InterestKeyword;
-import com.sprint.mission.monew.domain.interest.entity.QInterestKeyword;
 import com.sprint.mission.monew.domain.interest.repository.querydsl.InterestCustomRepository;
 import java.time.Instant;
 import java.util.List;
@@ -38,7 +37,6 @@ public class InterestCustomRepositoryImpl implements InterestCustomRepository {
     List<Tuple> raw = queryFactory
         .selectDistinct(interest, subscription.id)
         .from(interest)
-        .leftJoin(interest.keywords, interestKeyword).fetchJoin()
         .leftJoin(subscription).on(
             subscription.interest.eq(interest).and(subscription.user.id.eq(userId)))
         .where(
@@ -92,12 +90,11 @@ public class InterestCustomRepositoryImpl implements InterestCustomRepository {
   }
 
   private BooleanExpression likeKeyword(String keyword) {
-    QInterestKeyword kwdSub = new QInterestKeyword("kwdSub");
     return JPAExpressions.selectOne()
-        .from(kwdSub)
+        .from(interestKeyword)
         .where(
-            kwdSub.interest.eq(interest),
-            kwdSub.keyword.containsIgnoreCase(keyword)
+            interestKeyword.interest.eq(interest),
+            interestKeyword.keyword.containsIgnoreCase(keyword)
         )
         .exists();
   }

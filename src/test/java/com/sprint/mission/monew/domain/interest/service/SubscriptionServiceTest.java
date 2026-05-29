@@ -86,6 +86,27 @@ class SubscriptionServiceTest {
       assertThatThrownBy(() -> subscriptionService.unsubscribe(interestId, userId))
           .isInstanceOf(SubscriptionNotFoundException.class);
     }
+
+    @Test
+    @DisplayName("정상 취소 시 delete가 호출되고 subscriberCount가 1 감소한다")
+    void 정상_취소_시_delete가_호출되고_subscriberCount가_1_감소한다() {
+      // given
+      Interest interest = Interest.create("인공지능", List.of("AI"));
+      interest.increaseSubscriberCount();
+      User user = User.create("test@test.com", "테스터", "password123!");
+      Subscription subscription = Subscription.create(interest, user);
+
+      given(interestRepository.findById(interestId)).willReturn(Optional.of(interest));
+      given(subscriptionRepository.findByInterestIdAndUserId(interestId, userId))
+          .willReturn(Optional.of(subscription));
+
+      // when
+      subscriptionService.unsubscribe(interestId, userId);
+
+      // then
+      then(subscriptionRepository).should().delete(subscription);
+      assertThat(interest.getSubscriberCount()).isEqualTo(0);
+    }
   }
 
   @Nested

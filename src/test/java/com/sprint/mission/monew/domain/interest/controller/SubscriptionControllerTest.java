@@ -77,6 +77,20 @@ class SubscriptionControllerTest {
           .andExpect(status().isNotFound())
           .andExpect(jsonPath("$.code").value("SUBSCRIPTION_NOT_FOUND"));
     }
+
+    @Test
+    @DisplayName("정상 취소 시 204를 반환한다")
+    void 정상_취소_시_204를_반환한다() throws Exception {
+      // given
+      UUID interestId = UUID.randomUUID();
+      UUID userId = UUID.randomUUID();
+
+      // when & then
+      mockMvc
+          .perform(delete("/api/interests/{interestId}/subscriptions", interestId)
+              .header("Monew-Request-User-ID", userId))
+          .andExpect(status().isNoContent());
+    }
   }
 
   @Nested

@@ -42,7 +42,7 @@ public interface SubscriptionApi {
   @Operation(summary = "관심사 구독 취소", description = "관심사를 구독을 취소합니다.")
   @ApiResponses({
       @ApiResponse(
-          responseCode = "200",
+          responseCode = "204",
           description = "구독 취소 성공"),
       @ApiResponse(
           responseCode = "404",

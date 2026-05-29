@@ -13,7 +13,6 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.sprint.mission.monew.common.dto.CursorPageResponse;
 import com.sprint.mission.monew.domain.interest.dto.InterestCreateRequest;
 import com.sprint.mission.monew.domain.interest.dto.InterestResponse;
 import com.sprint.mission.monew.domain.interest.dto.InterestUpdateRequest;
@@ -82,6 +81,19 @@ class InterestControllerTest {
                   .header("Monew-Request-User-ID", UUID.randomUUID())
                   .param("orderBy", "name")
                   .param("limit", "10"))
+          .andExpect(status().isBadRequest());
+    }
+
+    @Test
+    @DisplayName("limit이 없으면 400을 반환한다")
+    void limit이_없으면_400을_반환한다() throws Exception {
+      // when & then
+      mockMvc
+          .perform(
+              get("/api/interests")
+                  .header("Monew-Request-User-ID", UUID.randomUUID())
+                  .param("orderBy", "name")
+                  .param("direction", "ASC"))
           .andExpect(status().isBadRequest());
     }
   }

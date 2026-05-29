@@ -6,6 +6,7 @@ import java.util.Map;
 import java.util.stream.Collectors;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.catalina.connector.ClientAbortException;
+import org.springframework.beans.TypeMismatchException;
 import org.springframework.http.ResponseEntity;
 import org.springframework.http.converter.HttpMessageNotReadableException;
 import org.springframework.validation.FieldError;
@@ -76,10 +77,23 @@ public class GlobalExceptionHandler {
     Map<String, Object> details = e.getBindingResult().getFieldErrors().stream()
         .collect(Collectors.toMap(
             FieldError::getField,
-            fe -> fe.getDefaultMessage() != null ? fe.getDefaultMessage() : "invalid"
+            this::resolveFieldErrorMessage
         ));
     log.warn("[{}] {}", code.name(), details);
     return errorResponse(code, details, e);
+  }
+
+  private String resolveFieldErrorMessage(FieldError fe) {
+    if (fe.contains(TypeMismatchException.class)) {
+      Throwable cause = fe.unwrap(TypeMismatchException.class).getCause();
+      while (cause != null && cause.getCause() != null) {
+        cause = cause.getCause();
+      }
+      if (cause != null && cause.getMessage() != null) {
+        return cause.getMessage();
+      }
+    }
+    return fe.getDefaultMessage() != null ? fe.getDefaultMessage() : "invalid";
   }
 
   @ExceptionHandler(MonewException.class)

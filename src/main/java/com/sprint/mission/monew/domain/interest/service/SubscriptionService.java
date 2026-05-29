@@ -35,14 +35,14 @@ public class SubscriptionService {
     User user = userRepository.findById(userId)
         .orElseThrow(() -> UserNotFoundException.withId(userId));
     if (subscriptionRepository.existsByInterestIdAndUserId(interestId, userId)) {
-      throw SubscriptionAlreadyExistsException.of(interestId, userId);
+      throw SubscriptionAlreadyExistsException.withIds(interestId, userId);
     }
     try {
       Subscription saved = subscriptionRepository.saveAndFlush(Subscription.create(interest, user));
       interest.increaseSubscriberCount();
       return subscriptionMapper.toResponse(saved);
     } catch (DataIntegrityViolationException e) {
-      throw SubscriptionAlreadyExistsException.of(interestId, userId);
+      throw SubscriptionAlreadyExistsException.withIds(interestId, userId);
     }
   }
 

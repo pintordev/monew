@@ -128,7 +128,7 @@ class SubscriptionControllerTest {
       // given
       UUID interestId = UUID.randomUUID();
       UUID userId = UUID.randomUUID();
-      willThrow(SubscriptionAlreadyExistsException.of(interestId, userId))
+      willThrow(SubscriptionAlreadyExistsException.withIds(interestId, userId))
           .given(subscriptionService).subscribe(any(UUID.class), any(UUID.class));
 
       // when & then

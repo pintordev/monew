@@ -60,6 +60,23 @@ class SubscriptionControllerTest {
           .andExpect(status().isNotFound())
           .andExpect(jsonPath("$.code").value("INTEREST_NOT_FOUND"));
     }
+
+    @Test
+    @DisplayName("구독하지 않은 관심사 취소 시 404를 반환한다")
+    void 구독하지_않은_관심사_취소_시_404를_반환한다() throws Exception {
+      // given
+      UUID interestId = UUID.randomUUID();
+      UUID userId = UUID.randomUUID();
+      willThrow(SubscriptionNotFoundException.withIds(interestId, userId))
+          .given(subscriptionService).unsubscribe(any(UUID.class), any(UUID.class));
+
+      // when & then
+      mockMvc
+          .perform(delete("/api/interests/{interestId}/subscriptions", interestId)
+              .header("Monew-Request-User-ID", userId))
+          .andExpect(status().isNotFound())
+          .andExpect(jsonPath("$.code").value("SUBSCRIPTION_NOT_FOUND"));
+    }
   }
 
   @Nested

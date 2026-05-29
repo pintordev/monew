@@ -134,6 +134,26 @@ class InterestRepositoryTest {
       assertThat(result.content()).hasSize(1);
       assertThat(result.content().get(0).name()).isEqualTo("Basketball");
     }
+
+    @Test
+    @DisplayName("이름·키워드 둘 다 불일치하면 결과가 없다")
+    void 이름_키워드_둘_다_불일치하면_결과가_없다() {
+      // given
+      interestRepository.saveAll(List.of(
+          Interest.create("Soccer", List.of("football")),
+          Interest.create("Tennis", List.of("racket"))
+      ));
+      UUID userId = UUID.randomUUID();
+      InterestQueryCondition condition = new InterestQueryCondition(
+          "baseball", InterestOrderBy.NAME, SortDirection.DESC, null, null, 10);
+
+      // when
+      CursorPageResponse<InterestResponse> result = interestRepository.findInterests(condition, userId);
+
+      // then
+      assertThat(result.content()).isEmpty();
+      assertThat(result.hasNext()).isFalse();
+    }
   }
 
   @Nested

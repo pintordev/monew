@@ -181,6 +181,27 @@ class InterestControllerTest {
           .andExpect(jsonPath("$.hasNext").value(false))
           .andExpect(jsonPath("$.totalElements").value(0));
     }
+
+    @Test
+    @DisplayName("orderBy=subscriberCount이고 cursor가 유효한 숫자면 200을 반환한다")
+    void orderBy가_subscriberCount이고_cursor가_유효한_숫자면_200을_반환한다() throws Exception {
+      // given
+      CursorPageResponse<InterestResponse> response =
+          CursorPageResponse.of(List.of(), null, null, false, 0, 0L);
+      given(interestService.findAll(any(), any(UUID.class))).willReturn(response);
+
+      // when & then
+      mockMvc
+          .perform(
+              get("/api/interests")
+                  .header("Monew-Request-User-ID", UUID.randomUUID())
+                  .param("orderBy", "subscriberCount")
+                  .param("direction", "ASC")
+                  .param("limit", "10")
+                  .param("cursor", "5")
+                  .param("after", java.time.Instant.now().toString()))
+          .andExpect(status().isOk());
+    }
   }
 
   @Nested

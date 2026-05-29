@@ -4,6 +4,11 @@ import static org.assertj.core.api.Assertions.assertThat;
 
 import com.sprint.mission.monew.common.config.JpaConfig;
 import com.sprint.mission.monew.common.config.QuerydslConfig;
+import com.sprint.mission.monew.common.dto.CursorPageResponse;
+import com.sprint.mission.monew.common.dto.SortDirection;
+import com.sprint.mission.monew.domain.interest.dto.InterestOrderBy;
+import com.sprint.mission.monew.domain.interest.dto.InterestQueryCondition;
+import com.sprint.mission.monew.domain.interest.dto.InterestResponse;
 import com.sprint.mission.monew.domain.interest.entity.Interest;
 import com.sprint.mission.monew.domain.interest.entity.InterestKeyword;
 import java.util.List;
@@ -58,6 +63,34 @@ class InterestRepositoryTest {
       assertThat(found.get().getKeywords())
           .extracting(InterestKeyword::getKeyword)
           .containsExactlyInAnyOrderElementsOf(keywords);
+    }
+  }
+
+  @Nested
+  @DisplayName("관심사 목록 조회")
+  class FindInterests {
+
+    @Test
+    @DisplayName("검색어 없으면 전체 관심사를 name DESC로 반환한다")
+    void 검색어_없으면_전체_관심사를_name_DESC로_반환한다() {
+      // given
+      interestRepository.saveAll(List.of(
+          Interest.create("Celebrity", List.of("연예인")),
+          Interest.create("AI", List.of("인공지능")),
+          Interest.create("Baseball", List.of("야구"))
+      ));
+      UUID userId = UUID.randomUUID();
+      InterestQueryCondition condition = new InterestQueryCondition(
+          "", InterestOrderBy.NAME, SortDirection.DESC, null, null, 10);
+
+      // when
+      CursorPageResponse<InterestResponse> result = interestRepository.findInterests(condition, userId);
+
+      // then
+      assertThat(result.content()).hasSize(3);
+      assertThat(result.content()).extracting(InterestResponse::name)
+          .containsExactly("Celebrity", "Baseball", "AI");
+      assertThat(result.hasNext()).isFalse();
     }
   }
 

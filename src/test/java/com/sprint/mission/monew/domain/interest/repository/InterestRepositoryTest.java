@@ -113,6 +113,27 @@ class InterestRepositoryTest {
       assertThat(result.content()).hasSize(1);
       assertThat(result.content().get(0).name()).isEqualTo("Baseball");
     }
+
+    @Test
+    @DisplayName("검색어가 keywords에 부분일치하면 필터링된다")
+    void 검색어가_keywords에_부분일치하면_필터링된다() {
+      // given
+      interestRepository.saveAll(List.of(
+          Interest.create("Soccer", List.of("football", "goal")),
+          Interest.create("Basketball", List.of("court", "dunk")),
+          Interest.create("Tennis", List.of("racket", "serve"))
+      ));
+      UUID userId = UUID.randomUUID();
+      InterestQueryCondition condition = new InterestQueryCondition(
+          "court", InterestOrderBy.NAME, SortDirection.DESC, null, null, 10);
+
+      // when
+      CursorPageResponse<InterestResponse> result = interestRepository.findInterests(condition, userId);
+
+      // then
+      assertThat(result.content()).hasSize(1);
+      assertThat(result.content().get(0).name()).isEqualTo("Basketball");
+    }
   }
 
   @Nested

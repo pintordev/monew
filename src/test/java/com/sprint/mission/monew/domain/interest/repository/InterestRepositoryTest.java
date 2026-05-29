@@ -11,6 +11,8 @@ import com.sprint.mission.monew.domain.interest.dto.InterestQueryCondition;
 import com.sprint.mission.monew.domain.interest.dto.InterestResponse;
 import com.sprint.mission.monew.domain.interest.entity.Interest;
 import com.sprint.mission.monew.domain.interest.entity.InterestKeyword;
+import com.sprint.mission.monew.domain.interest.entity.Subscription;
+import com.sprint.mission.monew.domain.user.entity.User;
 import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
@@ -270,6 +272,30 @@ class InterestRepositoryTest {
       assertThat(result.content()).hasSize(1);
       assertThat(result.content().get(0).name()).isEqualTo("AI");
       assertThat(result.hasNext()).isFalse();
+    }
+
+    @Test
+    @DisplayName("구독한 관심사는 subscribedByMe=true, 미구독은 false로 반환된다")
+    void 구독한_관심사는_subscribedByMe가_true_미구독은_false로_반환된다() {
+      // given
+      Interest soccer = interestRepository.save(Interest.create("Soccer", List.of("football")));
+      Interest tennis = interestRepository.save(Interest.create("Tennis", List.of("racket")));
+
+      User user = em.persistAndFlush(User.create("test@test.com", "tester", "pass"));
+      em.persistAndFlush(Subscription.create(soccer, user));
+      em.clear();
+
+      InterestQueryCondition condition = new InterestQueryCondition(
+          "", InterestOrderBy.NAME, SortDirection.DESC, null, null, 10);
+
+      // when
+      CursorPageResponse<InterestResponse> result = interestRepository.findInterests(condition, user.getId());
+
+      // then — DESC: Tennis, Soccer
+      assertThat(result.content()).extracting(InterestResponse::name)
+          .containsExactly("Tennis", "Soccer");
+      assertThat(result.content().get(0).subscribedByMe()).isFalse(); // Tennis
+      assertThat(result.content().get(1).subscribedByMe()).isTrue();  // Soccer
     }
   }
 

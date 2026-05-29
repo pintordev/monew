@@ -96,6 +96,20 @@ class InterestControllerTest {
                   .param("direction", "ASC"))
           .andExpect(status().isBadRequest());
     }
+
+    @Test
+    @DisplayName("limit이 0이면 400을 반환한다")
+    void limit이_0이면_400을_반환한다() throws Exception {
+      // when & then
+      mockMvc
+          .perform(
+              get("/api/interests")
+                  .header("Monew-Request-User-ID", UUID.randomUUID())
+                  .param("orderBy", "name")
+                  .param("direction", "ASC")
+                  .param("limit", "0"))
+          .andExpect(status().isBadRequest());
+    }
   }
 
   @Nested

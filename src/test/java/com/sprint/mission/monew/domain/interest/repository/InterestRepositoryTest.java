@@ -275,6 +275,93 @@ class InterestRepositoryTest {
     }
 
     @Test
+    @DisplayName("cursor 기반으로 NAME ASC 다음 페이지를 조회한다")
+    void cursor_기반으로_NAME_ASC_다음_페이지를_조회한다() {
+      // given — ASC: AI, Baseball, Celebrity
+      interestRepository.saveAll(List.of(
+          Interest.create("Celebrity", List.of("연예인")),
+          Interest.create("Baseball", List.of("야구")),
+          Interest.create("AI", List.of("인공지능"))
+      ));
+      UUID userId = UUID.randomUUID();
+      CursorPageResponse<InterestResponse> firstPage = interestRepository.findInterests(
+          new InterestQueryCondition("", InterestOrderBy.NAME, SortDirection.ASC, null, null, 2),
+          userId);
+
+      // when
+      CursorPageResponse<InterestResponse> result = interestRepository.findInterests(
+          new InterestQueryCondition(
+              "", InterestOrderBy.NAME, SortDirection.ASC,
+              firstPage.nextCursor(), firstPage.nextAfter(), 2),
+          userId);
+
+      // then — 마지막 페이지: Celebrity
+      assertThat(result.content()).hasSize(1);
+      assertThat(result.content().get(0).name()).isEqualTo("Celebrity");
+      assertThat(result.hasNext()).isFalse();
+    }
+
+    @Test
+    @DisplayName("cursor 기반으로 SUBSCRIBER_COUNT DESC 다음 페이지를 조회한다")
+    void cursor_기반으로_SUBSCRIBER_COUNT_DESC_다음_페이지를_조회한다() {
+      // given — DESC: Soccer(2), Tennis(1), AI(0)
+      Interest soccer = Interest.create("Soccer", List.of("football"));
+      Interest tennis = Interest.create("Tennis", List.of("racket"));
+      Interest ai = Interest.create("AI", List.of("인공지능"));
+      soccer.increaseSubscriberCount();
+      soccer.increaseSubscriberCount();
+      tennis.increaseSubscriberCount();
+      interestRepository.saveAll(List.of(soccer, tennis, ai));
+      UUID userId = UUID.randomUUID();
+      CursorPageResponse<InterestResponse> firstPage = interestRepository.findInterests(
+          new InterestQueryCondition("", InterestOrderBy.SUBSCRIBER_COUNT, SortDirection.DESC,
+              null, null, 2),
+          userId);
+
+      // when
+      CursorPageResponse<InterestResponse> result = interestRepository.findInterests(
+          new InterestQueryCondition(
+              "", InterestOrderBy.SUBSCRIBER_COUNT, SortDirection.DESC,
+              firstPage.nextCursor(), firstPage.nextAfter(), 2),
+          userId);
+
+      // then — 마지막 페이지: AI
+      assertThat(result.content()).hasSize(1);
+      assertThat(result.content().get(0).name()).isEqualTo("AI");
+      assertThat(result.hasNext()).isFalse();
+    }
+
+    @Test
+    @DisplayName("cursor 기반으로 SUBSCRIBER_COUNT ASC 다음 페이지를 조회한다")
+    void cursor_기반으로_SUBSCRIBER_COUNT_ASC_다음_페이지를_조회한다() {
+      // given — ASC: AI(0), Tennis(1), Soccer(2)
+      Interest soccer = Interest.create("Soccer", List.of("football"));
+      Interest tennis = Interest.create("Tennis", List.of("racket"));
+      Interest ai = Interest.create("AI", List.of("인공지능"));
+      soccer.increaseSubscriberCount();
+      soccer.increaseSubscriberCount();
+      tennis.increaseSubscriberCount();
+      interestRepository.saveAll(List.of(soccer, tennis, ai));
+      UUID userId = UUID.randomUUID();
+      CursorPageResponse<InterestResponse> firstPage = interestRepository.findInterests(
+          new InterestQueryCondition("", InterestOrderBy.SUBSCRIBER_COUNT, SortDirection.ASC,
+              null, null, 2),
+          userId);
+
+      // when
+      CursorPageResponse<InterestResponse> result = interestRepository.findInterests(
+          new InterestQueryCondition(
+              "", InterestOrderBy.SUBSCRIBER_COUNT, SortDirection.ASC,
+              firstPage.nextCursor(), firstPage.nextAfter(), 2),
+          userId);
+
+      // then — 마지막 페이지: Soccer
+      assertThat(result.content()).hasSize(1);
+      assertThat(result.content().get(0).name()).isEqualTo("Soccer");
+      assertThat(result.hasNext()).isFalse();
+    }
+
+    @Test
     @DisplayName("구독한 관심사는 subscribedByMe=true, 미구독은 false로 반환된다")
     void 구독한_관심사는_subscribedByMe가_true_미구독은_false로_반환된다() {
       // given

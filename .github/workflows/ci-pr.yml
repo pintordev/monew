@@ -5,6 +5,8 @@ on:
     branches: [dev, main]
     types: [opened, synchronize, reopened]
 
+permissions: {}
+
 concurrency:
   group: ci-${{ github.event.pull_request.number || github.sha }}
   cancel-in-progress: true
@@ -22,6 +24,7 @@ jobs:
       - uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4
         with:
           fetch-depth: 2
+          persist-credentials: false
       - uses: dorny/paths-filter@d1c1ffe0248fe513906c8e24db8ea791d46f8590 # v3.0.3
         id: f
         with:
@@ -81,13 +84,6 @@ jobs:
 
       - name: Run tests and check coverage gate (80%)
         run: ./gradlew test jacocoTestCoverageVerification
-
-      - name: Upload coverage to Codecov
-        uses: codecov/codecov-action@75cd11691c0faa626561e295848008c8a7dddffe # v5
-        with:
-          token: ${{ secrets.CODECOV_TOKEN }}
-          files: build/reports/jacoco/test/jacocoTestReport.xml
-          fail_ci_if_error: true
 
       - name: Upload test & coverage reports
         if: always()

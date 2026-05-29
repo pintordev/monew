@@ -2,6 +2,7 @@ package com.sprint.mission.monew.domain.notification.service;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
+import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.BDDMockito.given;
 import static org.mockito.BDDMockito.then;
 
@@ -74,6 +75,29 @@ class NotificationServiceTest {
 
       // then
       assertThat(notification.getConfirmedAt()).isNotNull();
+    }
+  }
+
+  @Nested
+  @DisplayName("알림 전체 확인")
+  class ConfirmAll {
+
+    @Test
+    @DisplayName("repository.confirmAllByUserId에 위임한다")
+    void repository_confirmAllByUserId에_위임한다() {
+      // when
+      notificationService.confirmAll(userId);
+
+      // then
+      then(notificationRepository).should().confirmAllByUserId(any(UUID.class), any());
+    }
+
+    @Test
+    @DisplayName("알림이 없어도 예외 없이 동작한다")
+    void 알림이_없어도_예외_없이_동작한다() {
+      // when & then
+      org.junit.jupiter.api.Assertions.assertDoesNotThrow(
+          () -> notificationService.confirmAll(userId));
     }
   }
 

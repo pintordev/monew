@@ -10,6 +10,9 @@ import com.sprint.mission.monew.domain.notification.dto.NotificationResponse;
 import com.sprint.mission.monew.domain.notification.entity.Notification;
 import com.sprint.mission.monew.domain.notification.entity.ResourceType;
 
+import java.time.Instant;
+import java.time.temporal.ChronoUnit;
+import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
 import org.junit.jupiter.api.BeforeEach;
@@ -189,6 +192,57 @@ class NotificationRepositoryTest {
       assertThat(result).isPresent();
       assertThat(result.get().getId()).isEqualTo(notification.getId());
       assertThat(result.get().getUserId()).isEqualTo(userId);
+    }
+  }
+
+  @Nested
+  @DisplayName("confirmAllByUserId")
+  class ConfirmAllByUserId {
+
+    @Test
+    @DisplayName("미확인 알림 전체 확인 시 모두 confirmedAt이 설정된다")
+    void 미확인_알림_전체_확인_시_모두_confirmedAt이_설정된다() {
+      // given
+      notificationRepository.save(
+          Notification.create(userId, "알림1", ResourceType.INTEREST, UUID.randomUUID()));
+      notificationRepository.save(
+          Notification.create(userId, "알림2", ResourceType.INTEREST, UUID.randomUUID()));
+
+      // when
+      notificationRepository.confirmAllByUserId(userId, Instant.now());
+
+      // then
+      List<Notification> all = notificationRepository.findAll();
+      assertThat(all).allMatch(Notification::isConfirmed);
+    }
+
+    @Test
+    @DisplayName("미확인 알림이 0건이어도 예외 없이 동작한다")
+    void 미확인_알림이_0건이어도_예외_없이_동작한다() {
+      // given — 알림 없음
+
+      // when & then
+      org.junit.jupiter.api.Assertions.assertDoesNotThrow(
+          () -> notificationRepository.confirmAllByUserId(userId, Instant.now()));
+    }
+
+    @Test
+    @DisplayName("이미 확인된 알림은 confirmAll 호출 후에도 confirmedAt이 변경되지 않는다")
+    void 이미_확인된_알림은_confirmAll_호출_후에도_confirmedAt이_변경되지_않는다() {
+      // given
+      Notification confirmed = notificationRepository.save(
+          Notification.create(userId, "확인됨", ResourceType.INTEREST, UUID.randomUUID()));
+      confirmed.confirm();
+      notificationRepository.save(confirmed);
+
+      // when
+      Instant confirmAllTime = Instant.now();
+      notificationRepository.confirmAllByUserId(userId, confirmAllTime);
+
+      // then — confirmAll 이전에 확인된 알림이므로 confirmedAt이 confirmAllTime보다 이전이어야 함
+      Notification reloaded = notificationRepository.findById(confirmed.getId()).orElseThrow();
+      assertThat(reloaded.isConfirmed()).isTrue();
+      assertThat(reloaded.getConfirmedAt()).isBefore(confirmAllTime);
     }
   }
 

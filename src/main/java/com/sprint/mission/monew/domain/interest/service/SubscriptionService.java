@@ -53,5 +53,8 @@ public class SubscriptionService {
 
     Subscription subscription = subscriptionRepository.findByInterestIdAndUserId(interestId, userId)
         .orElseThrow(() -> SubscriptionNotFoundException.withIds(interestId, userId));
+
+    interest.decreaseSubscriberCount();
+    subscriptionRepository.delete(subscription);
   }
 }

@@ -96,7 +96,7 @@ class GlobalExceptionHandlerTest {
       for (FakeOrderBy v : values()) {
         if (v.name().equalsIgnoreCase(value)) return v;
       }
-      throw new IllegalArgumentException("지원하는 정렬 기준이 아닙니다.");
+      throw new InvalidOrderByException(value, FakeOrderBy.class, "지원하는 정렬 기준이 아닙니다.");
     }
   }
 
@@ -271,8 +271,8 @@ class GlobalExceptionHandlerTest {
   class ConverterTypeMismatch {
 
     @Test
-    @DisplayName("컨버터에서 IllegalArgumentException 발생 시 root cause 메시지를 details에 노출")
-    void 컨버터_IllegalArgumentException_root_cause_메시지_노출() throws Exception {
+    @DisplayName("컨버터에서 InvalidOrderByException 발생 시 root cause 메시지를 details에 노출")
+    void 컨버터_InvalidOrderByException_root_cause_메시지_노출() throws Exception {
       // given & when & then
       mockMvc
           .perform(get("/test/converter-mismatch")

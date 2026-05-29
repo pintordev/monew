@@ -7,13 +7,14 @@ import java.util.stream.Collectors;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.catalina.connector.ClientAbortException;
 import org.springframework.beans.TypeMismatchException;
+import org.springframework.core.NestedExceptionUtils;
 import org.springframework.http.ResponseEntity;
 import org.springframework.http.converter.HttpMessageNotReadableException;
 import org.springframework.validation.FieldError;
 import org.springframework.web.HttpRequestMethodNotSupportedException;
+import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.MissingRequestHeaderException;
 import org.springframework.web.bind.MissingServletRequestParameterException;
-import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
 import org.springframework.web.method.annotation.MethodArgumentTypeMismatchException;
@@ -83,18 +84,13 @@ public class GlobalExceptionHandler {
     return errorResponse(code, details, e);
   }
 
-  // 커스텀 컨버터 예외가 TypeMismatchException → ConversionFailedException → IllegalArgumentException
-  // 3단계로 래핑되므로 루트 cause까지 순회해 사용자 정의 메시지를 꺼낸다.
+  // GenericConversionService가 컨버터 예외를 ConversionFailedException으로 래핑하므로 root cause까지 탐색한다.
   private String resolveFieldErrorMessage(FieldError fe) {
     if (fe.contains(TypeMismatchException.class)) {
-      Throwable cause = fe.unwrap(TypeMismatchException.class).getCause();
-      while (cause != null && cause.getCause() != null) {
-        cause = cause.getCause();
-      }
-      if (cause instanceof IllegalArgumentException
-          && cause.getMessage() != null
-          && !cause.getMessage().isBlank()) {
-        return cause.getMessage();
+      Throwable root = NestedExceptionUtils.getMostSpecificCause(
+          fe.unwrap(TypeMismatchException.class));
+      if (root instanceof InvalidOrderByException ioe) {
+        return ioe.getMessage();
       }
     }
     return fe.getDefaultMessage() != null ? fe.getDefaultMessage() : "invalid";

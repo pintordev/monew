@@ -91,7 +91,9 @@ public class GlobalExceptionHandler {
       while (cause != null && cause.getCause() != null) {
         cause = cause.getCause();
       }
-      if (cause != null && cause.getMessage() != null) {
+      if (cause instanceof IllegalArgumentException
+          && cause.getMessage() != null
+          && !cause.getMessage().isBlank()) {
         return cause.getMessage();
       }
     }

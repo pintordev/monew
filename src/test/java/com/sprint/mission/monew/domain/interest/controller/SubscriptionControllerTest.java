@@ -3,6 +3,7 @@ package com.sprint.mission.monew.domain.interest.controller;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.BDDMockito.given;
 import static org.mockito.BDDMockito.willThrow;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.delete;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
@@ -10,6 +11,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 import com.sprint.mission.monew.domain.interest.dto.SubscriptionResponse;
 import com.sprint.mission.monew.domain.interest.exception.InterestNotFoundException;
 import com.sprint.mission.monew.domain.interest.exception.SubscriptionAlreadyExistsException;
+import com.sprint.mission.monew.domain.interest.exception.SubscriptionNotFoundException;
 import com.sprint.mission.monew.domain.interest.service.SubscriptionService;
 import java.util.List;
 import java.util.UUID;
@@ -29,6 +31,20 @@ class SubscriptionControllerTest {
 
   @MockitoBean
   SubscriptionService subscriptionService;
+
+  @Nested
+  @DisplayName("DELETE /api/interests/{interestId}/subscriptions — 관심사 구독 취소")
+  class Unsubscribe {
+
+    @Test
+    @DisplayName("Monew-Request-User-ID 헤더가 없으면 400을 반환한다")
+    void Monew_Request_User_ID_헤더가_없으면_400을_반환한다() throws Exception {
+      // when & then
+      mockMvc
+          .perform(delete("/api/interests/{interestId}/subscriptions", UUID.randomUUID()))
+          .andExpect(status().isBadRequest());
+    }
+  }
 
   @Nested
   @DisplayName("POST /api/interests/{interestId}/subscriptions — 관심사 구독")

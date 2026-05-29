@@ -13,6 +13,7 @@ import com.sprint.mission.monew.domain.comment.dto.response.CommentLikeResponse;
 import com.sprint.mission.monew.domain.comment.entity.Comment;
 import com.sprint.mission.monew.domain.comment.entity.CommentLike;
 import com.sprint.mission.monew.domain.comment.exception.CommentLikeAlreadyExistsException;
+import com.sprint.mission.monew.domain.comment.exception.CommentLikeNotFoundException;
 import com.sprint.mission.monew.domain.comment.exception.CommentNotFoundException;
 import com.sprint.mission.monew.domain.comment.mapper.CommentLikeMapper;
 import com.sprint.mission.monew.domain.comment.repository.CommentLikeRepository;
@@ -155,6 +156,37 @@ public class CommentLikeServiceTest {
       verify(commentRepository).increaseLikeCount(commentId);
       verify(commentLikeRepository).saveAndFlush(any(CommentLike.class));
       verify(commentLikeMapper).toResponse(any(CommentLike.class));
+    }
+  }
+
+  @Nested
+  @DisplayName("댓글 좋아요 취소하기")
+  class Service_CommentLike_Cancel {
+
+    @Test
+    @DisplayName("댓글 좋아요 취소 실패 - 좋아요가 존재하지 않음")
+    void 댓글_좋아요_취소_실패_좋아요_없음() {
+      // given
+      // commentId, userId는 BeforeEach에서 초기화
+
+      // when & then
+      assertThatThrownBy(
+          () -> commentLikeService.cancel(commentId, userId)).isInstanceOf(
+          CommentLikeNotFoundException.class);
+    }
+
+    @Test
+    @DisplayName("댓글 좋아요 취소 성공")
+    void 댓글_좋아요_취소_성공() {
+      // given
+      given(commentLikeRepository.deleteByUserIdAndCommentId(userId, commentId)).willReturn(1);
+
+      // when
+      commentLikeService.cancel(commentId, userId);
+
+      // then
+      verify(commentLikeRepository).deleteByUserIdAndCommentId(userId, commentId);
+      verify(commentRepository).decreaseLikeCount(commentId);
     }
   }
 

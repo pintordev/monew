@@ -33,4 +33,17 @@ public interface CommentLikeApi {
       @RequestHeader("Monew-Request-User-ID") @Parameter(description = "요청자 ID") UUID userId
   );
 
+  @Operation(summary = "댓글 좋아요 취소", description = "댓글 좋아요를 취소합니다.")
+  @ApiResponses(value = {
+      @ApiResponse(responseCode = "204", description = "댓글 좋아요 취소 성공"),
+      @ApiResponse(responseCode = "404", description = "좋아요 정보 없음",
+          content = @Content(schema = @Schema(implementation = ErrorResponse.class))),
+      @ApiResponse(responseCode = "500", description = "서버 내부 오류",
+          content = @Content(schema = @Schema(implementation = ErrorResponse.class)))
+  })
+  ResponseEntity<Void> cancelCommentLike(
+      @PathVariable @Parameter(description = "댓글 ID") UUID commentId,
+      @RequestHeader("Monew-Request-User-ID") @Parameter(description = "요청자 ID") UUID userId
+  );
+
 }

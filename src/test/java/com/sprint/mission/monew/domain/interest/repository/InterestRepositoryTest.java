@@ -175,6 +175,29 @@ class InterestRepositoryTest {
       assertThat(result.content()).extracting(InterestResponse::name)
           .containsExactly("AI", "Baseball", "Celebrity");
     }
+
+    @Test
+    @DisplayName("orderBy=subscriberCount, direction=DESC로 정렬된다")
+    void orderBy_subscriberCount_direction_DESC로_정렬된다() {
+      // given
+      Interest soccer = Interest.create("Soccer", List.of("football"));
+      Interest tennis = Interest.create("Tennis", List.of("racket"));
+      Interest ai = Interest.create("AI", List.of("인공지능"));
+      soccer.increaseSubscriberCount();
+      soccer.increaseSubscriberCount(); // 2
+      tennis.increaseSubscriberCount(); // 1
+      interestRepository.saveAll(List.of(soccer, tennis, ai));
+      UUID userId = UUID.randomUUID();
+      InterestQueryCondition condition = new InterestQueryCondition(
+          "", InterestOrderBy.SUBSCRIBER_COUNT, SortDirection.DESC, null, null, 10);
+
+      // when
+      CursorPageResponse<InterestResponse> result = interestRepository.findInterests(condition, userId);
+
+      // then
+      assertThat(result.content()).extracting(InterestResponse::name)
+          .containsExactly("Soccer", "Tennis", "AI");
+    }
   }
 
   @Nested

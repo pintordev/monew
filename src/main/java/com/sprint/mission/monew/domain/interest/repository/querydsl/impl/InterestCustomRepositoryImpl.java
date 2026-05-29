@@ -18,11 +18,12 @@ import com.sprint.mission.monew.domain.interest.dto.InterestOrderBy;
 import com.sprint.mission.monew.domain.interest.dto.InterestQueryCondition;
 import com.sprint.mission.monew.domain.interest.dto.InterestResponse;
 import com.sprint.mission.monew.domain.interest.entity.Interest;
-import com.sprint.mission.monew.domain.interest.entity.InterestKeyword;
 import com.sprint.mission.monew.domain.interest.repository.querydsl.InterestCustomRepository;
 import java.time.Instant;
 import java.util.List;
+import java.util.Map;
 import java.util.UUID;
+import java.util.stream.Collectors;
 import lombok.RequiredArgsConstructor;
 import org.springframework.util.StringUtils;
 
@@ -53,8 +54,9 @@ public class InterestCustomRepositoryImpl implements InterestCustomRepository {
     boolean hasNext = raw.size() > condition.limit();
     List<Tuple> content = hasNext ? raw.subList(0, condition.limit()) : raw;
 
+    Map<UUID, List<String>> keywordMap = fetchKeywordMap(content);
     List<InterestResponse> responses = content.stream()
-        .map(t -> toResponse(t.get(interest), t.get(subscription.id) != null))
+        .map(t -> toResponse(t.get(interest), t.get(subscription.id) != null, keywordMap))
         .toList();
 
     String nextCursor = hasNext
@@ -147,11 +149,31 @@ public class InterestCustomRepositoryImpl implements InterestCustomRepository {
     };
   }
 
-  private InterestResponse toResponse(Interest i, boolean subscribedByMe) {
+  private Map<UUID, List<String>> fetchKeywordMap(List<Tuple> content) {
+    List<UUID> ids = content.stream()
+        .map(t -> t.get(interest).getId())
+        .toList();
+    if (ids.isEmpty()) {
+      return Map.of();
+    }
+    return queryFactory
+        .select(interestKeyword.interest.id, interestKeyword.keyword)
+        .from(interestKeyword)
+        .where(interestKeyword.interest.id.in(ids))
+        .fetch()
+        .stream()
+        .collect(Collectors.groupingBy(
+            t -> t.get(interestKeyword.interest.id),
+            Collectors.mapping(t -> t.get(interestKeyword.keyword), Collectors.toList())
+        ));
+  }
+
+  private InterestResponse toResponse(Interest i, boolean subscribedByMe,
+      Map<UUID, List<String>> keywordMap) {
     return new InterestResponse(
         i.getId(),
         i.getName(),
-        i.getKeywords().stream().map(InterestKeyword::getKeyword).toList(),
+        keywordMap.getOrDefault(i.getId(), List.of()),
         i.getSubscriberCount(),
         subscribedByMe
     );

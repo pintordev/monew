@@ -71,6 +71,19 @@ class InterestControllerTest {
                   .param("limit", "10"))
           .andExpect(status().isBadRequest());
     }
+
+    @Test
+    @DisplayName("direction이 없으면 400을 반환한다")
+    void direction이_없으면_400을_반환한다() throws Exception {
+      // when & then
+      mockMvc
+          .perform(
+              get("/api/interests")
+                  .header("Monew-Request-User-ID", UUID.randomUUID())
+                  .param("orderBy", "name")
+                  .param("limit", "10"))
+          .andExpect(status().isBadRequest());
+    }
   }
 
   @Nested

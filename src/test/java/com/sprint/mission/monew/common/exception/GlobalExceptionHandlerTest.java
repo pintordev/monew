@@ -96,7 +96,7 @@ class GlobalExceptionHandlerTest {
       for (FakeOrderBy v : values()) {
         if (v.name().equalsIgnoreCase(value)) return v;
       }
-      throw new IllegalArgumentException("지원하지 않는 정렬 기준: " + value);
+      throw new IllegalArgumentException("지원하는 정렬 기준이 아닙니다.");
     }
   }
 
@@ -279,7 +279,7 @@ class GlobalExceptionHandlerTest {
               .param("orderBy", "invalid"))
           .andExpect(status().isBadRequest())
           .andExpect(jsonPath("$.code").value("VALIDATION_ERROR"))
-          .andExpect(jsonPath("$.details.orderBy").value("지원하지 않는 정렬 기준: invalid"));
+          .andExpect(jsonPath("$.details.orderBy").value("지원하는 정렬 기준이 아닙니다."));
     }
   }
 

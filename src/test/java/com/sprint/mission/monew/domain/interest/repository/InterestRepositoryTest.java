@@ -244,6 +244,33 @@ class InterestRepositoryTest {
       assertThat(result.nextCursor()).isEqualTo("Baseball");
       assertThat(result.nextAfter()).isNotNull();
     }
+
+    @Test
+    @DisplayName("cursor 기반으로 다음 페이지를 조회한다")
+    void cursor_기반으로_다음_페이지를_조회한다() {
+      // given
+      interestRepository.saveAll(List.of(
+          Interest.create("Celebrity", List.of("연예인")),
+          Interest.create("Baseball", List.of("야구")),
+          Interest.create("AI", List.of("인공지능"))
+      ));
+      UUID userId = UUID.randomUUID();
+      CursorPageResponse<InterestResponse> firstPage = interestRepository.findInterests(
+          new InterestQueryCondition("", InterestOrderBy.NAME, SortDirection.DESC, null, null, 2),
+          userId);
+
+      // when
+      CursorPageResponse<InterestResponse> result = interestRepository.findInterests(
+          new InterestQueryCondition(
+              "", InterestOrderBy.NAME, SortDirection.DESC,
+              firstPage.nextCursor(), firstPage.nextAfter(), 2),
+          userId);
+
+      // then
+      assertThat(result.content()).hasSize(1);
+      assertThat(result.content().get(0).name()).isEqualTo("AI");
+      assertThat(result.hasNext()).isFalse();
+    }
   }
 
   @Nested

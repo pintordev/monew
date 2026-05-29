@@ -221,6 +221,29 @@ class InterestRepositoryTest {
       assertThat(result.content()).extracting(InterestResponse::name)
           .containsExactly("AI", "Tennis", "Soccer");
     }
+
+    @Test
+    @DisplayName("limit 초과 시 hasNext=true + nextCursor/nextAfter 반환된다")
+    void limit_초과_시_hasNext_true_nextCursor_nextAfter_반환된다() {
+      // given
+      interestRepository.saveAll(List.of(
+          Interest.create("Celebrity", List.of("연예인")),
+          Interest.create("Baseball", List.of("야구")),
+          Interest.create("AI", List.of("인공지능"))
+      ));
+      UUID userId = UUID.randomUUID();
+      InterestQueryCondition condition = new InterestQueryCondition(
+          "", InterestOrderBy.NAME, SortDirection.DESC, null, null, 2);
+
+      // when
+      CursorPageResponse<InterestResponse> result = interestRepository.findInterests(condition, userId);
+
+      // then — DESC: Celebrity, Baseball, AI → 첫 페이지 마지막은 Baseball
+      assertThat(result.hasNext()).isTrue();
+      assertThat(result.content()).hasSize(2);
+      assertThat(result.nextCursor()).isEqualTo("Baseball");
+      assertThat(result.nextAfter()).isNotNull();
+    }
   }
 
   @Nested

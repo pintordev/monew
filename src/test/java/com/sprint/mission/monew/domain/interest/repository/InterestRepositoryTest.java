@@ -92,6 +92,27 @@ class InterestRepositoryTest {
           .containsExactly("Celebrity", "Baseball", "AI");
       assertThat(result.hasNext()).isFalse();
     }
+
+    @Test
+    @DisplayName("검색어가 관심사 이름에 부분일치하면 필터링된다")
+    void 검색어가_관심사_이름에_부분일치하면_필터링된다() {
+      // given
+      interestRepository.saveAll(List.of(
+          Interest.create("Baseball", List.of("bat", "pitcher")),
+          Interest.create("Basketball", List.of("court", "dunk")),
+          Interest.create("AI", List.of("machine learning"))
+      ));
+      UUID userId = UUID.randomUUID();
+      InterestQueryCondition condition = new InterestQueryCondition(
+          "Base", InterestOrderBy.NAME, SortDirection.DESC, null, null, 10);
+
+      // when
+      CursorPageResponse<InterestResponse> result = interestRepository.findInterests(condition, userId);
+
+      // then
+      assertThat(result.content()).hasSize(1);
+      assertThat(result.content().get(0).name()).isEqualTo("Baseball");
+    }
   }
 
   @Nested

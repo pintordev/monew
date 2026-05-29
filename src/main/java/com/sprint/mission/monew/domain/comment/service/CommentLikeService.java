@@ -4,6 +4,7 @@ import com.sprint.mission.monew.domain.comment.dto.response.CommentLikeResponse;
 import com.sprint.mission.monew.domain.comment.entity.Comment;
 import com.sprint.mission.monew.domain.comment.entity.CommentLike;
 import com.sprint.mission.monew.domain.comment.exception.CommentLikeAlreadyExistsException;
+import com.sprint.mission.monew.domain.comment.exception.CommentLikeNotFoundException;
 import com.sprint.mission.monew.domain.comment.exception.CommentNotFoundException;
 import com.sprint.mission.monew.domain.comment.mapper.CommentLikeMapper;
 import com.sprint.mission.monew.domain.comment.repository.CommentLikeRepository;
@@ -60,6 +61,24 @@ public class CommentLikeService {
         savedCommentLike.getId(), userId, commentId);
 
     return commentLikeMapper.toResponse(savedCommentLike);
+  }
+
+  @Transactional
+  public void cancel(UUID commentId, UUID userId) {
+    log.debug("[COMMENT_LIKE_CANCEL_START] 댓글 좋아요 취소 시작 - 요청자 ID={}, 댓글 ID={}",
+        userId, commentId);
+
+    int deleted = commentLikeRepository.deleteByUserIdAndCommentId(userId, commentId);
+
+    // 좋아요가 없는 경우(deleteByUserIdAndCommentId 조건에 맞는 행이 없어 삭제된 행이 없음)
+    if (deleted == 0) {
+      throw CommentLikeNotFoundException.withId(userId, commentId);
+    }
+
+    commentRepository.decreaseLikeCount(commentId);
+
+    log.info("[COMMENT_LIKE_CANCEL_SUCCESS] 댓글 좋아요 취소 성공 - 요청자 ID={}, 댓글 ID={}",
+        userId, commentId);
   }
 
 }

@@ -1,6 +1,7 @@
 package com.sprint.mission.monew.domain.comment;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.delete;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
@@ -20,7 +21,6 @@ import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.test.autoconfigure.orm.jpa.TestEntityManager;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.test.context.ActiveProfiles;
@@ -132,6 +132,47 @@ public class CommentLikeIntegrationTest {
       // LikeCount 증가 검증
       Comment foundComment = commentRepository.findById(comment.getId()).orElseThrow();
       assertThat(foundComment.getLikeCount()).isEqualTo(1);
+    }
+  }
+
+  @Nested
+  @DisplayName("댓글 좋아요 취소하기")
+  class Cancel {
+
+    @Test
+    @DisplayName("댓글 좋아요 취소 실패 - 좋아요가 존재하지 않음")
+    void 댓글_좋아요_취소_실패_좋아요_없음() throws Exception {
+      // given
+      UUID notExistCommentId = UUID.randomUUID();
+      UUID notExistUserId = UUID.randomUUID();
+
+      // when & then
+      mockMvc.perform(delete("/api/comments/{commentId}/comment-likes", notExistCommentId)
+              .header("Monew-Request-User-ID", notExistUserId))
+          .andExpect(status().isNotFound());
+    }
+
+    @Test
+    @DisplayName("댓글 좋아요 취소 성공")
+    void 댓글_좋아요_취소_성공() throws Exception {
+      // given
+      // comment(article, user)는 BeforeEach에서 초기화
+      commentLikeRepository.save(CommentLike.create(user, comment));
+      commentRepository.increaseLikeCount(comment.getId());
+
+      // when & then
+      mockMvc.perform(delete("/api/comments/{commentId}/comment-likes", comment.getId())
+              .header("Monew-Request-User-ID", user.getId()))
+          .andExpect(status().isNoContent());
+
+      // DB 검증
+      boolean exists = commentLikeRepository.existsByUserIdAndCommentId(user.getId(),
+          comment.getId());
+      assertThat(exists).isFalse();
+
+      // LikeCount 감소 검증
+      Comment foundComment = commentRepository.findById(comment.getId()).orElseThrow();
+      assertThat(foundComment.getLikeCount()).isEqualTo(0);
     }
   }
 

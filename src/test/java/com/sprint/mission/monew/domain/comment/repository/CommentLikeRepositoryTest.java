@@ -19,7 +19,6 @@ import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.jdbc.AutoConfigureTestDatabase;
 import org.springframework.boot.test.autoconfigure.orm.jpa.DataJpaTest;
-import org.springframework.boot.test.autoconfigure.orm.jpa.TestEntityManager;
 import org.springframework.context.annotation.Import;
 import org.springframework.test.context.ActiveProfiles;
 
@@ -93,7 +92,8 @@ public class CommentLikeRepositoryTest {
       // user, comment를 BeforeEach에서 초기화
 
       // when
-      boolean result = commentLikeRepository.existsByUserIdAndCommentId(user.getId(), comment.getId());
+      boolean result = commentLikeRepository.existsByUserIdAndCommentId(user.getId(),
+          comment.getId());
 
       // then
       assertThat(result).isFalse();
@@ -107,10 +107,29 @@ public class CommentLikeRepositoryTest {
       commentLikeRepository.save(CommentLike.create(user, comment));
 
       // when
-      boolean result = commentLikeRepository.existsByUserIdAndCommentId(user.getId(), comment.getId());
+      boolean result = commentLikeRepository.existsByUserIdAndCommentId(user.getId(),
+          comment.getId());
 
       // then
       assertThat(result).isTrue();
+    }
+  }
+
+  @Nested
+  @DisplayName("사용자ID와 댓글ID가 일치하는 행 삭제")
+  class DeleteByUserIdAndCommentId {
+
+    @Test
+    @DisplayName("사용자ID와 댓글ID가 일치하는 행 삭제 성공")
+    void 사용자ID와_댓글ID_행_삭제_성공() {
+      // given
+      commentLikeRepository.save(CommentLike.create(user, comment));
+
+      // when
+      int deletedCount = commentLikeRepository.deleteByUserIdAndCommentId(user.getId(), comment.getId());
+
+      // then
+      assertThat(deletedCount).isEqualTo(1);
     }
   }
 

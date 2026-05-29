@@ -58,6 +58,22 @@ class SubscriptionServiceTest {
   }
 
   @Nested
+  @DisplayName("관심사 구독 취소")
+  class Unsubscribe {
+
+    @Test
+    @DisplayName("존재하지 않는 관심사 구독 취소 시 InterestNotFoundException이 발생한다")
+    void 존재하지_않는_관심사_구독_취소_시_InterestNotFoundException이_발생한다() {
+      // given
+      given(interestRepository.findById(interestId)).willReturn(Optional.empty());
+
+      // when & then
+      assertThatThrownBy(() -> subscriptionService.unsubscribe(interestId, userId))
+          .isInstanceOf(InterestNotFoundException.class);
+    }
+  }
+
+  @Nested
   @DisplayName("관심사 구독")
   class Subscribe {
 

@@ -10,6 +10,7 @@ import com.sprint.mission.monew.domain.interest.service.InterestService;
 import jakarta.validation.Valid;
 import java.util.UUID;
 import lombok.RequiredArgsConstructor;
+import org.springdoc.core.annotations.ParameterObject;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.DeleteMapping;
@@ -34,7 +35,7 @@ public class InterestController implements InterestApi {
   @GetMapping
   public ResponseEntity<CursorPageResponse<InterestResponse>> findAll(
       @RequestHeader("Monew-Request-User-ID") UUID userId,
-      @ModelAttribute InterestQueryCondition condition) {
+      @Valid @ParameterObject @ModelAttribute InterestQueryCondition condition) {
     return ResponseEntity.ok(interestService.findAll(condition, userId));
   }
 

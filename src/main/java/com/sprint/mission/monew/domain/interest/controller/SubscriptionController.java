@@ -34,6 +34,7 @@ public class SubscriptionController implements SubscriptionApi {
   public ResponseEntity<Void> unsubscribe(
       @PathVariable UUID interestId,
       @RequestHeader("Monew-Request-User-ID") UUID userId) {
+    subscriptionService.unsubscribe(interestId, userId);
     return null;
   }
 }

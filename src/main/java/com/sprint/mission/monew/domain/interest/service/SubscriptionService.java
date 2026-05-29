@@ -5,6 +5,7 @@ import com.sprint.mission.monew.domain.interest.entity.Interest;
 import com.sprint.mission.monew.domain.interest.entity.Subscription;
 import com.sprint.mission.monew.domain.interest.exception.InterestNotFoundException;
 import com.sprint.mission.monew.domain.interest.exception.SubscriptionAlreadyExistsException;
+import com.sprint.mission.monew.domain.interest.exception.SubscriptionNotFoundException;
 import com.sprint.mission.monew.domain.interest.mapper.SubscriptionMapper;
 import com.sprint.mission.monew.domain.interest.repository.InterestRepository;
 import com.sprint.mission.monew.domain.interest.repository.SubscriptionRepository;
@@ -49,5 +50,8 @@ public class SubscriptionService {
   public void unsubscribe(UUID interestId, UUID userId) {
     Interest interest = interestRepository.findById(interestId)
         .orElseThrow(() -> InterestNotFoundException.withId(interestId));
+
+    Subscription subscription = subscriptionRepository.findByInterestIdAndUserId(interestId, userId)
+        .orElseThrow(() -> SubscriptionNotFoundException.withIds(interestId, userId));
   }
 }

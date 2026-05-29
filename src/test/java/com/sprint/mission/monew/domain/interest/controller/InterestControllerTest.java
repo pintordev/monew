@@ -6,12 +6,14 @@ import static org.mockito.BDDMockito.willThrow;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.verifyNoInteractions;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.delete;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.patch;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.sprint.mission.monew.common.dto.CursorPageResponse;
 import com.sprint.mission.monew.domain.interest.dto.InterestCreateRequest;
 import com.sprint.mission.monew.domain.interest.dto.InterestResponse;
 import com.sprint.mission.monew.domain.interest.dto.InterestUpdateRequest;
@@ -39,6 +41,24 @@ class InterestControllerTest {
 
   @MockitoBean
   InterestService interestService;
+
+  @Nested
+  @DisplayName("GET /api/interests — 관심사 목록 조회")
+  class FindAll {
+
+    @Test
+    @DisplayName("Monew-Request-User-ID 헤더가 없으면 400을 반환한다")
+    void Monew_Request_User_ID_헤더가_없으면_400을_반환한다() throws Exception {
+      // when & then
+      mockMvc
+          .perform(
+              get("/api/interests")
+                  .param("orderBy", "name")
+                  .param("direction", "ASC")
+                  .param("limit", "10"))
+          .andExpect(status().isBadRequest());
+    }
+  }
 
   @Nested
   @DisplayName("POST /api/interests — 관심사 등록")

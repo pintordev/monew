@@ -13,6 +13,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.sprint.mission.monew.common.dto.CursorPageResponse;
 import com.sprint.mission.monew.domain.interest.dto.InterestCreateRequest;
 import com.sprint.mission.monew.domain.interest.dto.InterestResponse;
 import com.sprint.mission.monew.domain.interest.dto.InterestUpdateRequest;
@@ -109,6 +110,27 @@ class InterestControllerTest {
                   .param("direction", "ASC")
                   .param("limit", "0"))
           .andExpect(status().isBadRequest());
+    }
+
+    @Test
+    @DisplayName("정상 요청이면 200과 CursorPageResponse를 반환한다")
+    void 정상_요청이면_200과_CursorPageResponse를_반환한다() throws Exception {
+      // given
+      CursorPageResponse<InterestResponse> response =
+          CursorPageResponse.of(List.of(), null, null, false, 0, 0L);
+      given(interestService.findAll(any(), any(UUID.class))).willReturn(response);
+
+      // when & then
+      mockMvc
+          .perform(
+              get("/api/interests")
+                  .header("Monew-Request-User-ID", UUID.randomUUID())
+                  .param("orderBy", "name")
+                  .param("direction", "ASC")
+                  .param("limit", "10"))
+          .andExpect(status().isOk())
+          .andExpect(jsonPath("$.hasNext").value(false))
+          .andExpect(jsonPath("$.totalElements").value(0));
     }
   }
 

@@ -19,4 +19,17 @@ public record InterestQueryCondition(
   public boolean isCursorAndAfterConsistent() {
     return (cursor == null) == (after == null);
   }
+
+  @AssertTrue(message = "subscriberCount 기준 커서는 숫자여야 합니다")
+  public boolean isCursorFormatValidForOrderBy() {
+    if (cursor == null || orderBy != InterestOrderBy.SUBSCRIBER_COUNT) {
+      return true;
+    }
+    try {
+      Long.valueOf(cursor);
+      return true;
+    } catch (NumberFormatException e) {
+      return false;
+    }
+  }
 }

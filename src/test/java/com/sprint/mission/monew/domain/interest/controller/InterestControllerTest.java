@@ -129,6 +129,22 @@ class InterestControllerTest {
     }
 
     @Test
+    @DisplayName("after만 있고 cursor가 없으면 400을 반환한다")
+    void after만_있고_cursor가_없으면_400을_반환한다() throws Exception {
+      // when & then
+      mockMvc
+          .perform(
+              get("/api/interests")
+                  .header("Monew-Request-User-ID", UUID.randomUUID())
+                  .param("orderBy", "name")
+                  .param("direction", "ASC")
+                  .param("limit", "10")
+                  .param("after", java.time.Instant.now().toString()))
+          .andExpect(status().isBadRequest());
+      verifyNoInteractions(interestService);
+    }
+
+    @Test
     @DisplayName("정상 요청이면 200과 CursorPageResponse를 반환한다")
     void 정상_요청이면_200과_CursorPageResponse를_반환한다() throws Exception {
       // given

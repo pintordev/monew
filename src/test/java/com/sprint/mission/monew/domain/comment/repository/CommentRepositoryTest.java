@@ -3,6 +3,7 @@ package com.sprint.mission.monew.domain.comment.repository;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
+import com.sprint.mission.monew.common.config.JpaConfig;
 import com.sprint.mission.monew.common.config.QuerydslConfig;
 import com.sprint.mission.monew.domain.article.entity.Article;
 import com.sprint.mission.monew.domain.article.entity.ArticleSource;
@@ -20,13 +21,14 @@ import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.jdbc.AutoConfigureTestDatabase;
 import org.springframework.boot.test.autoconfigure.orm.jpa.DataJpaTest;
+import org.springframework.boot.test.autoconfigure.orm.jpa.TestEntityManager;
 import org.springframework.context.annotation.Import;
 import org.springframework.test.context.ActiveProfiles;
 
 @DataJpaTest
 @ActiveProfiles("test")
 @AutoConfigureTestDatabase(replace = AutoConfigureTestDatabase.Replace.NONE)
-@Import(QuerydslConfig.class)
+@Import({JpaConfig.class, QuerydslConfig.class})
 public class CommentRepositoryTest {
 
   @Autowired
@@ -37,6 +39,9 @@ public class CommentRepositoryTest {
 
   @Autowired
   private UserRepository userRepository;
+
+  @Autowired
+  private TestEntityManager testEntityManager;
 
   private Article article;
   private User user;
@@ -131,5 +136,30 @@ public class CommentRepositoryTest {
       // then
       assertThat(result).isEmpty();
     }
+  }
+
+  @Nested
+  @DisplayName("increaseLikeCount() 테스트")
+  class IncreaseLikeCount {
+
+    @Test
+    @DisplayName("댓글 좋아요 +1 증가 성공")
+    void 댓글_좋아요_1_증가_성공() {
+      // given
+      Comment savedComment = commentRepository.save(comment);
+      Comment before = commentRepository.findById(savedComment.getId()).orElseThrow();
+      assertThat(before.getLikeCount()).isEqualTo(0);
+
+      // when
+      commentRepository.increaseLikeCount(comment.getId());
+
+      testEntityManager.flush();
+      testEntityManager.clear();
+
+      // then
+      Comment after = commentRepository.findById(savedComment.getId()).orElseThrow();
+      assertThat(after.getLikeCount()).isEqualTo(1);
+    }
+
   }
 }

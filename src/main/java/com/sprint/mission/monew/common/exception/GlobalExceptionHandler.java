@@ -83,6 +83,8 @@ public class GlobalExceptionHandler {
     return errorResponse(code, details, e);
   }
 
+  // 커스텀 컨버터 예외가 TypeMismatchException → ConversionFailedException → IllegalArgumentException
+  // 3단계로 래핑되므로 루트 cause까지 순회해 사용자 정의 메시지를 꺼낸다.
   private String resolveFieldErrorMessage(FieldError fe) {
     if (fe.contains(TypeMismatchException.class)) {
       Throwable cause = fe.unwrap(TypeMismatchException.class).getCause();

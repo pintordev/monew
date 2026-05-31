@@ -17,6 +17,8 @@ jobs:
   build-and-push:
     if: github.event.repository.fork == false
     runs-on: ubuntu-latest
+    outputs:
+      image_tag: ${{ steps.tag.outputs.tag }}
 
     steps:
       - name: Checkout code
@@ -47,16 +49,37 @@ jobs:
             | docker login --username AWS --password-stdin public.ecr.aws
 
       - name: Build and push Docker image
+        id: tag
         run: |
           IMAGE_URI=${{ vars.ECR_REPOSITORY_URI }}
-          docker build -t $IMAGE_URI:${{ github.sha }} .
-          docker push $IMAGE_URI:${{ github.sha }}
+          SHORT_SHA=${GITHUB_SHA::8}
           if [ "${GITHUB_REF_NAME}" = "main" ]; then
-            docker tag $IMAGE_URI:${{ github.sha }} $IMAGE_URI:latest
-            docker push $IMAGE_URI:latest
+            TAG="latest-${SHORT_SHA}"
           else
-            docker tag $IMAGE_URI:${{ github.sha }} $IMAGE_URI:staging
-            docker push $IMAGE_URI:staging
+            TAG="staging-${SHORT_SHA}"
+          fi
+          docker build -t $IMAGE_URI:$TAG .
+          docker push $IMAGE_URI:$TAG
+          echo "tag=$TAG" >> $GITHUB_OUTPUT
+          echo "REPO_NAME=$(echo $IMAGE_URI | awk -F'/' '{print $NF}')" >> $GITHUB_ENV
+
+      - name: Clean up old ECR images (keep latest 2)
+        run: |
+          IMAGES=$(aws ecr-public describe-images \
+            --repository-name $REPO_NAME \
+            --region us-east-1 \
+            --query 'sort_by(imageDetails, &imagePushedAt)[*].imageDigest' \
+            --output json)
+
+          TOTAL=$(echo $IMAGES | jq 'length')
+          DELETE_COUNT=$((TOTAL - 2))
+
+          if [ $DELETE_COUNT -gt 0 ]; then
+            IMAGE_IDS=$(echo $IMAGES | jq "[.[0:$DELETE_COUNT] | .[] | {imageDigest:.}]")
+            aws ecr-public batch-delete-image \
+              --repository-name $REPO_NAME \
+              --region us-east-1 \
+              --image-ids "$IMAGE_IDS"
           fi
 
   # ════ Job 2: Deploy to ECS ════════════════════════════════════
@@ -76,7 +99,7 @@ jobs:
 
       - name: Register new task definition revision
         run: |
-          NEW_IMAGE=${{ vars.ECR_REPOSITORY_URI }}:${{ github.sha }}
+          NEW_IMAGE=${{ vars.ECR_REPOSITORY_URI }}:${{ needs.build-and-push.outputs.image_tag }}
           ENV_FILE_ARN="arn:aws:s3:::${{ secrets.AWS_S3_BUCKET }}/config/monew.env"
 
           TASK_DEF=$(aws ecs describe-task-definition \

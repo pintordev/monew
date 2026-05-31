@@ -15,6 +15,7 @@ permissions:
 jobs:
   # ════ Job 1: Build and push Docker image ══════════════════════
   build-and-push:
+    if: github.event.repository.fork == false
     runs-on: ubuntu-latest
 
     steps:

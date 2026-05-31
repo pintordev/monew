@@ -13,6 +13,7 @@ concurrency:
 jobs:
   filter:
     name: Filter changed files
+    if: github.event.repository.fork == false
     runs-on: ubuntu-latest
     permissions:
       contents: read

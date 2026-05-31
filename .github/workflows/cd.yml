@@ -37,16 +37,11 @@ jobs:
           aws s3 cp s3://${{ secrets.AWS_S3_BUCKET }}/config/prod/application.yaml src/main/resources/application.yaml
           aws s3 cp s3://${{ secrets.AWS_S3_BUCKET }}/config/prod/application-prod.yaml src/main/resources/application-prod.yaml
 
-      - name: Configure AWS credentials (us-east-1 for Public ECR)
-        uses: aws-actions/configure-aws-credentials@7474bc4690e29a8392af63c5b98e7449536d5c3a # v4
-        with:
-          role-to-assume: ${{ secrets.AWS_ROLE_TO_ASSUME }}
-          aws-region: us-east-1
-
-      - name: Login to Amazon ECR Public
+      - name: Login to Amazon ECR
         run: |
-          aws ecr-public get-login-password --region us-east-1 \
-            | docker login --username AWS --password-stdin public.ecr.aws
+          REGISTRY=$(echo "${{ vars.ECR_REPOSITORY_URI }}" | awk -F'/' '{print $1}')
+          aws ecr get-login-password --region ${{ vars.AWS_REGION }} \
+            | docker login --username AWS --password-stdin $REGISTRY
 
       - name: Build and push Docker image
         id: tag
@@ -65,9 +60,9 @@ jobs:
 
       - name: Clean up old ECR images (keep latest 2)
         run: |
-          IMAGES=$(aws ecr-public describe-images \
+          IMAGES=$(aws ecr describe-images \
             --repository-name $REPO_NAME \
-            --region us-east-1 \
+            --region ${{ vars.AWS_REGION }} \
             --query 'sort_by(imageDetails, &imagePushedAt)[*].imageDigest' \
             --output json)
 
@@ -76,9 +71,9 @@ jobs:
 
           if [ $DELETE_COUNT -gt 0 ]; then
             IMAGE_IDS=$(echo $IMAGES | jq "[.[0:$DELETE_COUNT] | .[] | {imageDigest:.}]")
-            aws ecr-public batch-delete-image \
+            aws ecr batch-delete-image \
               --repository-name $REPO_NAME \
-              --region us-east-1 \
+              --region ${{ vars.AWS_REGION }} \
               --image-ids "$IMAGE_IDS"
           fi
 

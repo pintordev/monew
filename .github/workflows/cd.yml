@@ -96,16 +96,13 @@ jobs:
         id: register
         run: |
           NEW_IMAGE=${{ vars.ECR_REPOSITORY_URI }}:${{ needs.build-and-push.outputs.image_tag }}
-          ENV_FILE_ARN="arn:aws:s3:::${{ secrets.AWS_S3_BUCKET }}/config/monew.env"
 
           TASK_DEF=$(aws ecs describe-task-definition \
             --task-definition ${{ vars.ECS_TASK_DEFINITION }} \
             --query taskDefinition)
           NEW_TASK_DEF=$(echo $TASK_DEF \
             | jq --arg IMAGE "$NEW_IMAGE" \
-                 --arg ENV_FILE_ARN "$ENV_FILE_ARN" \
               '.containerDefinitions[0].image = $IMAGE
-               | .containerDefinitions[0].environmentFiles = [{"value": $ENV_FILE_ARN, "type": "s3"}]
                | del(.taskDefinitionArn, .revision, .status,
                      .requiresAttributes, .compatibilities,
                      .registeredAt, .registeredBy)')

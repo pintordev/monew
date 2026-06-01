@@ -16,16 +16,10 @@ jobs:
       contents: read
 
     steps:
-      - name: Checkout code
-        uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4
-        with:
-          fetch-depth: 1
-          persist-credentials: false
-
       - name: Extract PR number from commit message
         id: pr
         run: |
-          PR_NUMBER=$(git log -1 --pretty=%s | grep -oP '#\K\d+' || true)
+          PR_NUMBER=$(echo "${{ github.event.head_commit.message }}" | grep -oP '#\K\d+' || true)
           echo "number=$PR_NUMBER" >> $GITHUB_OUTPUT
 
       - name: Find PR CI run ID

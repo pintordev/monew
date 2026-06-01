@@ -19,8 +19,10 @@ jobs:
       - name: Extract PR number from commit message
         id: pr
         run: |
-          PR_NUMBER=$(echo "${{ github.event.head_commit.message }}" | grep -oP '#\K\d+' || true)
+          PR_NUMBER=$(echo "$COMMIT_MESSAGE" | grep -oP '#\K\d+' || true)
           echo "number=$PR_NUMBER" >> $GITHUB_OUTPUT
+        env:
+          COMMIT_MESSAGE: ${{ github.event.head_commit.message }}
 
       - name: Find PR CI run ID
         id: run
@@ -34,7 +36,9 @@ jobs:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Download Jacoco report from PR CI
+        id: download
         if: steps.run.outputs.id != '' && steps.run.outputs.id != 'null'
+        continue-on-error: true
         run: |
           gh run download ${{ steps.run.outputs.id }} \
             --name jacoco-report \
@@ -42,14 +46,21 @@ jobs:
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
+      - name: Resolve Jacoco XML path
+        id: report
+        if: steps.download.outcome == 'success'
+        run: |
+          REPORT_FILE=$(find /tmp/jacoco-report -type f -name 'jacocoTestReport.xml' | head -n 1)
+          echo "file=$REPORT_FILE" >> $GITHUB_OUTPUT
+
       - name: Upload to Codecov
-        if: steps.run.outputs.id != '' && steps.run.outputs.id != 'null'
+        if: steps.report.outputs.file != ''
         uses: codecov/codecov-action@75cd11691c0faa626561e295848008c8a7dddffe # v5
         with:
           token: ${{ secrets.CODECOV_TOKEN }}
-          files: /tmp/jacoco-report/jacocoTestReport.xml
+          files: ${{ steps.report.outputs.file }}
           fail_ci_if_error: true
 
       - name: Skip (no PR artifact found)
-        if: steps.pr.outputs.number == '' || steps.run.outputs.id == '' || steps.run.outputs.id == 'null'
+        if: steps.pr.outputs.number == '' || steps.run.outputs.id == '' || steps.run.outputs.id == 'null' || steps.download.outcome != 'success'
         run: echo "No PR artifact found — Codecov upload skipped"

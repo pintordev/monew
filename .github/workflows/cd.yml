@@ -60,17 +60,24 @@ jobs:
 
       - name: Clean up old ECR images (keep latest 2)
         run: |
-          IMAGES=$(aws ecr describe-images \
+          TAG_PREFIX=$([ "${GITHUB_REF_NAME}" = "main" ] && echo "latest-" || echo "staging-")
+          ALL_IMAGES=$(aws ecr describe-images \
             --repository-name $REPO_NAME \
             --region ${{ vars.AWS_REGION }} \
-            --query 'sort_by(imageDetails, &imagePushedAt)[*].imageDigest' \
-            --output json)
+            --output json \
+            | jq --arg prefix "$TAG_PREFIX" '
+                [.imageDetails[]
+                 | select(.imageTags != null and any(.imageTags[]; startswith($prefix)))
+                 | {imageDigest, imagePushedAt}]
+                | sort_by(.imagePushedAt)
+                | map(.imageDigest)
+              ')
 
-          TOTAL=$(echo $IMAGES | jq 'length')
+          TOTAL=$(echo $ALL_IMAGES | jq 'length')
           DELETE_COUNT=$((TOTAL - 2))
 
           if [ $DELETE_COUNT -gt 0 ]; then
-            IMAGE_IDS=$(echo $IMAGES | jq "[.[0:$DELETE_COUNT] | .[] | {imageDigest:.}]")
+            IMAGE_IDS=$(echo $ALL_IMAGES | jq "[.[0:$DELETE_COUNT] | .[] | {imageDigest:.}]")
             aws ecr batch-delete-image \
               --repository-name $REPO_NAME \
               --region ${{ vars.AWS_REGION }} \

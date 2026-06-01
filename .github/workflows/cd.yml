@@ -93,6 +93,7 @@ jobs:
           aws-region: ${{ vars.AWS_REGION }}
 
       - name: Register new task definition revision
+        id: register
         run: |
           NEW_IMAGE=${{ vars.ECR_REPOSITORY_URI }}:${{ needs.build-and-push.outputs.image_tag }}
           ENV_FILE_ARN="arn:aws:s3:::${{ secrets.AWS_S3_BUCKET }}/config/monew.env"
@@ -111,44 +112,12 @@ jobs:
           NEW_REVISION=$(aws ecs register-task-definition \
             --cli-input-json "$NEW_TASK_DEF" \
             --query taskDefinition.taskDefinitionArn --output text)
-          echo "NEW_REVISION=$NEW_REVISION" >> $GITHUB_ENV
+          echo "task_def_arn=$NEW_REVISION" >> $GITHUB_OUTPUT
 
-      - name: Stop existing tasks (free-tier resource)
-        run: |
-          aws ecs update-service \
-            --cluster ${{ vars.ECS_CLUSTER }} \
-            --service ${{ vars.ECS_SERVICE }} \
-            --desired-count 0
-
-          aws ecs wait services-stable \
-            --cluster ${{ vars.ECS_CLUSTER }} \
-            --services ${{ vars.ECS_SERVICE }}
-
-          RUNNING_COUNT=$(aws ecs describe-services \
-            --cluster ${{ vars.ECS_CLUSTER }} \
-            --services ${{ vars.ECS_SERVICE }} \
-            --query 'services[0].runningCount' \
-            --output text)
-          test "$RUNNING_COUNT" = "0"
-
-      - name: Deploy new task definition
-        run: |
-          aws ecs update-service \
-            --cluster ${{ vars.ECS_CLUSTER }} \
-            --service ${{ vars.ECS_SERVICE }} \
-            --task-definition $NEW_REVISION \
-            --desired-count 1
-
-      - name: Wait for deployment to stabilize
-        run: |
-          aws ecs wait services-stable \
-            --cluster ${{ vars.ECS_CLUSTER }} \
-            --services ${{ vars.ECS_SERVICE }}
-          echo "Deployment complete!"
-
-      - name: Verify deployment status
-        run: |
-          aws ecs describe-services \
-            --cluster ${{ vars.ECS_CLUSTER }} \
-            --services ${{ vars.ECS_SERVICE }} \
-            --query "services[0].deployments"
+      - name: Deploy to ECS (rolling update)
+        uses: aws-actions/amazon-ecs-deploy-task-definition@df9643053eda01f169e64a0e363ea4f338ae1135 # v2
+        with:
+          task-definition: ${{ steps.register.outputs.task_def_arn }}
+          service: ${{ vars.ECS_SERVICE }}
+          cluster: ${{ vars.ECS_CLUSTER }}
+          wait-for-service-stability: true

@@ -119,7 +119,7 @@ jobs:
           echo "task_def_arn=$NEW_REVISION" >> $GITHUB_OUTPUT
 
       - name: Deploy to ECS (rolling update)
-        uses: aws-actions/amazon-ecs-deploy-task-definition@df9643053eda01f169e64a0e363ea4f338ae1135 # v2
+        uses: aws-actions/amazon-ecs-deploy-task-definition@a310a830f5c14e583e35d84e4e1ec7dd177c3c9c # v2
         with:
           task-definition: ${{ steps.register.outputs.task_def_arn }}
           service: ${{ vars.ECS_SERVICE }}

@@ -99,29 +99,22 @@ jobs:
           role-to-assume: ${{ secrets.AWS_ROLE_TO_ASSUME }}
           aws-region: ${{ vars.AWS_REGION }}
 
-      - name: Register new task definition revision
-        id: register
+      - name: Prepare task definition
         run: |
-          NEW_IMAGE=${{ vars.ECR_REPOSITORY_URI }}:${{ needs.build-and-push.outputs.image_tag }}
-
-          TASK_DEF=$(aws ecs describe-task-definition \
+          aws ecs describe-task-definition \
             --task-definition ${{ vars.ECS_TASK_DEFINITION }} \
-            --query taskDefinition)
-          NEW_TASK_DEF=$(echo $TASK_DEF \
-            | jq --arg IMAGE "$NEW_IMAGE" \
+            --query taskDefinition \
+            | jq --arg IMAGE "${{ vars.ECR_REPOSITORY_URI }}:${{ needs.build-and-push.outputs.image_tag }}" \
               '.containerDefinitions[0].image = $IMAGE
                | del(.taskDefinitionArn, .revision, .status,
                      .requiresAttributes, .compatibilities,
-                     .registeredAt, .registeredBy)')
-          NEW_REVISION=$(aws ecs register-task-definition \
-            --cli-input-json "$NEW_TASK_DEF" \
-            --query taskDefinition.taskDefinitionArn --output text)
-          echo "task_def_arn=$NEW_REVISION" >> $GITHUB_OUTPUT
+                     .registeredAt, .registeredBy)' \
+            > /tmp/task-definition.json
 
       - name: Deploy to ECS (rolling update)
         uses: aws-actions/amazon-ecs-deploy-task-definition@a310a830f5c14e583e35d84e4e1ec7dd177c3c9c # v2
         with:
-          task-definition: ${{ steps.register.outputs.task_def_arn }}
+          task-definition: /tmp/task-definition.json
           service: ${{ vars.ECS_SERVICE }}
           cluster: ${{ vars.ECS_CLUSTER }}
           wait-for-service-stability: true

@@ -1,18 +1,14 @@
 package com.sprint.mission.monew.batch;
 
-import com.sprint.mission.monew.common.exception.ErrorCode;
-import com.sprint.mission.monew.common.exception.MonewException;
-import java.util.Map;
+import com.sprint.mission.monew.common.exception.MonewInternalException;
 
-public class LogBackupFailedException extends MonewException {
+public class LogBackupFailedException extends MonewInternalException {
 
-  private LogBackupFailedException(Map<String, Object> details) {
-    super(ErrorCode.INTERNAL_ERROR, details);
+  private LogBackupFailedException(String s3Key, Throwable cause) {
+    super("로그 파일 S3 업로드 실패: " + s3Key, cause);
   }
 
   public static LogBackupFailedException withKey(String s3Key, Throwable cause) {
-    LogBackupFailedException ex = new LogBackupFailedException(Map.of("s3Key", s3Key));
-    ex.initCause(cause);
-    return ex;
+    return new LogBackupFailedException(s3Key, cause);
   }
 }

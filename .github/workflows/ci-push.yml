@@ -14,6 +14,7 @@ jobs:
     permissions:
       actions: read
       contents: read
+      pull-requests: read
 
     steps:
       - name: Extract PR number from commit message
@@ -24,13 +25,25 @@ jobs:
         env:
           COMMIT_MESSAGE: ${{ github.event.head_commit.message }}
 
-      - name: Find PR CI run ID
-        id: run
+      - name: Get PR head SHA
+        id: pr_sha
         if: steps.pr.outputs.number != ''
         run: |
+          SHA=$(gh pr view ${{ steps.pr.outputs.number }} \
+            --repo ${{ github.repository }} \
+            --json headRefOid \
+            --jq '.headRefOid')
+          echo "sha=$SHA" >> $GITHUB_OUTPUT
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Find PR CI run ID
+        id: run
+        if: steps.pr_sha.outputs.sha != ''
+        run: |
           RUN_ID=$(gh api \
-            "repos/${{ github.repository }}/actions/workflows/ci-pr.yml/runs" \
-            --jq "[.workflow_runs[] | select((.pull_requests[].number | tostring) == \"${{ steps.pr.outputs.number }}\") | {id, created_at}] | sort_by(.created_at) | reverse | first | .id")
+            "repos/${{ github.repository }}/actions/workflows/ci-pr.yml/runs?head_sha=${{ steps.pr_sha.outputs.sha }}" \
+            --jq "[.workflow_runs[] | {id, created_at}] | sort_by(.created_at) | reverse | first | .id")
           echo "id=$RUN_ID" >> $GITHUB_OUTPUT
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
@@ -62,5 +75,10 @@ jobs:
           fail_ci_if_error: true
 
       - name: Skip (no PR artifact found)
-        if: steps.pr.outputs.number == '' || steps.run.outputs.id == '' || steps.run.outputs.id == 'null' || steps.download.outcome != 'success'
+        if: >-
+          steps.pr.outputs.number == '' ||
+          steps.pr_sha.outputs.sha == '' ||
+          steps.run.outputs.id == '' ||
+          steps.run.outputs.id == 'null' ||
+          steps.download.outcome != 'success'
         run: echo "No PR artifact found — Codecov upload skipped"

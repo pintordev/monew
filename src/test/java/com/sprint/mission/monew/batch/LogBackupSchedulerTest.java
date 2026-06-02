@@ -23,7 +23,7 @@ class LogBackupSchedulerTest {
   class UploadLogs {
 
     @Test
-    @DisplayName("uploadLogs 호출 시 LogUploadService에 위임한다")
+    @DisplayName("uploadLogs 호출 시 LogBackupService에 위임한다")
     void uploadLogs_호출_시_서비스에_위임한다() {
       // when
       logBackupScheduler.uploadLogs();

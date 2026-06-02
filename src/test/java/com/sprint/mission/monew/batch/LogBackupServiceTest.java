@@ -61,11 +61,12 @@ class LogBackupServiceTest {
     }
 
     @Test
-    @DisplayName("S3에 이미 동일 키가 존재하면 업로드를 건너뛴다")
-    void S3에_이미_동일_키가_존재하면_업로드를_건너뛴다() throws IOException {
+    @DisplayName("S3에 이미 동일 키가 존재하면 업로드 없이 로컬 파일을 삭제한다")
+    void S3에_이미_동일_키가_존재하면_업로드_없이_로컬_파일을_삭제한다() throws IOException {
       // given
       LocalDate yesterday = LocalDate.now().minusDays(1);
-      Files.writeString(tempDir.resolve("monew." + yesterday + ".log"), "log content");
+      Path logFile = tempDir.resolve("monew." + yesterday + ".log");
+      Files.writeString(logFile, "log content");
       given(s3Client.headObject(any(HeadObjectRequest.class)))
           .willReturn(HeadObjectResponse.builder().build());
 
@@ -74,6 +75,7 @@ class LogBackupServiceTest {
 
       // then
       verify(s3Client, never()).putObject(any(PutObjectRequest.class), any(RequestBody.class));
+      assertThat(logFile).doesNotExist();
     }
 
     @Test
@@ -104,6 +106,7 @@ class LogBackupServiceTest {
 
       try (MockedStatic<Files> filesMock = mockStatic(Files.class)) {
         filesMock.when(() -> Files.exists(any())).thenReturn(true);
+        filesMock.when(() -> Files.readAllBytes(any())).thenReturn("log content".getBytes());
         filesMock.when(() -> Files.delete(any())).thenThrow(new IOException("삭제 실패"));
 
         // when & then

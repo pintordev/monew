@@ -50,10 +50,11 @@ public class LogBackupService {
           PutObjectRequest.builder().bucket(bucket).key(s3Key).build(),
           RequestBody.fromFile(logFile));
       log.info("업로드 완료: {}", s3Key);
-      deleteLocalFile(logFile);
     } catch (Exception e) {
       throw LogBackupFailedException.withKey(s3Key, e);
     }
+
+    deleteLocalFile(logFile);
   }
 
   private void deleteLocalFile(Path logFile) {
@@ -61,7 +62,7 @@ public class LogBackupService {
       Files.delete(logFile);
       log.info("로컬 로그 파일 삭제: {}", logFile);
     } catch (IOException e) {
-      log.warn("로컬 로그 파일 삭제 실패: {}", logFile, e);
+      throw LogBackupDeleteFailedException.withPath(logFile, e);
     }
   }
 }

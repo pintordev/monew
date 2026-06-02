@@ -4,7 +4,6 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.BDDMockito.given;
-import static org.mockito.Mockito.CALLS_REAL_METHODS;
 import static org.mockito.Mockito.mockStatic;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
@@ -103,8 +102,9 @@ class LogBackupServiceTest {
       given(s3Client.headObject(any(HeadObjectRequest.class)))
           .willThrow(NoSuchKeyException.builder().build());
 
-      try (MockedStatic<Files> filesMock = mockStatic(Files.class, CALLS_REAL_METHODS)) {
-        filesMock.when(() -> Files.delete(logFile)).thenThrow(new IOException("삭제 실패"));
+      try (MockedStatic<Files> filesMock = mockStatic(Files.class)) {
+        filesMock.when(() -> Files.exists(any())).thenReturn(true);
+        filesMock.when(() -> Files.delete(any())).thenThrow(new IOException("삭제 실패"));
 
         // when & then
         assertThatThrownBy(() -> logBackupService.upload())

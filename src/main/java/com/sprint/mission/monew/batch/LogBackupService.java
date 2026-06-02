@@ -39,15 +39,18 @@ public class LogBackupService {
     try {
       s3Client.headObject(HeadObjectRequest.builder().bucket(bucket).key(s3Key).build());
       log.info("이미 업로드됨, 건너뜀: {}", s3Key);
-    } catch (NoSuchKeyException e) {
-      try {
-        s3Client.putObject(
-            PutObjectRequest.builder().bucket(bucket).key(s3Key).build(),
-            RequestBody.fromFile(logFile));
-        log.info("업로드 완료: {}", s3Key);
-      } catch (Exception ex) {
-        log.error("업로드 실패: {}", s3Key, ex);
-      }
+      return;
+    } catch (NoSuchKeyException ignored) {
+      // 업로드 진행
+    }
+
+    try {
+      s3Client.putObject(
+          PutObjectRequest.builder().bucket(bucket).key(s3Key).build(),
+          RequestBody.fromFile(logFile));
+      log.info("업로드 완료: {}", s3Key);
+    } catch (Exception e) {
+      throw LogBackupFailedException.withKey(s3Key, e);
     }
   }
 }

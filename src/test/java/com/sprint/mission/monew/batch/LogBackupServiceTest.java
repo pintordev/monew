@@ -1,6 +1,6 @@
 package com.sprint.mission.monew.batch;
 
-import static org.assertj.core.api.Assertions.assertThatNoException;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.BDDMockito.given;
 import static org.mockito.Mockito.never;
@@ -74,8 +74,8 @@ class LogBackupServiceTest {
     }
 
     @Test
-    @DisplayName("S3 업로드 중 예외 발생 시 예외를 삼키고 로그만 남긴다")
-    void S3_업로드_중_예외_발생_시_예외를_삼키고_로그만_남긴다() throws IOException {
+    @DisplayName("S3 업로드 중 예외 발생 시 LogBackupFailedException을 던진다")
+    void S3_업로드_중_예외_발생_시_LogBackupFailedException을_던진다() throws IOException {
       // given
       LocalDate yesterday = LocalDate.now().minusDays(1);
       Files.writeString(tempDir.resolve("monew." + yesterday + ".log"), "log content");
@@ -85,7 +85,8 @@ class LogBackupServiceTest {
           .willThrow(new RuntimeException("S3 연결 오류"));
 
       // when & then
-      assertThatNoException().isThrownBy(() -> logBackupService.upload());
+      assertThatThrownBy(() -> logBackupService.upload())
+          .isInstanceOf(LogBackupFailedException.class);
     }
   }
 }

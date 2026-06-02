@@ -1,10 +1,14 @@
 package com.sprint.mission.monew.batch;
 
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.BDDMockito.given;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
 
+import java.io.IOException;
+import java.nio.file.Files;
 import java.nio.file.Path;
+import java.time.LocalDate;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
@@ -17,6 +21,8 @@ import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.test.util.ReflectionTestUtils;
 import software.amazon.awssdk.core.sync.RequestBody;
 import software.amazon.awssdk.services.s3.S3Client;
+import software.amazon.awssdk.services.s3.model.HeadObjectRequest;
+import software.amazon.awssdk.services.s3.model.HeadObjectResponse;
 import software.amazon.awssdk.services.s3.model.PutObjectRequest;
 
 @ExtendWith(MockitoExtension.class)
@@ -41,6 +47,22 @@ class LogBackupServiceTest {
     @DisplayName("전날 로그 파일이 없으면 S3 업로드를 호출하지 않는다")
     void 전날_로그_파일이_없으면_S3_업로드를_호출하지_않는다() {
       // given — tempDir에 로그 파일 없음
+
+      // when
+      logBackupService.upload();
+
+      // then
+      verify(s3Client, never()).putObject(any(PutObjectRequest.class), any(RequestBody.class));
+    }
+
+    @Test
+    @DisplayName("S3에 이미 동일 키가 존재하면 업로드를 건너뛴다")
+    void S3에_이미_동일_키가_존재하면_업로드를_건너뛴다() throws IOException {
+      // given
+      LocalDate yesterday = LocalDate.now().minusDays(1);
+      Files.writeString(tempDir.resolve("monew." + yesterday + ".log"), "log content");
+      given(s3Client.headObject(any(HeadObjectRequest.class)))
+          .willReturn(HeadObjectResponse.builder().build());
 
       // when
       logBackupService.upload();

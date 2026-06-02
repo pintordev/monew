@@ -4,6 +4,8 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.BDDMockito.given;
+import static org.mockito.Mockito.CALLS_REAL_METHODS;
+import static org.mockito.Mockito.mockStatic;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
 
@@ -19,6 +21,7 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.junit.jupiter.api.io.TempDir;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
+import org.mockito.MockedStatic;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.test.util.ReflectionTestUtils;
 import software.amazon.awssdk.core.sync.RequestBody;
@@ -88,6 +91,25 @@ class LogBackupServiceTest {
       // when & then
       assertThatThrownBy(() -> logBackupService.upload())
           .isInstanceOf(LogBackupFailedException.class);
+    }
+
+    @Test
+    @DisplayName("로컬 파일 삭제 실패 시 LogBackupDeleteFailedException을 던진다")
+    void 로컬_파일_삭제_실패_시_LogBackupDeleteFailedException을_던진다() throws IOException {
+      // given
+      LocalDate yesterday = LocalDate.now().minusDays(1);
+      Path logFile = tempDir.resolve("monew." + yesterday + ".log");
+      Files.writeString(logFile, "log content");
+      given(s3Client.headObject(any(HeadObjectRequest.class)))
+          .willThrow(NoSuchKeyException.builder().build());
+
+      try (MockedStatic<Files> filesMock = mockStatic(Files.class, CALLS_REAL_METHODS)) {
+        filesMock.when(() -> Files.delete(logFile)).thenThrow(new IOException("삭제 실패"));
+
+        // when & then
+        assertThatThrownBy(() -> logBackupService.upload())
+            .isInstanceOf(LogBackupDeleteFailedException.class);
+      }
     }
 
     @Test

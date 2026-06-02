@@ -1,5 +1,6 @@
 package com.sprint.mission.monew.batch;
 
+import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.time.LocalDate;
@@ -49,8 +50,18 @@ public class LogBackupService {
           PutObjectRequest.builder().bucket(bucket).key(s3Key).build(),
           RequestBody.fromFile(logFile));
       log.info("업로드 완료: {}", s3Key);
+      deleteLocalFile(logFile);
     } catch (Exception e) {
       throw LogBackupFailedException.withKey(s3Key, e);
+    }
+  }
+
+  private void deleteLocalFile(Path logFile) {
+    try {
+      Files.delete(logFile);
+      log.info("로컬 로그 파일 삭제: {}", logFile);
+    } catch (IOException e) {
+      log.warn("로컬 로그 파일 삭제 실패: {}", logFile, e);
     }
   }
 }

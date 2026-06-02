@@ -1,5 +1,6 @@
 package com.sprint.mission.monew.batch;
 
+import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.BDDMockito.given;
@@ -90,11 +91,12 @@ class LogBackupServiceTest {
     }
 
     @Test
-    @DisplayName("로그 파일이 존재하고 S3에 없으면 putObject를 호출한다")
-    void 로그_파일이_존재하고_S3에_없으면_putObject를_호출한다() throws IOException {
+    @DisplayName("로그 파일이 존재하고 S3에 없으면 업로드 후 로컬 파일을 삭제한다")
+    void 로그_파일이_존재하고_S3에_없으면_업로드_후_로컬_파일을_삭제한다() throws IOException {
       // given
       LocalDate yesterday = LocalDate.now().minusDays(1);
-      Files.writeString(tempDir.resolve("monew." + yesterday + ".log"), "log content");
+      Path logFile = tempDir.resolve("monew." + yesterday + ".log");
+      Files.writeString(logFile, "log content");
       given(s3Client.headObject(any(HeadObjectRequest.class)))
           .willThrow(NoSuchKeyException.builder().build());
 
@@ -103,6 +105,7 @@ class LogBackupServiceTest {
 
       // then
       verify(s3Client).putObject(any(PutObjectRequest.class), any(RequestBody.class));
+      assertThat(logFile).doesNotExist();
     }
   }
 }

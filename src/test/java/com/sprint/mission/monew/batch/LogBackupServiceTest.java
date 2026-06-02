@@ -1,5 +1,6 @@
 package com.sprint.mission.monew.batch;
 
+import static org.assertj.core.api.Assertions.assertThatNoException;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.BDDMockito.given;
 import static org.mockito.Mockito.never;
@@ -23,6 +24,7 @@ import software.amazon.awssdk.core.sync.RequestBody;
 import software.amazon.awssdk.services.s3.S3Client;
 import software.amazon.awssdk.services.s3.model.HeadObjectRequest;
 import software.amazon.awssdk.services.s3.model.HeadObjectResponse;
+import software.amazon.awssdk.services.s3.model.NoSuchKeyException;
 import software.amazon.awssdk.services.s3.model.PutObjectRequest;
 
 @ExtendWith(MockitoExtension.class)
@@ -69,6 +71,21 @@ class LogBackupServiceTest {
 
       // then
       verify(s3Client, never()).putObject(any(PutObjectRequest.class), any(RequestBody.class));
+    }
+
+    @Test
+    @DisplayName("S3 업로드 중 예외 발생 시 예외를 삼키고 로그만 남긴다")
+    void S3_업로드_중_예외_발생_시_예외를_삼키고_로그만_남긴다() throws IOException {
+      // given
+      LocalDate yesterday = LocalDate.now().minusDays(1);
+      Files.writeString(tempDir.resolve("monew." + yesterday + ".log"), "log content");
+      given(s3Client.headObject(any(HeadObjectRequest.class)))
+          .willThrow(NoSuchKeyException.builder().build());
+      given(s3Client.putObject(any(PutObjectRequest.class), any(RequestBody.class)))
+          .willThrow(new RuntimeException("S3 연결 오류"));
+
+      // when & then
+      assertThatNoException().isThrownBy(() -> logBackupService.upload());
     }
   }
 }

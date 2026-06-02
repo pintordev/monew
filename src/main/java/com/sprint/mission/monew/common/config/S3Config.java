@@ -9,8 +9,11 @@ import software.amazon.awssdk.services.s3.S3Client;
 @Configuration
 public class S3Config {
 
-  @Value("${cloud.aws.region.static}")
-  private String region;
+  private final String region;
+
+  public S3Config(@Value("${cloud.aws.region.static}") String region) {
+    this.region = region;
+  }
 
   @Bean
   public S3Client s3Client() {

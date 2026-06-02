@@ -10,12 +10,12 @@ import org.springframework.stereotype.Component;
 @Slf4j
 @Component
 @RequiredArgsConstructor
-public class LogUploadScheduler {
+public class LogBackupScheduler {
 
-  private final LogUploadService logUploadService;
+  private final LogBackupService logBackupService;
 
   @Scheduled(cron = "${scheduler.log-upload.cron}")
   public void uploadLogs() {
-    logUploadService.upload();
+    logBackupService.upload();
   }
 }

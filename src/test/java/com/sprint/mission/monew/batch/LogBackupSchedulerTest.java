@@ -11,10 +11,12 @@ import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
 @ExtendWith(MockitoExtension.class)
-class LogUploadSchedulerTest {
+class LogBackupSchedulerTest {
 
-  @InjectMocks LogUploadScheduler logUploadScheduler;
-  @Mock LogUploadService logUploadService;
+  @InjectMocks
+  LogBackupScheduler logBackupScheduler;
+  @Mock
+  LogBackupService logBackupService;
 
   @Nested
   @DisplayName("로그 파일 S3 업로드 스케줄러")
@@ -24,10 +26,10 @@ class LogUploadSchedulerTest {
     @DisplayName("uploadLogs 호출 시 LogUploadService에 위임한다")
     void uploadLogs_호출_시_서비스에_위임한다() {
       // when
-      logUploadScheduler.uploadLogs();
+      logBackupScheduler.uploadLogs();
 
       // then
-      verify(logUploadService).upload();
+      verify(logBackupService).upload();
     }
   }
 }

@@ -1,8 +1,14 @@
 package com.sprint.mission.monew.common.exception;
 
-public class MonewInternalException extends RuntimeException {
+import lombok.Getter;
 
-  public MonewInternalException(String message, Throwable cause) {
-    super(message, cause);
+@Getter
+public abstract class MonewInternalException extends RuntimeException {
+
+  private final InternalErrorCode errorCode;
+
+  protected MonewInternalException(InternalErrorCode errorCode, String detail, Throwable cause) {
+    super(errorCode.getMessage() + ": " + detail, cause);
+    this.errorCode = errorCode;
   }
 }

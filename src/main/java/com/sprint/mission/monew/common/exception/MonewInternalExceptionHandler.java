@@ -8,6 +8,10 @@ import org.springframework.stereotype.Component;
 public class MonewInternalExceptionHandler {
 
   public void handle(Throwable e) {
-    log.error("[INTERNAL] {}: {}", e.getClass().getSimpleName(), e.getMessage(), e);
+    if (e instanceof MonewInternalException mie) {
+      log.error("[{}] {}", mie.getErrorCode().name(), mie.getMessage(), mie);
+    } else {
+      log.error("[UNKNOWN] {}: {}", e.getClass().getSimpleName(), e.getMessage(), e);
+    }
   }
 }

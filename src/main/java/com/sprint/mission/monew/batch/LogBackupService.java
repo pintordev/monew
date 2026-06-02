@@ -19,12 +19,12 @@ public class LogBackupService {
   @Value("${cloud.aws.s3.bucket}")
   private String bucket;
 
-  @Value("${log.dir:logs}")
+  @Value("${monew.log-dir}")
   private String logDir;
 
   public void upload() {
     LocalDate yesterday = LocalDate.now().minusDays(1);
-    Path logFile = Path.of(logDir, yesterday.toString(), "app.log");
+    Path logFile = Path.of(logDir, "monew." + yesterday + ".log");
 
     if (!Files.exists(logFile)) {
       log.warn("로그 파일 없음: {}", logFile);

@@ -88,5 +88,21 @@ class LogBackupServiceTest {
       assertThatThrownBy(() -> logBackupService.upload())
           .isInstanceOf(LogBackupFailedException.class);
     }
+
+    @Test
+    @DisplayName("로그 파일이 존재하고 S3에 없으면 putObject를 호출한다")
+    void 로그_파일이_존재하고_S3에_없으면_putObject를_호출한다() throws IOException {
+      // given
+      LocalDate yesterday = LocalDate.now().minusDays(1);
+      Files.writeString(tempDir.resolve("monew." + yesterday + ".log"), "log content");
+      given(s3Client.headObject(any(HeadObjectRequest.class)))
+          .willThrow(NoSuchKeyException.builder().build());
+
+      // when
+      logBackupService.upload();
+
+      // then
+      verify(s3Client).putObject(any(PutObjectRequest.class), any(RequestBody.class));
+    }
   }
 }

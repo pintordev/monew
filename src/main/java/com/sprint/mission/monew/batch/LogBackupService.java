@@ -8,6 +8,8 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import software.amazon.awssdk.services.s3.S3Client;
+import software.amazon.awssdk.services.s3.model.HeadObjectRequest;
+import software.amazon.awssdk.services.s3.model.NoSuchKeyException;
 
 @Slf4j
 @Service
@@ -29,6 +31,17 @@ public class LogBackupService {
     if (!Files.exists(logFile)) {
       log.warn("로그 파일 없음: {}", logFile);
       return;
+    }
+
+    String s3Key = "logs/" + yesterday + "/monew." + yesterday + ".log";
+    try {
+      s3Client.headObject(HeadObjectRequest.builder()
+          .bucket(bucket)
+          .key(s3Key)
+          .build());
+      log.info("이미 업로드됨, 건너뜀: {}", s3Key);
+    } catch (NoSuchKeyException e) {
+      // 아직 업로드 로직 미구현
     }
   }
 }

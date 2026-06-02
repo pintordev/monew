@@ -7,9 +7,11 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
+import software.amazon.awssdk.core.sync.RequestBody;
 import software.amazon.awssdk.services.s3.S3Client;
 import software.amazon.awssdk.services.s3.model.HeadObjectRequest;
 import software.amazon.awssdk.services.s3.model.NoSuchKeyException;
+import software.amazon.awssdk.services.s3.model.PutObjectRequest;
 
 @Slf4j
 @Service
@@ -35,13 +37,17 @@ public class LogBackupService {
 
     String s3Key = "logs/" + yesterday + "/monew." + yesterday + ".log";
     try {
-      s3Client.headObject(HeadObjectRequest.builder()
-          .bucket(bucket)
-          .key(s3Key)
-          .build());
+      s3Client.headObject(HeadObjectRequest.builder().bucket(bucket).key(s3Key).build());
       log.info("이미 업로드됨, 건너뜀: {}", s3Key);
     } catch (NoSuchKeyException e) {
-      // 아직 업로드 로직 미구현
+      try {
+        s3Client.putObject(
+            PutObjectRequest.builder().bucket(bucket).key(s3Key).build(),
+            RequestBody.fromFile(logFile));
+        log.info("업로드 완료: {}", s3Key);
+      } catch (Exception ex) {
+        log.error("업로드 실패: {}", s3Key, ex);
+      }
     }
   }
 }

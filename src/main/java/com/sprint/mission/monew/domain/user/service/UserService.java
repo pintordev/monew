@@ -38,6 +38,7 @@ public class UserService {
   private final PasswordEncoder passwordEncoder;
   private final EmailVerificationRepository emailVerificationRepository;
   private final ApplicationEventPublisher eventPublisher;
+  private final UserMetrics userMetrics;
 
   @Transactional
   public UserResponse create(UserCreateRequest request) {
@@ -57,6 +58,7 @@ public class UserService {
     eventPublisher.publishEvent(
         new EmailVerificationCreatedEvent(saved.getEmail(), savedVerification.getToken()));
 
+    userMetrics.countRegistered();
     log.info("회원가입 완료: id={}", saved.getId());
     return userMapper.toResponse(saved);
   }
@@ -121,6 +123,7 @@ public class UserService {
   public int deleteExpiredUsers(Instant threshold) {
     log.info("물리 삭제 실행: threshold={}", threshold);
     int deleted = userRepository.deleteAllByDeletedAtBefore(threshold);
+    userMetrics.countDeleted(deleted);
     log.info("물리 삭제 완료: {}건 삭제", deleted);
     return deleted;
   }

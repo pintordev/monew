@@ -24,13 +24,16 @@ public class ControllerLoggingAspect {
     log.debug("요청 수신 | userId={}", userId);
 
     long start = System.currentTimeMillis();
-    Object result = jp.proceed();
-    long elapsed = System.currentTimeMillis() - start;
-
-    int status = result instanceof ResponseEntity<?> re
-        ? re.getStatusCode().value() : 200;
-    log.info("요청 처리 완료 | status={}, elapsedMs={}", status, elapsed);
-
-    return result;
+    try {
+      Object result = jp.proceed();
+      long elapsed = System.currentTimeMillis() - start;
+      int status = result instanceof ResponseEntity<?> re
+          ? re.getStatusCode().value() : 200;
+      log.info("요청 처리 완료 | status={}, elapsedMs={}", status, elapsed);
+      return result;
+    } catch (Throwable t) {
+      log.warn("요청 처리 실패 | elapsedMs={}", System.currentTimeMillis() - start);
+      throw t;
+    }
   }
 }

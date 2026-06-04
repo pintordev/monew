@@ -2,12 +2,15 @@ package com.sprint.mission.monew.batch;
 
 import com.sprint.mission.monew.domain.article.entity.Article;
 import com.sprint.mission.monew.domain.article.entity.ArticleSource;
-import com.sprint.mission.monew.domain.article.event.ArticleCreatedEvent;
 import com.sprint.mission.monew.domain.article.repository.ArticleRepository;
-import java.time.Instant;
+import java.util.ArrayList;
+import java.util.LinkedHashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.function.Function;
+import java.util.stream.Collectors;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -18,33 +21,47 @@ import org.springframework.transaction.annotation.Transactional;
 public class ArticleUpsertService {
 
   private final ArticleRepository articleRepository;
-  private final ApplicationEventPublisher eventPublisher;
   private final NewsCollectMetrics newsCollectMetrics;
 
-  // save() + publishEvent()를 같은 트랜잭션으로 묶어 @TransactionalEventListener(AFTER_COMMIT) 안전 보장
+  // 출처별 기사 목록을 한 번의 SELECT + saveAll로 일괄 처리해 DB 왕복 비용을 최소화
   @Transactional
-  public void upsert(ArticleSource source, String sourceUrl, String title,
-      Instant publishDate, String summary) {
-    if (sourceUrl == null || sourceUrl.isBlank()) {
-      log.warn("sourceUrl이 없어 기사를 건너뜁니다: title={}", title);
+  public void upsertAll(ArticleSource source, List<ArticleCandidate> candidates) {
+    // null/blank 제거 후 동일 URL 중복 제거 (first-seen 우선, LinkedHashMap으로 순서 보존)
+    Map<String, ArticleCandidate> deduped = candidates.stream()
+        .filter(c -> c.sourceUrl() != null && !c.sourceUrl().isBlank())
+        .collect(Collectors.toMap(
+            ArticleCandidate::sourceUrl,
+            Function.identity(),
+            (a, b) -> a,
+            LinkedHashMap::new));
+
+    if (deduped.isEmpty()) {
       return;
     }
-    articleRepository.findBySourceUrl(sourceUrl)
-        .ifPresentOrElse(
-            existing -> {
-              if (existing.isDeleted()) {
-                log.debug("소프트 삭제된 기사 건너뜁니다: sourceUrl={}", sourceUrl);
-                return;
-              }
-              existing.update(title, summary);
-              articleRepository.save(existing);
-              newsCollectMetrics.countDuplicated();
-            },
-            () -> {
-              Article saved = articleRepository.save(
-                  Article.create(source, sourceUrl, title, publishDate, summary));
-              eventPublisher.publishEvent(new ArticleCreatedEvent(saved));
-              newsCollectMetrics.countCreated();
-            });
+
+    Map<String, Article> existing = articleRepository.findBySourceUrlIn(new ArrayList<>(deduped.keySet())).stream()
+        .collect(Collectors.toMap(Article::getSourceUrl, Function.identity(), (a, b) -> a));
+
+    List<Article> toCreate = new ArrayList<>();
+    for (ArticleCandidate c : deduped.values()) {
+      Article article = existing.get(c.sourceUrl());
+      if (article == null) {
+        toCreate.add(Article.create(source, c.sourceUrl(), c.title(), c.publishDate(), c.summary()));
+      } else if (!article.isDeleted()) {
+        article.update(c.title(), c.summary());
+        newsCollectMetrics.countDuplicated();
+        log.debug("기사 업데이트 완료 | sourceUrl={}", c.sourceUrl());
+      }
+    }
+
+    if (toCreate.isEmpty()) {
+      return;
+    }
+    List<Article> saved = articleRepository.saveAll(toCreate);
+    saved.forEach(a -> {
+      newsCollectMetrics.countCreated();
+      log.info("기사 저장 완료 | articleId={}, sourceUrl={}", a.getId(), a.getSourceUrl());
+    });
   }
+
 }

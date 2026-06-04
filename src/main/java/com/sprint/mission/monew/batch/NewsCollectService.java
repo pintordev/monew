@@ -59,11 +59,11 @@ public class NewsCollectService {
           nUpserted++;
         } catch (Exception e) {
           newsCollectMetrics.countFailed(ArticleSource.NAVER);
-          log.warn("Naver 기사 단건 처리 실패: link={}", item.link(), e);
+          log.warn("Naver 기사 단건 처리 실패 | link={}", item.link(), e);
         }
       }
       newsCollectMetrics.countCollected(ArticleSource.NAVER, nUpserted);
-      log.info("Naver 뉴스 수집 완료: {}건", nUpserted);
+      log.info("Naver 뉴스 수집 완료 | count={}", nUpserted);
     } catch (Exception e) {
       log.error("Naver 뉴스 수집 실패", e);
     }
@@ -78,11 +78,11 @@ public class NewsCollectService {
               source, item.sourceUrl(), item.title(), item.publishDate(), item.summary());
         } catch (Exception e) {
           newsCollectMetrics.countFailed(source);
-          log.warn("{} 기사 단건 처리 실패: url={}", source, item.sourceUrl(), e);
+          log.warn("{} 기사 단건 처리 실패 | url={}", source, item.sourceUrl(), e);
         }
       }
       newsCollectMetrics.countCollected(source, items.size());
-      log.info("{} RSS 수집 완료: {}건", source, items.size());
+      log.info("{} RSS 수집 완료 | count={}", source, items.size());
     } catch (Exception e) {
       log.error("{} RSS 수집 실패", source, e);
     }

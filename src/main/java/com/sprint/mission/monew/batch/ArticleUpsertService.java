@@ -26,14 +26,14 @@ public class ArticleUpsertService {
   public void upsert(ArticleSource source, String sourceUrl, String title,
       Instant publishDate, String summary) {
     if (sourceUrl == null || sourceUrl.isBlank()) {
-      log.warn("sourceUrl이 없어 기사를 건너뜁니다: title={}", title);
+      log.warn("sourceUrl 없어 기사 스킵 | title={}", title);
       return;
     }
     articleRepository.findBySourceUrl(sourceUrl)
         .ifPresentOrElse(
             existing -> {
               if (existing.isDeleted()) {
-                log.debug("소프트 삭제된 기사 건너뜁니다: sourceUrl={}", sourceUrl);
+                log.debug("소프트 삭제된 기사 스킵 | sourceUrl={}", sourceUrl);
                 return;
               }
               existing.update(title, summary);

@@ -26,4 +26,29 @@ public record ArticleQueryCondition(
   public boolean isCursorAndAfterConsistent() {
     return (cursor == null) == (after == null);
   }
+
+  @AssertTrue(message = "cursor 형식이 orderBy 기준과 맞지 않습니다")
+  public boolean isCursorFormatValidForOrderBy() {
+    if (cursor == null || orderBy == null) {
+      return true;
+    }
+    return switch (orderBy) {
+      case PUBLISH_DATE -> {
+        try {
+          Instant.parse(cursor);
+          yield true;
+        } catch (Exception e) {
+          yield false;
+        }
+      }
+      case COMMENT_COUNT, VIEW_COUNT -> {
+        try {
+          Integer.parseInt(cursor);
+          yield true;
+        } catch (NumberFormatException e) {
+          yield false;
+        }
+      }
+    };
+  }
 }

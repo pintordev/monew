@@ -12,7 +12,6 @@ import com.sprint.mission.monew.domain.article.dto.ArticleResponse;
 import com.sprint.mission.monew.domain.article.entity.Article;
 import com.sprint.mission.monew.domain.article.entity.ArticleInterest;
 import com.sprint.mission.monew.domain.article.entity.ArticleSource;
-import com.sprint.mission.monew.domain.article.exception.ArticleInvalidCursorException;
 import com.sprint.mission.monew.domain.interest.entity.Interest;
 import com.sprint.mission.monew.domain.interest.repository.InterestRepository;
 import jakarta.persistence.EntityManager;
@@ -394,48 +393,6 @@ class ArticleRepositoryTest {
 
       // then
       assertThat(result).isEmpty();
-    }
-
-    @Test
-    @DisplayName("PUBLISH_DATE cursor 값이 파싱 불가능하면 ArticleInvalidCursorException을 던진다")
-    void PUBLISH_DATE_cursor_파싱_불가_시_예외_발생() {
-      // given
-      ArticleQueryCondition condition = new ArticleQueryCondition(
-          null, null, null, null, null,
-          ArticleOrderBy.PUBLISH_DATE, SortDirection.DESC,
-          "not-a-date", Instant.now(), 10);
-
-      // when & then
-      assertThatThrownBy(() -> articleRepository.search(condition, requestUserId))
-          .isInstanceOf(ArticleInvalidCursorException.class);
-    }
-
-    @Test
-    @DisplayName("COMMENT_COUNT cursor 값이 파싱 불가능하면 ArticleInvalidCursorException을 던진다")
-    void COMMENT_COUNT_cursor_파싱_불가_시_예외_발생() {
-      // given
-      ArticleQueryCondition condition = new ArticleQueryCondition(
-          null, null, null, null, null,
-          ArticleOrderBy.COMMENT_COUNT, SortDirection.DESC,
-          "not-a-number", Instant.now(), 10);
-
-      // when & then
-      assertThatThrownBy(() -> articleRepository.search(condition, requestUserId))
-          .isInstanceOf(ArticleInvalidCursorException.class);
-    }
-
-    @Test
-    @DisplayName("VIEW_COUNT cursor 값이 파싱 불가능하면 ArticleInvalidCursorException을 던진다")
-    void VIEW_COUNT_cursor_파싱_불가_시_예외_발생() {
-      // given
-      ArticleQueryCondition condition = new ArticleQueryCondition(
-          null, null, null, null, null,
-          ArticleOrderBy.VIEW_COUNT, SortDirection.DESC,
-          "not-a-number", Instant.now(), 10);
-
-      // when & then
-      assertThatThrownBy(() -> articleRepository.search(condition, requestUserId))
-          .isInstanceOf(ArticleInvalidCursorException.class);
     }
 
     @Test

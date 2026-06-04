@@ -18,10 +18,8 @@ import com.sprint.mission.monew.domain.article.dto.ArticleOrderBy;
 import com.sprint.mission.monew.domain.article.dto.ArticleQueryCondition;
 import com.sprint.mission.monew.domain.article.dto.ArticleResponse;
 import com.sprint.mission.monew.domain.article.entity.ArticleSource;
-import com.sprint.mission.monew.domain.article.exception.ArticleInvalidCursorException;
 import com.sprint.mission.monew.domain.article.repository.querydsl.ArticleCustomRepository;
 import java.time.Instant;
-import java.time.format.DateTimeParseException;
 import java.util.List;
 import java.util.UUID;
 import lombok.RequiredArgsConstructor;
@@ -158,27 +156,12 @@ public class ArticleCustomRepositoryImpl implements ArticleCustomRepository {
       return null;
     }
     return switch (condition.orderBy()) {
-      case PUBLISH_DATE -> {
-        try {
-          yield buildCursorExpression(article.publishDate, Instant.parse(cursor), after, isAsc);
-        } catch (DateTimeParseException e) {
-          throw ArticleInvalidCursorException.withCursor(cursor);
-        }
-      }
-      case COMMENT_COUNT -> {
-        try {
-          yield buildCursorExpression(article.commentCount, Integer.parseInt(cursor), after, isAsc);
-        } catch (NumberFormatException e) {
-          throw ArticleInvalidCursorException.withCursor(cursor);
-        }
-      }
-      case VIEW_COUNT -> {
-        try {
-          yield buildCursorExpression(article.viewCount, Integer.parseInt(cursor), after, isAsc);
-        } catch (NumberFormatException e) {
-          throw ArticleInvalidCursorException.withCursor(cursor);
-        }
-      }
+      case PUBLISH_DATE ->
+          buildCursorExpression(article.publishDate, Instant.parse(cursor), after, isAsc);
+      case COMMENT_COUNT ->
+          buildCursorExpression(article.commentCount, Integer.parseInt(cursor), after, isAsc);
+      case VIEW_COUNT ->
+          buildCursorExpression(article.viewCount, Integer.parseInt(cursor), after, isAsc);
     };
   }
 

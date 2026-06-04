@@ -1,6 +1,7 @@
 package com.sprint.mission.monew.domain.article.repository;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatCode;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 import com.sprint.mission.monew.common.config.JpaConfig;
@@ -394,6 +395,48 @@ class ArticleRepositoryTest {
 
       // then
       assertThat(result).isEmpty();
+    }
+
+    @Test
+    @DisplayName("COMMENT_COUNT 정렬로 hasNext가 true이면 nextCursor는 정수 문자열이다")
+    void COMMENT_COUNT_hasNext_true이면_nextCursor가_정수다() {
+      // given
+      saveArticle(ArticleSource.NAVER, "기사1");
+      saveArticle(ArticleSource.HANKYUNG, "기사2");
+
+      ArticleQueryCondition condition = new ArticleQueryCondition(
+          null, null, null, null, null,
+          ArticleOrderBy.COMMENT_COUNT, SortDirection.DESC,
+          null, null, 1);
+
+      // when
+      var response = articleRepository.search(condition, requestUserId);
+
+      // then
+      assertThat(response.hasNext()).isTrue();
+      assertThat(response.nextCursor()).isNotNull();
+      assertThatCode(() -> Integer.parseInt(response.nextCursor())).doesNotThrowAnyException();
+    }
+
+    @Test
+    @DisplayName("VIEW_COUNT 정렬로 hasNext가 true이면 nextCursor는 정수 문자열이다")
+    void VIEW_COUNT_hasNext_true이면_nextCursor가_정수다() {
+      // given
+      saveArticle(ArticleSource.NAVER, "기사1");
+      saveArticle(ArticleSource.HANKYUNG, "기사2");
+
+      ArticleQueryCondition condition = new ArticleQueryCondition(
+          null, null, null, null, null,
+          ArticleOrderBy.VIEW_COUNT, SortDirection.DESC,
+          null, null, 1);
+
+      // when
+      var response = articleRepository.search(condition, requestUserId);
+
+      // then
+      assertThat(response.hasNext()).isTrue();
+      assertThat(response.nextCursor()).isNotNull();
+      assertThatCode(() -> Integer.parseInt(response.nextCursor())).doesNotThrowAnyException();
     }
 
     @Test

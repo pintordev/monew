@@ -33,6 +33,7 @@ public class ArticleCustomRepositoryImpl implements ArticleCustomRepository {
   @Override
   public CursorPageResponse<ArticleResponse> search(ArticleQueryCondition condition,
       UUID requestUserId) {
+    BooleanExpression viewedByMeExpr = articleView.id.isNotNull();
     JPAQuery<Tuple> query = queryFactory
         .select(
             article.id,
@@ -43,7 +44,7 @@ public class ArticleCustomRepositoryImpl implements ArticleCustomRepository {
             article.summary,
             article.commentCount,
             article.viewCount,
-            articleView.id.isNotNull(),
+            viewedByMeExpr,
             article.createdAt
         )
         .from(article)
@@ -79,7 +80,7 @@ public class ArticleCustomRepositoryImpl implements ArticleCustomRepository {
             t.get(article.summary),
             t.get(article.commentCount),
             t.get(article.viewCount),
-            Boolean.TRUE.equals(t.get(articleView.id.isNotNull()))))
+            Boolean.TRUE.equals(t.get(viewedByMeExpr))))
         .toList();
 
     String nextCursor = null;

@@ -38,10 +38,11 @@ class ArticleRepositoryTest {
   @Autowired InterestRepository interestRepository;
   @Autowired EntityManager em;
 
-  UUID requestUserId = UUID.randomUUID();
+  UUID requestUserId;
 
   @BeforeEach
   void setUp() {
+    requestUserId = UUID.randomUUID();
     articleRepository.deleteAll();
   }
 

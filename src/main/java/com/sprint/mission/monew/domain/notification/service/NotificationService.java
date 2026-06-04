@@ -33,6 +33,7 @@ public class NotificationService {
   @Transactional
   public void confirmAll(UUID userId) {
     notificationRepository.confirmAllByUserId(userId, Instant.now());
+    log.info("알림 전체 확인 완료 | userId={}", userId);
   }
 
   @Transactional
@@ -85,5 +86,6 @@ public class NotificationService {
             .findByIdAndUserIdAndConfirmedAtIsNull(notificationId, userId)
             .orElseThrow(() -> NotificationNotFoundException.withId(notificationId));
     notification.confirm();
+    log.info("알림 확인 완료 | notificationId={}, userId={}", notificationId, userId);
   }
 }

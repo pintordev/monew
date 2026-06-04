@@ -39,12 +39,14 @@ public class ArticleUpsertService {
               existing.update(title, summary);
               articleRepository.save(existing);
               newsCollectMetrics.countDuplicated();
+              log.debug("기사 업데이트 완료 | sourceUrl={}", sourceUrl);
             },
             () -> {
               Article saved = articleRepository.save(
                   Article.create(source, sourceUrl, title, publishDate, summary));
               eventPublisher.publishEvent(new ArticleCreatedEvent(saved));
               newsCollectMetrics.countCreated();
+              log.info("기사 저장 완료 | articleId={}, sourceUrl={}", saved.getId(), sourceUrl);
             });
   }
 }

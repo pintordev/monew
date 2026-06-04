@@ -447,7 +447,7 @@ public class CommentIntegrationTest {
           .andExpect(status().isOk())
           .andExpect(jsonPath("$.content").isArray())
           .andExpect(jsonPath("$.content.length()").value(1))
-          .andExpect(jsonPath("$.nextCursor").exists());
+          .andExpect(jsonPath("$.hasNext").value(false));
     }
   }
 }

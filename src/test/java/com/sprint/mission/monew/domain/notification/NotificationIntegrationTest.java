@@ -60,7 +60,8 @@ public class NotificationIntegrationTest {
 
       // when & then
       mockMvc.perform(get("/api/notifications")
-              .header("Monew-Request-User-ID", user.getId()))
+              .header("Monew-Request-User-ID", user.getId())
+              .param("limit", "10"))
           .andExpect(status().isOk())
           .andExpect(jsonPath("$.content.length()").value(1))
           .andExpect(jsonPath("$.totalElements").value(1))
@@ -87,7 +88,8 @@ public class NotificationIntegrationTest {
 
       // when & then
       mockMvc.perform(get("/api/notifications")
-              .header("Monew-Request-User-ID", user.getId()))
+              .header("Monew-Request-User-ID", user.getId())
+              .param("limit", "10"))
           .andExpect(status().isOk())
           .andExpect(jsonPath("$.content.length()").value(1))
           .andExpect(jsonPath("$.totalElements").value(1))
@@ -255,7 +257,8 @@ public class NotificationIntegrationTest {
 
       // then — 목록 조회 시 0건
       mockMvc.perform(get("/api/notifications")
-              .header("Monew-Request-User-ID", user.getId()))
+              .header("Monew-Request-User-ID", user.getId())
+              .param("limit", "10"))
           .andExpect(status().isOk())
           .andExpect(jsonPath("$.content.length()").value(0))
           .andExpect(jsonPath("$.totalElements").value(0))

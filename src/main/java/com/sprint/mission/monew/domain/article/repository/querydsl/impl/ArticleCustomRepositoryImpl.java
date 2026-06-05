@@ -61,7 +61,8 @@ public class ArticleCustomRepositoryImpl implements ArticleCustomRepository {
         )
         .orderBy(
             buildOrderSpecifier(condition.orderBy(), condition.direction()),
-            buildCreatedAtOrderSpecifier(condition.direction())
+            buildCreatedAtOrderSpecifier(condition.direction()),
+            buildIdOrderSpecifier(condition.direction())
         )
         .limit(condition.limit() + 1L);
     if (condition.interestId() != null) {
@@ -89,17 +90,19 @@ public class ArticleCustomRepositoryImpl implements ArticleCustomRepository {
 
     String nextCursor = null;
     Instant nextAfter = null;
+    UUID nextIdAfter = null;
     if (hasNext && !rawContent.isEmpty()) {
       Tuple last = rawContent.get(rawContent.size() - 1);
       nextCursor = extractCursor(last, condition.orderBy());
       nextAfter = last.get(article.createdAt);
+      nextIdAfter = last.get(article.id);
     }
 
     return CursorPageResponse.of(
         content,
         nextCursor,
         nextAfter,
-        null,
+        nextIdAfter,
         hasNext,
         content.size(),
         null
@@ -136,32 +139,55 @@ public class ArticleCustomRepositoryImpl implements ArticleCustomRepository {
   private BooleanExpression cursorCondition(ArticleQueryCondition condition) {
     String cursor = condition.cursor();
     Instant after = condition.after();
+    UUID idAfter = condition.idAfter();
     boolean isAsc = condition.direction() == SortDirection.ASC;
     if (cursor == null) {
       return null;
     }
     return switch (condition.orderBy()) {
       case PUBLISH_DATE ->
-          buildCursorExpression(article.publishDate, Instant.parse(cursor), after, isAsc);
+          buildCursorExpression(article.publishDate, Instant.parse(cursor), after, idAfter, isAsc);
       case COMMENT_COUNT ->
-          buildCursorExpression(article.commentCount, Integer.parseInt(cursor), after, isAsc);
+          buildCursorExpression(article.commentCount, Integer.parseInt(cursor), after, idAfter, isAsc);
       case VIEW_COUNT ->
-          buildCursorExpression(article.viewCount, Integer.parseInt(cursor), after, isAsc);
+          buildCursorExpression(article.viewCount, Integer.parseInt(cursor), after, idAfter, isAsc);
     };
   }
 
   private BooleanExpression buildCursorExpression(
-      ComparableExpression<Instant> field, Instant cursorValue, Instant after, boolean isAsc) {
-    return isAsc
-        ? field.gt(cursorValue).or(field.eq(cursorValue).and(article.createdAt.gt(after)))
-        : field.lt(cursorValue).or(field.eq(cursorValue).and(article.createdAt.lt(after)));
+      ComparableExpression<Instant> field, Instant cursorValue, Instant after, UUID idAfter,
+      boolean isAsc) {
+    BooleanExpression sameField = field.eq(cursorValue);
+    BooleanExpression tiebreaker = idAfter != null
+        ? sameField.and(article.createdAt.eq(after)).and(isAsc
+            ? article.id.gt(idAfter)
+            : article.id.lt(idAfter))
+        : null;
+    BooleanExpression createdAtStep = sameField.and(isAsc
+        ? article.createdAt.gt(after)
+        : article.createdAt.lt(after));
+    BooleanExpression fieldStep = isAsc ? field.gt(cursorValue) : field.lt(cursorValue);
+    return tiebreaker != null
+        ? fieldStep.or(createdAtStep).or(tiebreaker)
+        : fieldStep.or(createdAtStep);
   }
 
   private BooleanExpression buildCursorExpression(
-      NumberExpression<Integer> field, int cursorValue, Instant after, boolean isAsc) {
-    return isAsc
-        ? field.gt(cursorValue).or(field.eq(cursorValue).and(article.createdAt.gt(after)))
-        : field.lt(cursorValue).or(field.eq(cursorValue).and(article.createdAt.lt(after)));
+      NumberExpression<Integer> field, int cursorValue, Instant after, UUID idAfter,
+      boolean isAsc) {
+    BooleanExpression sameField = field.eq(cursorValue);
+    BooleanExpression tiebreaker = idAfter != null
+        ? sameField.and(article.createdAt.eq(after)).and(isAsc
+            ? article.id.gt(idAfter)
+            : article.id.lt(idAfter))
+        : null;
+    BooleanExpression createdAtStep = sameField.and(isAsc
+        ? article.createdAt.gt(after)
+        : article.createdAt.lt(after));
+    BooleanExpression fieldStep = isAsc ? field.gt(cursorValue) : field.lt(cursorValue);
+    return tiebreaker != null
+        ? fieldStep.or(createdAtStep).or(tiebreaker)
+        : fieldStep.or(createdAtStep);
   }
 
   private String extractCursor(Tuple last, ArticleOrderBy orderBy) {
@@ -184,5 +210,10 @@ public class ArticleCustomRepositoryImpl implements ArticleCustomRepository {
   private OrderSpecifier<?> buildCreatedAtOrderSpecifier(SortDirection direction) {
     Order dir = direction == SortDirection.DESC ? Order.DESC : Order.ASC;
     return new OrderSpecifier<>(dir, article.createdAt);
+  }
+
+  private OrderSpecifier<?> buildIdOrderSpecifier(SortDirection direction) {
+    Order dir = direction == SortDirection.DESC ? Order.DESC : Order.ASC;
+    return new OrderSpecifier<>(dir, article.id);
   }
 }

@@ -75,7 +75,7 @@ def call_claude(conventions: str, diff: str) -> dict:
 
     response = client.messages.create(
         model="claude-sonnet-4-6",
-        max_tokens=2048,
+        max_tokens=4096,
         system=[
             {
                 "type": "text",
@@ -90,6 +90,12 @@ def call_claude(conventions: str, diff: str) -> dict:
             }
         ],
     )
+
+    if response.stop_reason == "max_tokens":
+        raise RuntimeError(
+            "Claude response was truncated (max_tokens reached). "
+            "Increase max_tokens or reduce the diff size."
+        )
 
     text = response.content[0].text.strip()
     text = re.sub(r"^```(?:json)?\s*", "", text)

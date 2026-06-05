@@ -64,7 +64,11 @@ public class ArticleCustomRepositoryImpl implements ArticleCustomRepository {
             buildCreatedAtOrderSpecifier(condition.direction())
         )
         .limit(condition.limit() + 1L);
-    joinInterest(query, condition);
+    if (condition.interestId() != null) {
+      query.join(articleInterest).on(
+          articleInterest.article.id.eq(article.id)
+              .and(articleInterest.interest.id.eq(condition.interestId())));
+    }
 
     List<Tuple> raw = query.fetch();
     boolean hasNext = raw.size() > condition.limit();
@@ -91,35 +95,14 @@ public class ArticleCustomRepositoryImpl implements ArticleCustomRepository {
       nextAfter = last.get(article.createdAt);
     }
 
-    JPAQuery<Long> countQuery = queryFactory
-        .select(article.count())
-        .from(article)
-        .where(
-            isNullDeletedAt(),
-            likeKeyword(condition.keyword()),
-            eqSourceIn(condition.sourceIn()),
-            goePublishDateFrom(condition.publishDateFrom()),
-            loePublishDateTo(condition.publishDateTo())
-        );
-    joinInterest(countQuery, condition);
-    Long totalElements = countQuery.fetchOne();
-
     return CursorPageResponse.of(
         content,
         nextCursor,
         nextAfter,
         hasNext,
         content.size(),
-        totalElements
+        null
     );
-  }
-
-  private <T> void joinInterest(JPAQuery<T> query, ArticleQueryCondition condition) {
-    if (condition.interestId() != null) {
-      query.join(articleInterest).on(
-          articleInterest.article.id.eq(article.id)
-              .and(articleInterest.interest.id.eq(condition.interestId())));
-    }
   }
 
   private BooleanExpression isNullDeletedAt() {

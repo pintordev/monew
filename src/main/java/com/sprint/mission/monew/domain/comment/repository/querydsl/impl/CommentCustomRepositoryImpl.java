@@ -74,7 +74,7 @@ public class CommentCustomRepositoryImpl implements CommentCustomRepository {
         nextAfter,
         hasNext,
         content.size(),
-        countByArticleId(condition.articleId())
+        null
     );
   }
 
@@ -129,18 +129,5 @@ public class CommentCustomRepositoryImpl implements CommentCustomRepository {
       case CREATED_AT -> last.createdAt().toString();
       case LIKE_COUNT -> String.valueOf(last.likeCount());
     };
-  }
-
-  @Override
-  public long countByArticleId(UUID articleId) {
-    Long count = queryFactory
-        .select(comment.count())
-        .from(comment)
-        .where(
-            eqArticleId(articleId),
-            isNullDeletedAt()
-        )
-        .fetchOne();
-    return count != null ? count : 0L;
   }
 }

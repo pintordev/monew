@@ -67,19 +67,13 @@ public class InterestCustomRepositoryImpl implements InterestCustomRepository {
       nextAfter = last.getCreatedAt();
     }
 
-    Long total = queryFactory
-        .select(interest.count())
-        .from(interest)
-        .where(likeNameOrKeyword(condition.keyword()))
-        .fetchOne();
-
     return CursorPageResponse.of(
         responses,
         nextCursor,
         nextAfter,
         hasNext,
         content.size(),
-        total
+        null
     );
   }
 

@@ -52,7 +52,9 @@ public class CommentCustomRepositoryImpl implements CommentCustomRepository {
             cursorCondition(condition)
         )
         .orderBy(
-            buildOrderSpecifiers(condition.orderBy(), condition.direction())
+            buildOrderSpecifier(condition.orderBy(), condition.direction()),
+            buildCreatedAtOrderSpecifier(condition.direction()),
+            buildIdOrderSpecifier(condition.direction())
         )
         .limit(condition.limit() + 1L)
         .fetch();
@@ -81,19 +83,22 @@ public class CommentCustomRepositoryImpl implements CommentCustomRepository {
     );
   }
 
-  private OrderSpecifier<?>[] buildOrderSpecifiers(CommentOrderBy orderBy, SortDirection direction) {
+  private OrderSpecifier<?> buildOrderSpecifier(CommentOrderBy orderBy, SortDirection direction) {
     Order dir = direction == SortDirection.ASC ? Order.ASC : Order.DESC;
     return switch (orderBy) {
-      case CREATED_AT -> new OrderSpecifier<?>[] {
-          new OrderSpecifier<>(dir, comment.createdAt),
-          new OrderSpecifier<>(dir, comment.id)
-      };
-      case LIKE_COUNT -> new OrderSpecifier<?>[] {
-          new OrderSpecifier<>(dir, comment.likeCount),
-          new OrderSpecifier<>(dir, comment.createdAt),
-          new OrderSpecifier<>(dir, comment.id)
-      };
+      case CREATED_AT -> new OrderSpecifier<>(dir, comment.createdAt);
+      case LIKE_COUNT -> new OrderSpecifier<>(dir, comment.likeCount);
     };
+  }
+
+  private OrderSpecifier<?> buildCreatedAtOrderSpecifier(SortDirection direction) {
+    Order dir = direction == SortDirection.ASC ? Order.ASC : Order.DESC;
+    return new OrderSpecifier<>(dir, comment.createdAt);
+  }
+
+  private OrderSpecifier<?> buildIdOrderSpecifier(SortDirection direction) {
+    Order dir = direction == SortDirection.ASC ? Order.ASC : Order.DESC;
+    return new OrderSpecifier<>(dir, comment.id);
   }
 
   private BooleanExpression eqArticleId(UUID articleId) {

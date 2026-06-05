@@ -156,7 +156,8 @@ class InterestControllerTest {
                   .param("direction", "ASC")
                   .param("limit", "10")
                   .param("cursor", "invalid")
-                  .param("after", java.time.Instant.now().toString()))
+                  .param("after", java.time.Instant.now().toString())
+                  .param("idAfter", UUID.randomUUID().toString()))
           .andExpect(status().isBadRequest());
       verifyNoInteractions(interestService);
     }

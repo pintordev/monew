@@ -428,6 +428,23 @@ public class CommentIntegrationTest {
     }
 
     @Test
+    @DisplayName("댓글 목록 조회 성공 - 등록순 cursor 적용")
+    void 댓글_목록조회_성공_등록순_cursor() throws Exception {
+      // given — comment의 createdAt을 cursor로 사용하면 그 이전 댓글은 없음
+      // when & then
+      mockMvc.perform(get("/api/comments")
+              .param("articleId", article.getId().toString())
+              .param("orderBy", "CREATED_AT")
+              .param("direction", "DESC")
+              .param("cursor", comment.getCreatedAt().toString())
+              .param("after", comment.getCreatedAt().toString())
+              .param("limit", "5")
+              .header("Monew-Request-User-ID", user.getId()))
+          .andExpect(status().isOk())
+          .andExpect(jsonPath("$.content.length()").value(0));
+    }
+
+    @Test
     @DisplayName("댓글 목록 조회 성공 - 좋아요순")
     void 댓글_목록조회_성공_좋아요순() throws Exception {
       // given
@@ -451,7 +468,7 @@ public class CommentIntegrationTest {
           .andExpect(status().isOk())
           .andExpect(jsonPath("$.content").isArray())
           .andExpect(jsonPath("$.content.length()").value(1))
-          .andExpect(jsonPath("$.nextCursor").exists());
+          .andExpect(jsonPath("$.hasNext").value(false));
     }
   }
 }

@@ -72,6 +72,7 @@ public class CommentCustomRepositoryImpl implements CommentCustomRepository {
         content,
         nextCursor,
         nextAfter,
+        null,
         hasNext,
         content.size(),
         null

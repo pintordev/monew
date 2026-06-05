@@ -99,6 +99,7 @@ public class ArticleCustomRepositoryImpl implements ArticleCustomRepository {
         content,
         nextCursor,
         nextAfter,
+        null,
         hasNext,
         content.size(),
         null

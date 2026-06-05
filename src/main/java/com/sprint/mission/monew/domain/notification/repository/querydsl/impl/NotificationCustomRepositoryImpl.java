@@ -70,6 +70,7 @@ public class NotificationCustomRepositoryImpl implements NotificationCustomRepos
         content,
         nextCursor,
         nextAfter,
+        null,
         hasNext,
         content.size(),
         totalElements

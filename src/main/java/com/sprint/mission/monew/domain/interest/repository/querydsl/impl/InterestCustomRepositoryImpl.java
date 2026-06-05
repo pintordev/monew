@@ -71,6 +71,7 @@ public class InterestCustomRepositoryImpl implements InterestCustomRepository {
         responses,
         nextCursor,
         nextAfter,
+        null,
         hasNext,
         content.size(),
         null

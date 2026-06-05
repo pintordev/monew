@@ -93,6 +93,7 @@ public class CommentIntegrationTest {
 
       // when & then
       mockMvc.perform(post("/api/comments")
+              .header("Monew-Request-User-ID", user.getId())
               .contentType(MediaType.APPLICATION_JSON)
               .content(requestBody))
           .andExpect(status().isBadRequest());
@@ -111,6 +112,7 @@ public class CommentIntegrationTest {
 
       // when & then
       mockMvc.perform(post("/api/comments")
+              .header("Monew-Request-User-ID", user.getId())
               .contentType(MediaType.APPLICATION_JSON)
               .content(requestBody))
           .andExpect(status().isBadRequest());
@@ -130,6 +132,7 @@ public class CommentIntegrationTest {
 
       // when & then
       mockMvc.perform(post("/api/comments")
+              .header("Monew-Request-User-ID", user.getId())
               .contentType(MediaType.APPLICATION_JSON)
               .content(requestBody))
           .andExpect(status().isBadRequest());

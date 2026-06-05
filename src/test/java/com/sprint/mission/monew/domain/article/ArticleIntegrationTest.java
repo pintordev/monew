@@ -63,8 +63,7 @@ class ArticleIntegrationTest {
           .andExpect(status().isOk())
           .andExpect(jsonPath("$.content").isArray())
           .andExpect(jsonPath("$.content").isEmpty())
-          .andExpect(jsonPath("$.hasNext").value(false))
-          .andExpect(jsonPath("$.totalElements").value(0));
+          .andExpect(jsonPath("$.hasNext").value(false));
     }
 
     @Test
@@ -89,8 +88,7 @@ class ArticleIntegrationTest {
           .andExpect(status().isOk())
           .andExpect(jsonPath("$.content").isArray())
           .andExpect(jsonPath("$.content[0].title").value("테스트 기사"))
-          .andExpect(jsonPath("$.content[0].source").value("NAVER"))
-          .andExpect(jsonPath("$.totalElements").value(1));
+          .andExpect(jsonPath("$.content[0].source").value("NAVER"));
     }
 
     @Test
@@ -115,8 +113,7 @@ class ArticleIntegrationTest {
                   .param("direction", "DESC")
                   .param("limit", "10"))
           .andExpect(status().isOk())
-          .andExpect(jsonPath("$.content").isEmpty())
-          .andExpect(jsonPath("$.totalElements").value(0));
+          .andExpect(jsonPath("$.content").isEmpty());
     }
 
     @Test

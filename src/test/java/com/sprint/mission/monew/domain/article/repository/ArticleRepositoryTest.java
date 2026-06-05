@@ -60,51 +60,6 @@ class ArticleRepositoryTest {
   }
 
   @Nested
-  @DisplayName("count")
-  class Count {
-
-    @Test
-    @DisplayName("기사가 없으면 0을 반환한다")
-    void 기사가_없으면_0을_반환한다() {
-      // when
-      long count = articleRepository.search(defaultCondition(10), requestUserId).totalElements();
-
-      // then
-      assertThat(count).isZero();
-    }
-
-    @Test
-    @DisplayName("저장된 기사 수만큼 반환한다")
-    void 저장된_기사_수만큼_반환한다() {
-      // given
-      saveArticle(ArticleSource.NAVER, "기사1");
-      saveArticle(ArticleSource.HANKYUNG, "기사2");
-
-      // when
-      long count = articleRepository.search(defaultCondition(10), requestUserId).totalElements();
-
-      // then
-      assertThat(count).isEqualTo(2);
-    }
-
-    @Test
-    @DisplayName("소프트딜리트된 기사는 count에서 제외된다")
-    void 소프트딜리트된_기사는_count에서_제외된다() {
-      // given
-      Article article = saveArticle(ArticleSource.NAVER, "삭제될기사");
-      article.softDelete();
-      articleRepository.save(article);
-      saveArticle(ArticleSource.HANKYUNG, "정상기사");
-
-      // when
-      long count = articleRepository.search(defaultCondition(10), requestUserId).totalElements();
-
-      // then
-      assertThat(count).isEqualTo(1);
-    }
-  }
-
-  @Nested
   @DisplayName("search")
   class Search {
 

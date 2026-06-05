@@ -62,17 +62,19 @@ public class CommentCustomRepositoryImpl implements CommentCustomRepository {
 
     String nextCursor = null;
     Instant nextAfter = null;
+    UUID nextIdAfter = null;
     if (hasNext && !content.isEmpty()) {
       CommentResponse last = content.get(content.size() - 1);
       nextCursor = extractCursor(last, condition.orderBy());
       nextAfter = last.createdAt();
+      nextIdAfter = last.id();
     }
 
     return CursorPageResponse.of(
         content,
         nextCursor,
         nextAfter,
-        null,
+        nextIdAfter,
         hasNext,
         content.size(),
         null
@@ -83,11 +85,13 @@ public class CommentCustomRepositoryImpl implements CommentCustomRepository {
     Order dir = direction == SortDirection.ASC ? Order.ASC : Order.DESC;
     return switch (orderBy) {
       case CREATED_AT -> new OrderSpecifier<?>[] {
-          new OrderSpecifier<>(dir, comment.createdAt)
+          new OrderSpecifier<>(dir, comment.createdAt),
+          new OrderSpecifier<>(dir, comment.id)
       };
       case LIKE_COUNT -> new OrderSpecifier<?>[] {
           new OrderSpecifier<>(dir, comment.likeCount),
-          new OrderSpecifier<>(dir, comment.createdAt)
+          new OrderSpecifier<>(dir, comment.createdAt),
+          new OrderSpecifier<>(dir, comment.id)
       };
     };
   }
@@ -103,26 +107,43 @@ public class CommentCustomRepositoryImpl implements CommentCustomRepository {
   private BooleanExpression cursorCondition(CommentQueryCondition condition) {
     String cursor = condition.cursor();
     Instant after = condition.after();
+    UUID idAfter = condition.idAfter();
     boolean isAsc = condition.direction() == SortDirection.ASC;
     if (cursor == null) {
       return null;
     }
     return switch (condition.orderBy()) {
-      case CREATED_AT -> buildCursorExpression(comment.createdAt, Instant.parse(cursor), isAsc);
-      case LIKE_COUNT -> buildCursorExpression(comment.likeCount, Long.parseLong(cursor), after, isAsc);
+      case CREATED_AT -> buildCursorExpression(comment.createdAt, Instant.parse(cursor), idAfter, isAsc);
+      case LIKE_COUNT -> buildCursorExpression(comment.likeCount, Long.parseLong(cursor), after, idAfter, isAsc);
     };
   }
 
   private BooleanExpression buildCursorExpression(
-      ComparableExpression<Instant> field, Instant cursorValue, boolean isAsc) {
-    return isAsc ? field.gt(cursorValue) : field.lt(cursorValue);
+      ComparableExpression<Instant> field, Instant cursorValue, UUID idAfter, boolean isAsc) {
+    BooleanExpression fieldStep = isAsc ? field.gt(cursorValue) : field.lt(cursorValue);
+    if (idAfter == null) {
+      return fieldStep;
+    }
+    BooleanExpression tiebreaker = field.eq(cursorValue).and(isAsc
+        ? comment.id.gt(idAfter)
+        : comment.id.lt(idAfter));
+    return fieldStep.or(tiebreaker);
   }
 
   private BooleanExpression buildCursorExpression(
-      NumberExpression<Long> field, long cursorValue, Instant after, boolean isAsc) {
-    return isAsc
-        ? field.gt(cursorValue).or(field.eq(cursorValue).and(comment.createdAt.gt(after)))
-        : field.lt(cursorValue).or(field.eq(cursorValue).and(comment.createdAt.lt(after)));
+      NumberExpression<Long> field, long cursorValue, Instant after, UUID idAfter, boolean isAsc) {
+    BooleanExpression sameField = field.eq(cursorValue);
+    BooleanExpression createdAtStep = sameField.and(isAsc
+        ? comment.createdAt.gt(after)
+        : comment.createdAt.lt(after));
+    BooleanExpression fieldStep = isAsc ? field.gt(cursorValue) : field.lt(cursorValue);
+    if (idAfter == null) {
+      return fieldStep.or(createdAtStep);
+    }
+    BooleanExpression tiebreaker = sameField.and(comment.createdAt.eq(after)).and(isAsc
+        ? comment.id.gt(idAfter)
+        : comment.id.lt(idAfter));
+    return fieldStep.or(createdAtStep).or(tiebreaker);
   }
 
   private String extractCursor(CommentResponse last, CommentOrderBy orderBy) {

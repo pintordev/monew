@@ -40,7 +40,10 @@ public class NotificationCustomRepositoryImpl implements NotificationCustomRepos
             isNullConfirmedAt(),
             cursorCondition(condition)
         )
-        .orderBy(buildOrderSpecifier())
+        .orderBy(
+            buildCreatedAtOrderSpecifier(),
+            buildIdOrderSpecifier()
+        )
         .limit(condition.limit() + 1L)
         .fetch();
 
@@ -91,19 +94,15 @@ public class NotificationCustomRepositoryImpl implements NotificationCustomRepos
     if (cursor == null) {
       return null;
     }
-    BooleanExpression createdAtStep = notification.createdAt.gt(cursor);
-    if (idAfter == null) {
-      return createdAtStep;
-    }
-    return createdAtStep.or(
-        notification.createdAt.eq(cursor).and(notification.id.gt(idAfter))
-    );
+    return notification.createdAt.gt(cursor)
+        .or(notification.createdAt.eq(cursor).and(notification.id.gt(idAfter)));
   }
 
-  private OrderSpecifier<?>[] buildOrderSpecifier() {
-    return new OrderSpecifier<?>[] {
-        new OrderSpecifier<>(Order.ASC, notification.createdAt),
-        new OrderSpecifier<>(Order.ASC, notification.id)
-    };
+  private OrderSpecifier<?> buildCreatedAtOrderSpecifier() {
+    return new OrderSpecifier<>(Order.ASC, notification.createdAt);
+  }
+
+  private OrderSpecifier<?> buildIdOrderSpecifier() {
+    return new OrderSpecifier<>(Order.ASC, notification.id);
   }
 }

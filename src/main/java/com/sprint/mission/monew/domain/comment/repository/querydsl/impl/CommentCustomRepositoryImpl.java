@@ -120,30 +120,22 @@ public class CommentCustomRepositoryImpl implements CommentCustomRepository {
 
   private BooleanExpression buildCursorExpression(
       ComparableExpression<Instant> field, Instant cursorValue, UUID idAfter, boolean isAsc) {
-    BooleanExpression fieldStep = isAsc ? field.gt(cursorValue) : field.lt(cursorValue);
-    if (idAfter == null) {
-      return fieldStep;
-    }
-    BooleanExpression tiebreaker = field.eq(cursorValue).and(isAsc
-        ? comment.id.gt(idAfter)
-        : comment.id.lt(idAfter));
-    return fieldStep.or(tiebreaker);
+    return isAsc
+        ? field.gt(cursorValue)
+            .or(field.eq(cursorValue).and(comment.id.gt(idAfter)))
+        : field.lt(cursorValue)
+            .or(field.eq(cursorValue).and(comment.id.lt(idAfter)));
   }
 
   private BooleanExpression buildCursorExpression(
       NumberExpression<Long> field, long cursorValue, Instant after, UUID idAfter, boolean isAsc) {
-    BooleanExpression sameField = field.eq(cursorValue);
-    BooleanExpression createdAtStep = sameField.and(isAsc
-        ? comment.createdAt.gt(after)
-        : comment.createdAt.lt(after));
-    BooleanExpression fieldStep = isAsc ? field.gt(cursorValue) : field.lt(cursorValue);
-    if (idAfter == null) {
-      return fieldStep.or(createdAtStep);
-    }
-    BooleanExpression tiebreaker = sameField.and(comment.createdAt.eq(after)).and(isAsc
-        ? comment.id.gt(idAfter)
-        : comment.id.lt(idAfter));
-    return fieldStep.or(createdAtStep).or(tiebreaker);
+    return isAsc
+        ? field.gt(cursorValue)
+            .or(field.eq(cursorValue).and(comment.createdAt.gt(after)))
+            .or(field.eq(cursorValue).and(comment.createdAt.eq(after)).and(comment.id.gt(idAfter)))
+        : field.lt(cursorValue)
+            .or(field.eq(cursorValue).and(comment.createdAt.lt(after)))
+            .or(field.eq(cursorValue).and(comment.createdAt.eq(after)).and(comment.id.lt(idAfter)));
   }
 
   private String extractCursor(CommentResponse last, CommentOrderBy orderBy) {

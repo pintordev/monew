@@ -118,34 +118,24 @@ public class InterestCustomRepositoryImpl implements InterestCustomRepository {
   private BooleanExpression buildCursorExpression(
       ComparableExpression<String> field, String cursorValue, Instant after, UUID idAfter,
       boolean isAsc) {
-    BooleanExpression sameField = field.eq(cursorValue);
-    BooleanExpression createdAtStep = sameField.and(isAsc
-        ? interest.createdAt.gt(after)
-        : interest.createdAt.lt(after));
-    BooleanExpression fieldStep = isAsc ? field.gt(cursorValue) : field.lt(cursorValue);
-    if (idAfter == null) {
-      return fieldStep.or(createdAtStep);
-    }
-    BooleanExpression tiebreaker = sameField.and(interest.createdAt.eq(after)).and(isAsc
-        ? interest.id.gt(idAfter)
-        : interest.id.lt(idAfter));
-    return fieldStep.or(createdAtStep).or(tiebreaker);
+    return isAsc
+        ? field.gt(cursorValue)
+            .or(field.eq(cursorValue).and(interest.createdAt.gt(after)))
+            .or(field.eq(cursorValue).and(interest.createdAt.eq(after)).and(interest.id.gt(idAfter)))
+        : field.lt(cursorValue)
+            .or(field.eq(cursorValue).and(interest.createdAt.lt(after)))
+            .or(field.eq(cursorValue).and(interest.createdAt.eq(after)).and(interest.id.lt(idAfter)));
   }
 
   private BooleanExpression buildCursorExpression(
       NumberExpression<Long> field, Long cursorValue, Instant after, UUID idAfter, boolean isAsc) {
-    BooleanExpression sameField = field.eq(cursorValue);
-    BooleanExpression createdAtStep = sameField.and(isAsc
-        ? interest.createdAt.gt(after)
-        : interest.createdAt.lt(after));
-    BooleanExpression fieldStep = isAsc ? field.gt(cursorValue) : field.lt(cursorValue);
-    if (idAfter == null) {
-      return fieldStep.or(createdAtStep);
-    }
-    BooleanExpression tiebreaker = sameField.and(interest.createdAt.eq(after)).and(isAsc
-        ? interest.id.gt(idAfter)
-        : interest.id.lt(idAfter));
-    return fieldStep.or(createdAtStep).or(tiebreaker);
+    return isAsc
+        ? field.gt(cursorValue)
+            .or(field.eq(cursorValue).and(interest.createdAt.gt(after)))
+            .or(field.eq(cursorValue).and(interest.createdAt.eq(after)).and(interest.id.gt(idAfter)))
+        : field.lt(cursorValue)
+            .or(field.eq(cursorValue).and(interest.createdAt.lt(after)))
+            .or(field.eq(cursorValue).and(interest.createdAt.eq(after)).and(interest.id.lt(idAfter)));
   }
 
   private OrderSpecifier<?> buildOrderSpecifier(InterestOrderBy orderBy, SortDirection direction) {

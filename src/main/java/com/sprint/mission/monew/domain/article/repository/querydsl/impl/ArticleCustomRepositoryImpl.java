@@ -157,37 +157,25 @@ public class ArticleCustomRepositoryImpl implements ArticleCustomRepository {
   private BooleanExpression buildCursorExpression(
       ComparableExpression<Instant> field, Instant cursorValue, Instant after, UUID idAfter,
       boolean isAsc) {
-    BooleanExpression sameField = field.eq(cursorValue);
-    BooleanExpression tiebreaker = idAfter != null
-        ? sameField.and(article.createdAt.eq(after)).and(isAsc
-            ? article.id.gt(idAfter)
-            : article.id.lt(idAfter))
-        : null;
-    BooleanExpression createdAtStep = sameField.and(isAsc
-        ? article.createdAt.gt(after)
-        : article.createdAt.lt(after));
-    BooleanExpression fieldStep = isAsc ? field.gt(cursorValue) : field.lt(cursorValue);
-    return tiebreaker != null
-        ? fieldStep.or(createdAtStep).or(tiebreaker)
-        : fieldStep.or(createdAtStep);
+    return isAsc
+        ? field.gt(cursorValue)
+            .or(field.eq(cursorValue).and(article.createdAt.gt(after)))
+            .or(field.eq(cursorValue).and(article.createdAt.eq(after)).and(article.id.gt(idAfter)))
+        : field.lt(cursorValue)
+            .or(field.eq(cursorValue).and(article.createdAt.lt(after)))
+            .or(field.eq(cursorValue).and(article.createdAt.eq(after)).and(article.id.lt(idAfter)));
   }
 
   private BooleanExpression buildCursorExpression(
       NumberExpression<Integer> field, int cursorValue, Instant after, UUID idAfter,
       boolean isAsc) {
-    BooleanExpression sameField = field.eq(cursorValue);
-    BooleanExpression tiebreaker = idAfter != null
-        ? sameField.and(article.createdAt.eq(after)).and(isAsc
-            ? article.id.gt(idAfter)
-            : article.id.lt(idAfter))
-        : null;
-    BooleanExpression createdAtStep = sameField.and(isAsc
-        ? article.createdAt.gt(after)
-        : article.createdAt.lt(after));
-    BooleanExpression fieldStep = isAsc ? field.gt(cursorValue) : field.lt(cursorValue);
-    return tiebreaker != null
-        ? fieldStep.or(createdAtStep).or(tiebreaker)
-        : fieldStep.or(createdAtStep);
+    return isAsc
+        ? field.gt(cursorValue)
+            .or(field.eq(cursorValue).and(article.createdAt.gt(after)))
+            .or(field.eq(cursorValue).and(article.createdAt.eq(after)).and(article.id.gt(idAfter)))
+        : field.lt(cursorValue)
+            .or(field.eq(cursorValue).and(article.createdAt.lt(after)))
+            .or(field.eq(cursorValue).and(article.createdAt.eq(after)).and(article.id.lt(idAfter)));
   }
 
   private String extractCursor(Tuple last, ArticleOrderBy orderBy) {

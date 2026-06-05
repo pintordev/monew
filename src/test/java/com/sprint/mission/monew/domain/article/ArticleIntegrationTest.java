@@ -156,6 +156,7 @@ class ArticleIntegrationTest {
                   .param("direction", "DESC")
                   .param("cursor", "5")
                   .param("after", "2024-01-01T00:00:00Z")
+                  .param("idAfter", UUID.randomUUID().toString())
                   .param("limit", "10"))
           .andExpect(status().isOk());
     }

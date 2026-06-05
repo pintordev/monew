@@ -19,7 +19,8 @@ public record InterestQueryCondition(
 
   @AssertTrue(message = "cursor, after, idAfter는 함께 전달되어야 합니다")
   public boolean isCursorAndAfterAndIdAfterConsistent() {
-    return (cursor == null) == (after == null) == (idAfter == null);
+    return (cursor == null && after == null && idAfter == null)
+        || (cursor != null && after != null && idAfter != null);
   }
 
   @AssertTrue(message = "subscriberCount 기준 커서는 숫자여야 합니다")

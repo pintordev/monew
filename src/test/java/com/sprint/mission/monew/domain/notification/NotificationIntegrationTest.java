@@ -138,7 +138,8 @@ public class NotificationIntegrationTest {
               .header("Monew-Request-User-ID", user.getId())
               .param("limit", "10")
               .param("cursor", "1970-01-01T00:00:00Z")
-              .param("after", "1970-01-01T00:00:00Z"))
+              .param("after", "1970-01-01T00:00:00Z")
+              .param("idAfter", UUID.randomUUID().toString()))
           .andExpect(status().isOk())
           .andExpect(jsonPath("$.content.length()").value(1));
     }

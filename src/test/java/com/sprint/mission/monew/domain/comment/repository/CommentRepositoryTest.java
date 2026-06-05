@@ -312,7 +312,7 @@ public class CommentRepositoryTest {
           CommentOrderBy.CREATED_AT,
           SortDirection.DESC,
           null,
-          null,
+          null, null,
           5
       );
 
@@ -362,7 +362,7 @@ public class CommentRepositoryTest {
           CommentOrderBy.LIKE_COUNT,
           SortDirection.DESC,
           null,
-          null,
+          null, null,
           5
       );
 
@@ -395,6 +395,7 @@ public class CommentRepositoryTest {
           article.getId(),
           CommentOrderBy.CREATED_AT,
           SortDirection.DESC,
+          null,
           null,
           null,
           5
@@ -432,6 +433,7 @@ public class CommentRepositoryTest {
           SortDirection.DESC,
           secondComment.getCreatedAt().toString(), // 두번째 시간 이전의 댓글(firstComment)만 조회됨
           null,
+          secondComment.getId(),
           5
       );
 
@@ -481,6 +483,7 @@ public class CommentRepositoryTest {
           SortDirection.DESC,
           "2",
           secondComment.getCreatedAt(),
+          secondComment.getId(),
           5
       );
 
@@ -536,7 +539,7 @@ public class CommentRepositoryTest {
           CommentOrderBy.LIKE_COUNT,
           SortDirection.ASC,
           null,
-          null,
+          null, null,
           2
       );
 
@@ -562,6 +565,7 @@ public class CommentRepositoryTest {
           SortDirection.ASC,
           String.valueOf(lastOfTwoGroup.likeCount()),
           lastOfTwoGroup.createdAt(),
+          lastOfTwoGroup.id(),
           5
       );
 

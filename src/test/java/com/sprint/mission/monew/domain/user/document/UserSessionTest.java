@@ -61,4 +61,26 @@ class UserSessionTest {
           .isBeforeOrEqualTo(after.plus(30, ChronoUnit.MINUTES));
     }
   }
+
+  @Nested
+  @DisplayName("만료 갱신")
+  class RefreshExpiry {
+
+    @Test
+    @DisplayName("refreshExpiry 호출 시 expiresAt이 연장됨")
+    void refreshExpiry_호출_시_expiresAt이_연장됨() {
+      // given
+      UserSession session = UserSession.create(UUID.randomUUID(), "1.2.3.4", "fp", 30);
+      Instant before = Instant.now();
+
+      // when
+      session.refreshExpiry(30);
+
+      // then
+      Instant after = Instant.now();
+      assertThat(session.getExpiresAt())
+          .isAfterOrEqualTo(before.plus(30, ChronoUnit.MINUTES))
+          .isBeforeOrEqualTo(after.plus(30, ChronoUnit.MINUTES));
+    }
+  }
 }

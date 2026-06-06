@@ -34,4 +34,9 @@ public class UserSession {
     session.expiresAt = session.lastAccessedAt.plus(timeoutMinutes, ChronoUnit.MINUTES);
     return session;
   }
+
+  public void refreshExpiry(int timeoutMinutes) {
+    this.lastAccessedAt = Instant.now();
+    this.expiresAt = this.lastAccessedAt.plus(timeoutMinutes, ChronoUnit.MINUTES);
+  }
 }

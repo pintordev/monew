@@ -55,4 +55,23 @@ class UserSessionRepositoryTest {
       assertThat(result).isEmpty();
     }
   }
+
+  @Nested
+  @DisplayName("세션 삭제")
+  class DeleteById {
+
+    @Test
+    @DisplayName("삭제 후 조회 시 빈 Optional 반환")
+    void 삭제_후_조회_시_빈_Optional_반환() {
+      // given
+      UserSession session = UserSession.create(UUID.randomUUID(), "1.2.3.4", "fp-abc", 30);
+      userSessionRepository.save(session);
+
+      // when
+      userSessionRepository.deleteById(session.getId());
+
+      // then
+      assertThat(userSessionRepository.findById(session.getId())).isEmpty();
+    }
+  }
 }

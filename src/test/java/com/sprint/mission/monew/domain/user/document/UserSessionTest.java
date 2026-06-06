@@ -2,6 +2,8 @@ package com.sprint.mission.monew.domain.user.document;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
+import java.time.Instant;
+import java.time.temporal.ChronoUnit;
 import java.util.UUID;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
@@ -41,6 +43,22 @@ class UserSessionTest {
       assertThat(session.getUserId()).isEqualTo(userId);
       assertThat(session.getIp()).isEqualTo("1.2.3.4");
       assertThat(session.getDeviceFingerprint()).isEqualTo("fp-abc");
+    }
+
+    @Test
+    @DisplayName("expiresAt은 생성 시각 + timeoutMinutes")
+    void expiresAt은_생성_시각_plus_timeoutMinutes() {
+      // given
+      Instant before = Instant.now();
+
+      // when
+      UserSession session = UserSession.create(UUID.randomUUID(), "1.2.3.4", "fp", 30);
+
+      // then
+      Instant after = Instant.now();
+      assertThat(session.getExpiresAt())
+          .isAfterOrEqualTo(before.plus(30, ChronoUnit.MINUTES))
+          .isBeforeOrEqualTo(after.plus(30, ChronoUnit.MINUTES));
     }
   }
 }

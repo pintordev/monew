@@ -7,6 +7,7 @@ import lombok.AccessLevel;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import org.springframework.data.annotation.Id;
+import org.springframework.data.mongodb.core.index.Indexed;
 import org.springframework.data.mongodb.core.mapping.Document;
 
 @Getter
@@ -18,9 +19,14 @@ public class UserSession {
   private UUID id;
 
   private UUID userId;
+
   private String ip;
+
   private String deviceFingerprint;
+
   private Instant lastAccessedAt;
+
+  @Indexed(expireAfter = "0s")
   private Instant expiresAt;
 
   public static UserSession create(UUID userId, String ip, String deviceFingerprint,

@@ -244,7 +244,7 @@ class UserServiceTest {
 
       // then
       assertThat(result).isNotNull();
-      assertThat(result.user().email()).isEqualTo("test@test.com");
+      assertThat(result.response().email()).isEqualTo("test@test.com");
     }
 
     @Test

@@ -48,7 +48,7 @@ public class UserController implements UserApi {
   @Override
   public ResponseEntity<UserResponse> login(@Valid @RequestBody UserLoginRequest request,
       HttpServletRequest httpRequest) {
-    String ip = httpRequest.getRemoteAddr();
+    String ip = resolveClientIp(httpRequest);
     String fingerprint = buildFingerprint(httpRequest);
     LoginResult result = userService.login(request, ip, fingerprint);
     return ResponseEntity.ok()
@@ -56,12 +56,23 @@ public class UserController implements UserApi {
         .body(result.response());
   }
 
+  private String resolveClientIp(HttpServletRequest req) {
+    String cf = req.getHeader("CF-Connecting-IP");
+    if (cf != null && !cf.isBlank()) {
+      return cf;
+    }
+    String xff = req.getHeader("X-Forwarded-For");
+    if (xff != null && !xff.isBlank()) {
+      return xff.split(",")[0].trim();
+    }
+    return req.getRemoteAddr();
+  }
+
   private String buildFingerprint(HttpServletRequest req) {
-    return String.valueOf(
-        (req.getHeader("User-Agent") + "|"
-            + req.getHeader("Accept-Language") + "|"
-            + req.getHeader("Accept-Encoding")).hashCode()
-    );
+    String raw = req.getHeader("User-Agent") + "|"
+        + req.getHeader("Accept-Language") + "|"
+        + req.getHeader("Accept-Encoding");
+    return org.springframework.util.DigestUtils.md5DigestAsHex(raw.getBytes());
   }
 
   @GetMapping("/verify")

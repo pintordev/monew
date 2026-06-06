@@ -52,7 +52,7 @@ public class UserController implements UserApi {
     String fingerprint = buildFingerprint(httpRequest);
     LoginResult result = userService.login(request, ip, fingerprint);
     return ResponseEntity.ok()
-        .header("Monew-Session-Token", result.sessionToken().toString())
+        .header("Monew-Request-User-ID", result.sessionToken().toString())
         .body(result.response());
   }
 

@@ -9,6 +9,8 @@ import static org.mockito.BDDMockito.given;
 import static org.mockito.BDDMockito.then;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.times;
+import com.sprint.mission.monew.domain.user.document.UserSession;
+import com.sprint.mission.monew.domain.user.dto.LoginResult;
 import com.sprint.mission.monew.domain.user.dto.UserCreateRequest;
 import com.sprint.mission.monew.domain.user.dto.UserLoginRequest;
 import com.sprint.mission.monew.domain.user.dto.UserPasswordResetCodeRequest;
@@ -34,6 +36,7 @@ import com.sprint.mission.monew.domain.user.exception.UserInvalidUnlockTokenExce
 import com.sprint.mission.monew.domain.user.mapper.UserMapper;
 import com.sprint.mission.monew.domain.user.repository.EmailVerificationRepository;
 import com.sprint.mission.monew.domain.user.repository.PasswordResetTokenRepository;
+import com.sprint.mission.monew.domain.user.repository.UserSessionRepository;
 import com.sprint.mission.monew.domain.user.repository.UserUnlockTokenRepository;
 import com.sprint.mission.monew.domain.user.repository.UserRepository;
 import java.time.Instant;
@@ -79,6 +82,9 @@ class UserServiceTest {
 
   @Mock
   private UserUnlockTokenRepository userUnlockTokenRepository;
+
+  @Mock
+  private UserSessionRepository userSessionRepository;
 
   @Nested
   @DisplayName("회원가입")
@@ -186,7 +192,7 @@ class UserServiceTest {
           .willReturn(Optional.empty());
 
       // when & then
-      assertThatThrownBy(() -> userService.login(request))
+      assertThatThrownBy(() -> userService.login(request, "127.0.0.1", "fp-test"))
           .isInstanceOf(UserLoginFailedException.class);
     }
 
@@ -199,7 +205,7 @@ class UserServiceTest {
           .willReturn(Optional.of(user));
 
       // when & then
-      assertThatThrownBy(() -> userService.login(request))
+      assertThatThrownBy(() -> userService.login(request, "127.0.0.1", "fp-test"))
           .isInstanceOf(UserEmailNotVerifiedException.class);
     }
 
@@ -214,7 +220,7 @@ class UserServiceTest {
       given(passwordEncoder.matches(request.password(), user.getPassword())).willReturn(false);
 
       // when & then
-      assertThatThrownBy(() -> userService.login(request))
+      assertThatThrownBy(() -> userService.login(request, "127.0.0.1", "fp-test"))
           .isInstanceOf(UserLoginFailedException.class);
     }
 
@@ -231,13 +237,14 @@ class UserServiceTest {
           .willReturn(Optional.of(user));
       given(passwordEncoder.matches(request.password(), user.getPassword())).willReturn(true);
       given(userMapper.toResponse(user)).willReturn(userResponse);
+      given(userSessionRepository.save(any(UserSession.class))).willAnswer(inv -> inv.getArgument(0));
 
       // when
-      UserResponse result = userService.login(request);
+      LoginResult result = userService.login(request, "127.0.0.1", "fp-test");
 
       // then
       assertThat(result).isNotNull();
-      assertThat(result.email()).isEqualTo("test@test.com");
+      assertThat(result.user().email()).isEqualTo("test@test.com");
     }
 
     @Test
@@ -251,7 +258,7 @@ class UserServiceTest {
           .willReturn(Optional.of(user));
 
       // when & then
-      assertThatThrownBy(() -> userService.login(request))
+      assertThatThrownBy(() -> userService.login(request, "127.0.0.1", "fp-test"))
           .isInstanceOf(UserAccountLockedException.class);
     }
 
@@ -266,7 +273,7 @@ class UserServiceTest {
       given(passwordEncoder.matches(request.password(), user.getPassword())).willReturn(false);
 
       // when & then
-      assertThatThrownBy(() -> userService.login(request))
+      assertThatThrownBy(() -> userService.login(request, "127.0.0.1", "fp-test"))
           .isInstanceOf(UserLoginFailedException.class);
       assertThat(user.getLoginFailCount()).isEqualTo(1);
     }
@@ -283,7 +290,7 @@ class UserServiceTest {
 
       // when - 5회 실패
       for (int i = 0; i < 5; i++) {
-        assertThatThrownBy(() -> userService.login(request))
+        assertThatThrownBy(() -> userService.login(request, "127.0.0.1", "fp-test"))
             .isInstanceOf(UserLoginFailedException.class);
       }
 
@@ -306,12 +313,36 @@ class UserServiceTest {
           .willReturn(Optional.of(user));
       given(passwordEncoder.matches(request.password(), user.getPassword())).willReturn(true);
       given(userMapper.toResponse(user)).willReturn(userResponse);
+      given(userSessionRepository.save(any(UserSession.class))).willAnswer(inv -> inv.getArgument(0));
 
       // when
-      userService.login(request);
+      userService.login(request, "127.0.0.1", "fp-test");
 
       // then
       assertThat(user.getLoginFailCount()).isEqualTo(0);
+    }
+
+    @Test
+    @DisplayName("성공 시 UserSession 저장 및 sessionToken 반환")
+    void 성공_시_UserSession_저장_및_sessionToken_반환() {
+      // given
+      User user = User.create("test@test.com", "테스터", "encodedPassword");
+      user.verifyEmail();
+      UserResponse userResponse = new UserResponse(
+          UUID.randomUUID(), "test@test.com", "테스터", Instant.now()
+      );
+      given(userRepository.findByEmailAndDeletedAtIsNull(request.email()))
+          .willReturn(Optional.of(user));
+      given(passwordEncoder.matches(request.password(), user.getPassword())).willReturn(true);
+      given(userMapper.toResponse(user)).willReturn(userResponse);
+      given(userSessionRepository.save(any(UserSession.class))).willAnswer(inv -> inv.getArgument(0));
+
+      // when
+      LoginResult result = userService.login(request, "127.0.0.1", "fp-test");
+
+      // then
+      then(userSessionRepository).should().save(any(UserSession.class));
+      assertThat(result.sessionToken()).isNotNull();
     }
   }
 

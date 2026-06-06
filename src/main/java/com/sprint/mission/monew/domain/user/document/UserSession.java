@@ -1,5 +1,7 @@
 package com.sprint.mission.monew.domain.user.document;
 
+import java.time.Instant;
+import java.time.temporal.ChronoUnit;
 import java.util.UUID;
 import lombok.AccessLevel;
 import lombok.Getter;
@@ -18,6 +20,8 @@ public class UserSession {
   private UUID userId;
   private String ip;
   private String deviceFingerprint;
+  private Instant lastAccessedAt;
+  private Instant expiresAt;
 
   public static UserSession create(UUID userId, String ip, String deviceFingerprint,
       int timeoutMinutes) {
@@ -26,6 +30,8 @@ public class UserSession {
     session.userId = userId;
     session.ip = ip;
     session.deviceFingerprint = deviceFingerprint;
+    session.lastAccessedAt = Instant.now();
+    session.expiresAt = session.lastAccessedAt.plus(timeoutMinutes, ChronoUnit.MINUTES);
     return session;
   }
 }

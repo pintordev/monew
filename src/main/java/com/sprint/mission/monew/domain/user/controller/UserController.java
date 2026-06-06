@@ -1,6 +1,7 @@
 package com.sprint.mission.monew.domain.user.controller;
 
 import com.sprint.mission.monew.domain.user.controller.api.UserApi;
+import com.sprint.mission.monew.domain.user.dto.LoginResult;
 import com.sprint.mission.monew.domain.user.dto.UserCreateRequest;
 import com.sprint.mission.monew.domain.user.dto.UserLoginRequest;
 import com.sprint.mission.monew.domain.user.dto.UserPasswordResetCodeRequest;
@@ -14,6 +15,7 @@ import jakarta.validation.Valid;
 import jakarta.validation.constraints.NotBlank;
 import java.util.UUID;
 import lombok.RequiredArgsConstructor;
+import jakarta.servlet.http.HttpServletRequest;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.validation.annotation.Validated;
@@ -44,8 +46,22 @@ public class UserController implements UserApi {
 
   @PostMapping("/login")
   @Override
-  public ResponseEntity<UserResponse> login(@Valid @RequestBody UserLoginRequest request) {
-    return ResponseEntity.ok(userService.login(request));
+  public ResponseEntity<UserResponse> login(@Valid @RequestBody UserLoginRequest request,
+      HttpServletRequest httpRequest) {
+    String ip = httpRequest.getRemoteAddr();
+    String fingerprint = buildFingerprint(httpRequest);
+    LoginResult result = userService.login(request, ip, fingerprint);
+    return ResponseEntity.ok()
+        .header("Monew-Session-Token", result.sessionToken().toString())
+        .body(result.response());
+  }
+
+  private String buildFingerprint(HttpServletRequest req) {
+    return String.valueOf(
+        (req.getHeader("User-Agent") + "|"
+            + req.getHeader("Accept-Language") + "|"
+            + req.getHeader("Accept-Encoding")).hashCode()
+    );
   }
 
   @GetMapping("/verify")

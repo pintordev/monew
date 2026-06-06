@@ -14,6 +14,7 @@ import static org.springframework.test.web.servlet.request.MockMvcRequestBuilder
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.sprint.mission.monew.domain.user.dto.LoginResult;
 import com.sprint.mission.monew.domain.user.dto.UserCreateRequest;
 import com.sprint.mission.monew.domain.user.dto.UserLoginRequest;
 import com.sprint.mission.monew.domain.user.dto.UserPasswordResetCodeRequest;
@@ -144,7 +145,7 @@ class UserControllerTest {
     @DisplayName("존재하지 않는 이메일이면 401 반환")
     void 존재하지_않는_이메일이면_401_반환() throws Exception {
       UserLoginRequest request = new UserLoginRequest("test@test.com", "password123");
-      given(userService.login(any())).willThrow(UserLoginFailedException.withEmail());
+      given(userService.login(any(), any(), any())).willThrow(UserLoginFailedException.withEmail());
       mockMvc.perform(post("/api/users/login")
               .contentType(APPLICATION_JSON)
               .content(objectMapper.writeValueAsString(request)))
@@ -155,7 +156,7 @@ class UserControllerTest {
     @DisplayName("이메일 미인증 시 401 반환")
     void 이메일_미인증_시_401_반환() throws Exception {
       UserLoginRequest request = new UserLoginRequest("test@test.com", "password123");
-      given(userService.login(any()))
+      given(userService.login(any(), any(), any()))
           .willThrow(UserEmailNotVerifiedException.withEmail("test@test.com"));
       mockMvc.perform(post("/api/users/login")
               .contentType(APPLICATION_JSON)
@@ -167,7 +168,7 @@ class UserControllerTest {
     @DisplayName("비밀번호가 틀리면 401 반환")
     void 비밀번호가_틀리면_401_반환() throws Exception {
       UserLoginRequest request = new UserLoginRequest("test@test.com", "wrongpassword");
-      given(userService.login(any())).willThrow(UserLoginFailedException.withPassword());
+      given(userService.login(any(), any(), any())).willThrow(UserLoginFailedException.withPassword());
       mockMvc.perform(post("/api/users/login")
               .contentType(APPLICATION_JSON)
               .content(objectMapper.writeValueAsString(request)))
@@ -179,7 +180,7 @@ class UserControllerTest {
     void 성공_시_200_반환() throws Exception {
       UserLoginRequest request = new UserLoginRequest("test@test.com", "password123");
       UserResponse response = new UserResponse(UUID.randomUUID(), "test@test.com", "테스터", Instant.now());
-      given(userService.login(any())).willReturn(response);
+      given(userService.login(any(), any(), any())).willReturn(new LoginResult(response, UUID.randomUUID()));
       mockMvc.perform(post("/api/users/login")
               .contentType(APPLICATION_JSON)
               .content(objectMapper.writeValueAsString(request)))
@@ -192,7 +193,7 @@ class UserControllerTest {
     @DisplayName("계정이 잠긴 경우 423 반환")
     void 계정이_잠긴_경우_423_반환() throws Exception {
       UserLoginRequest request = new UserLoginRequest("test@test.com", "password123");
-      given(userService.login(any()))
+      given(userService.login(any(), any(), any()))
           .willThrow(UserAccountLockedException.withEmail("test@test.com"));
       mockMvc.perform(post("/api/users/login")
               .contentType(APPLICATION_JSON)

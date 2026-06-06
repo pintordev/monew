@@ -30,6 +30,10 @@ public class MdcLoggingInterceptor implements HandlerInterceptor {
   }
 
   private String resolveClientIp(HttpServletRequest request) {
+    String cf = request.getHeader("CF-Connecting-IP");
+    if (cf != null && !cf.isBlank()) {
+      return cf;
+    }
     String forwarded = request.getHeader("X-Forwarded-For");
     if (forwarded != null && !forwarded.isBlank()) {
       return forwarded.split(",")[0].trim();

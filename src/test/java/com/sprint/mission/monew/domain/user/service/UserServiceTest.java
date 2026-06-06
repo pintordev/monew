@@ -491,6 +491,20 @@ class UserServiceTest {
       // then
       assertThat(user.isDeleted()).isTrue();
     }
+
+    @Test
+    @DisplayName("논리 삭제 성공 시 세션 삭제")
+    void 논리_삭제_성공_시_세션_삭제() {
+      // given
+      User user = User.create("test@test.com", "테스터", "encodedPassword");
+      given(userRepository.findByIdAndDeletedAtIsNull(userId)).willReturn(Optional.of(user));
+
+      // when
+      userService.delete(userId, requestUserId);
+
+      // then
+      then(userSessionRepository).should().deleteByUserId(userId);
+    }
   }
 
   @Nested

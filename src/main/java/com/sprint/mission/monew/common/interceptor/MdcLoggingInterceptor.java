@@ -1,5 +1,6 @@
 package com.sprint.mission.monew.common.interceptor;
 
+import com.sprint.mission.monew.common.util.RequestUtils;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import java.util.UUID;
@@ -17,7 +18,7 @@ public class MdcLoggingInterceptor implements HandlerInterceptor {
     MDC.put("requestId", requestId);
     MDC.put("method", request.getMethod());
     MDC.put("url", request.getRequestURI());
-    MDC.put("clientIp", resolveClientIp(request));
+    MDC.put("clientIp", RequestUtils.resolveClientIp(request));
 
     response.setHeader("Monew-Request-ID", requestId);
     return true;
@@ -29,15 +30,5 @@ public class MdcLoggingInterceptor implements HandlerInterceptor {
     MDC.clear();
   }
 
-  private String resolveClientIp(HttpServletRequest request) {
-    String cf = request.getHeader("CF-Connecting-IP");
-    if (cf != null && !cf.isBlank()) {
-      return cf;
-    }
-    String forwarded = request.getHeader("X-Forwarded-For");
-    if (forwarded != null && !forwarded.isBlank()) {
-      return forwarded.split(",")[0].trim();
-    }
-    return request.getRemoteAddr();
-  }
+
 }

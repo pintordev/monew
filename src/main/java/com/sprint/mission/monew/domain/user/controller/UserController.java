@@ -1,6 +1,7 @@
 package com.sprint.mission.monew.domain.user.controller;
 
 import com.sprint.mission.monew.domain.user.controller.api.UserApi;
+import com.sprint.mission.monew.common.util.RequestUtils;
 import com.sprint.mission.monew.domain.user.dto.LoginResult;
 import com.sprint.mission.monew.domain.user.dto.UserCreateRequest;
 import com.sprint.mission.monew.domain.user.dto.UserLoginRequest;
@@ -48,24 +49,12 @@ public class UserController implements UserApi {
   @Override
   public ResponseEntity<UserResponse> login(@Valid @RequestBody UserLoginRequest request,
       HttpServletRequest httpRequest) {
-    String ip = resolveClientIp(httpRequest);
+    String ip = RequestUtils.resolveClientIp(httpRequest);
     String fingerprint = buildFingerprint(httpRequest);
     LoginResult result = userService.login(request, ip, fingerprint);
     return ResponseEntity.ok()
         .header("Monew-Request-User-ID", result.sessionToken().toString())
         .body(result.response());
-  }
-
-  private String resolveClientIp(HttpServletRequest req) {
-    String cf = req.getHeader("CF-Connecting-IP");
-    if (cf != null && !cf.isBlank()) {
-      return cf;
-    }
-    String xff = req.getHeader("X-Forwarded-For");
-    if (xff != null && !xff.isBlank()) {
-      return xff.split(",")[0].trim();
-    }
-    return req.getRemoteAddr();
   }
 
   private String buildFingerprint(HttpServletRequest req) {

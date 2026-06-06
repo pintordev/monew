@@ -154,6 +154,7 @@ public class UserService {
     User user = userRepository.findByIdAndDeletedAtIsNull(userId)
         .orElseThrow(() -> UserNotFoundException.withId(userId));
     user.softDelete();
+    userSessionRepository.deleteByUserId(userId);
     log.info("사용자 논리 삭제 완료 | userId={}", userId);
   }
 

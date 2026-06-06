@@ -28,5 +28,19 @@ class UserSessionTest {
       assertThat(s1.getId()).isNotEqualTo(s2.getId());
     }
 
+    @Test
+    @DisplayName("userId, ip, deviceFingerprint가 그대로 저장")
+    void userId_ip_deviceFingerprint가_그대로_저장() {
+      // given
+      UUID userId = UUID.randomUUID();
+
+      // when
+      UserSession session = UserSession.create(userId, "1.2.3.4", "fp-abc", 30);
+
+      // then
+      assertThat(session.getUserId()).isEqualTo(userId);
+      assertThat(session.getIp()).isEqualTo("1.2.3.4");
+      assertThat(session.getDeviceFingerprint()).isEqualTo("fp-abc");
+    }
   }
 }

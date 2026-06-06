@@ -2,6 +2,7 @@ package com.sprint.mission.monew.domain.user.repository;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
+import com.sprint.mission.monew.common.config.MongoContainerConfig;
 import com.sprint.mission.monew.domain.user.document.UserSession;
 import java.util.Optional;
 import java.util.UUID;
@@ -11,10 +12,10 @@ import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.data.mongo.DataMongoTest;
-import org.springframework.test.context.ActiveProfiles;
+import org.springframework.context.annotation.Import;
 
 @DataMongoTest
-@ActiveProfiles("test")
+@Import(MongoContainerConfig.class)
 class UserSessionRepositoryTest {
 
   @Autowired

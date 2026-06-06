@@ -44,5 +44,15 @@ class UserSessionRepositoryTest {
       assertThat(result).isPresent();
       assertThat(result.get().getId()).isEqualTo(session.getId());
     }
+    
+    @Test
+    @DisplayName("존재하지 않는 ID 조회 시 빈 Optional 반환")
+    void 존재하지_않는_ID_조회_시_빈_Optional_반환() {
+      // when
+      Optional<UserSession> result = userSessionRepository.findById(UUID.randomUUID());
+
+      // then
+      assertThat(result).isEmpty();
+    }
   }
 }

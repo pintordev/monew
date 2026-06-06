@@ -15,10 +15,17 @@ public class UserSession {
   @Id
   private UUID id;
 
+  private UUID userId;
+  private String ip;
+  private String deviceFingerprint;
+
   public static UserSession create(UUID userId, String ip, String deviceFingerprint,
       int timeoutMinutes) {
     UserSession session = new UserSession();
     session.id = UUID.randomUUID();
+    session.userId = userId;
+    session.ip = ip;
+    session.deviceFingerprint = deviceFingerprint;
     return session;
   }
 }

@@ -2,6 +2,7 @@ package com.sprint.mission.monew.common.filter;
 
 import com.sprint.mission.monew.common.exception.UnauthorizedException;
 import com.sprint.mission.monew.domain.user.repository.UserSessionRepository;
+import java.util.UUID;
 import jakarta.servlet.Filter;
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
@@ -35,6 +36,9 @@ public class AuthFilter implements Filter {
       if (token == null || token.isBlank()) {
         throw UnauthorizedException.of();
       }
+      UUID sessionToken = UUID.fromString(token);
+      userSessionRepository.findById(sessionToken)
+          .orElseThrow(UnauthorizedException::of);
       chain.doFilter(request, response);
     } catch (UnauthorizedException e) {
       handlerExceptionResolver.resolveException(request, response, null, e);

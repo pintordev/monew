@@ -1,6 +1,7 @@
 package com.sprint.mission.monew.common.filter;
 
 import com.sprint.mission.monew.common.exception.UnauthorizedException;
+import com.sprint.mission.monew.domain.user.document.UserSession;
 import com.sprint.mission.monew.domain.user.repository.UserSessionRepository;
 import jakarta.servlet.Filter;
 import jakarta.servlet.FilterChain;
@@ -8,8 +9,11 @@ import jakarta.servlet.ServletException;
 import jakarta.servlet.ServletRequest;
 import jakarta.servlet.ServletResponse;
 import jakarta.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletRequestWrapper;
 import jakarta.servlet.http.HttpServletResponse;
 import java.io.IOException;
+import java.util.Collections;
+import java.util.Enumeration;
 import java.util.List;
 import java.util.UUID;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -60,9 +64,9 @@ public class AuthFilter implements Filter {
         throw UnauthorizedException.of();
       }
       UUID sessionToken = UUID.fromString(token);
-      userSessionRepository.findById(sessionToken)
+      UserSession session = userSessionRepository.findById(sessionToken)
           .orElseThrow(UnauthorizedException::of);
-      chain.doFilter(request, response);
+      chain.doFilter(new UserIdHeaderWrapper(request, session.getUserId()), response);
     } catch (UnauthorizedException e) {
       handlerExceptionResolver.resolveException(request, response, null, e);
     }
@@ -71,5 +75,31 @@ public class AuthFilter implements Filter {
   private boolean isExcluded(String method, String uri) {
     return EXCLUDED.stream()
         .anyMatch(e -> e.method().equalsIgnoreCase(method) && PATH_MATCHER.match(e.path(), uri));
+  }
+
+  private static class UserIdHeaderWrapper extends HttpServletRequestWrapper {
+
+    private final String userId;
+
+    UserIdHeaderWrapper(HttpServletRequest request, UUID userId) {
+      super(request);
+      this.userId = userId.toString();
+    }
+
+    @Override
+    public String getHeader(String name) {
+      if ("Monew-Request-User-ID".equalsIgnoreCase(name)) {
+        return userId;
+      }
+      return super.getHeader(name);
+    }
+
+    @Override
+    public Enumeration<String> getHeaders(String name) {
+      if ("Monew-Request-User-ID".equalsIgnoreCase(name)) {
+        return Collections.enumeration(List.of(userId));
+      }
+      return super.getHeaders(name);
+    }
   }
 }

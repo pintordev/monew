@@ -144,5 +144,31 @@ class AuthFilterTest {
       // then
       assertThat(session.getExpiresAt()).isAfter(before);
     }
+
+
+    @Test
+    @DisplayName("IP /24 벗어나면 세션 삭제 후 401 (chain 미실행)")
+    void IP_24_벗어나면_세션_삭제_후_401() throws Exception {
+      // given
+      UUID userId = UUID.randomUUID();
+      com.sprint.mission.monew.domain.user.document.UserSession session =
+          com.sprint.mission.monew.domain.user.document.UserSession.create(userId, "1.2.3.4", "fp", 30);
+      request.addHeader("Monew-Request-User-ID", session.getId().toString());
+      request.setRemoteAddr("1.2.4.4");  // 다른 /24
+      given(userSessionRepository.findById(session.getId())).willReturn(java.util.Optional.of(session));
+
+      // when
+      authFilter.doFilter(request, response, chain);
+
+      // then
+      assertThat(chain.getRequest()).isNull();
+      then(userSessionRepository).should().deleteById(session.getId());
+      then(handlerExceptionResolver).should().resolveException(
+          org.mockito.ArgumentMatchers.any(),
+          org.mockito.ArgumentMatchers.any(),
+          org.mockito.ArgumentMatchers.isNull(),
+          org.mockito.ArgumentMatchers.any()
+      );
+    }
   }
 }

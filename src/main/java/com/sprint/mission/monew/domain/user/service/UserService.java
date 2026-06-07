@@ -57,7 +57,7 @@ public class UserService {
   private final EmailQueue emailQueue;
   private final UserMetrics userMetrics;
 
-  @Value("${monew.session.timeout-minutes:30}")
+  @Value("${monew.session.timeout-minutes}")
   private int sessionTimeoutMinutes;
 
   @Transactional

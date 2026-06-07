@@ -43,7 +43,7 @@ public class AuthFilter implements Filter {
   private final UserSessionRepository userSessionRepository;
   private final HandlerExceptionResolver handlerExceptionResolver;
 
-  @Value("${monew.session.timeout-minutes:30}")
+  @Value("${monew.session.timeout-minutes}")
   private int sessionTimeoutMinutes;
 
   @Autowired

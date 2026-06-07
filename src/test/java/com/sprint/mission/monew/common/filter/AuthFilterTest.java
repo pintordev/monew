@@ -79,5 +79,24 @@ class AuthFilterTest {
           org.mockito.ArgumentMatchers.any()
       );
     }
+
+    @Test
+    @DisplayName("제외 경로는 헤더 없어도 chain 통과")
+    void 제외_경로는_헤더_없어도_chain_통과() throws Exception {
+      // given
+      request.setRequestURI("/api/users/login");
+
+      // when
+      authFilter.doFilter(request, response, chain);
+
+      // then
+      assertThat(chain.getRequest()).isNotNull();
+      then(handlerExceptionResolver).should(never()).resolveException(
+          org.mockito.ArgumentMatchers.any(),
+          org.mockito.ArgumentMatchers.any(),
+          org.mockito.ArgumentMatchers.any(),
+          org.mockito.ArgumentMatchers.any()
+      );
+    }
   }
 }

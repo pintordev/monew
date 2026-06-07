@@ -9,6 +9,7 @@ import com.sprint.mission.monew.domain.user.repository.UserSessionRepository;
 import java.util.Optional;
 import java.util.UUID;
 
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
@@ -16,6 +17,7 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.test.util.ReflectionTestUtils;
 import org.springframework.mock.web.MockFilterChain;
 import org.springframework.mock.web.MockHttpServletRequest;
 import org.springframework.mock.web.MockHttpServletResponse;
@@ -32,6 +34,11 @@ class AuthFilterTest {
 
   @InjectMocks
   private AuthFilter authFilter;
+
+  @BeforeEach
+  void setUp() {
+    ReflectionTestUtils.setField(authFilter, "sessionTimeoutMinutes", 30);
+  }
 
   private final MockHttpServletRequest request = new MockHttpServletRequest();
   private final MockHttpServletResponse response = new MockHttpServletResponse();

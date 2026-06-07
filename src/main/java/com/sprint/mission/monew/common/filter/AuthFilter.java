@@ -18,6 +18,7 @@ import java.util.List;
 import java.util.UUID;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 import org.springframework.util.AntPathMatcher;
 import org.springframework.web.servlet.HandlerExceptionResolver;
@@ -39,6 +40,9 @@ public class AuthFilter implements Filter {
 
   private final UserSessionRepository userSessionRepository;
   private final HandlerExceptionResolver handlerExceptionResolver;
+
+  @Value("${monew.session.timeout-minutes:30}")
+  private int sessionTimeoutMinutes;
 
   @Autowired
   public AuthFilter(UserSessionRepository userSessionRepository,
@@ -66,6 +70,8 @@ public class AuthFilter implements Filter {
       UUID sessionToken = UUID.fromString(token);
       UserSession session = userSessionRepository.findById(sessionToken)
           .orElseThrow(UnauthorizedException::of);
+      session.refreshExpiry(sessionTimeoutMinutes);
+      userSessionRepository.save(session);
       chain.doFilter(new UserIdHeaderWrapper(request, session.getUserId()), response);
     } catch (UnauthorizedException e) {
       handlerExceptionResolver.resolveException(request, response, null, e);

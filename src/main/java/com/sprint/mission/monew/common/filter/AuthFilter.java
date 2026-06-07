@@ -1,6 +1,7 @@
 package com.sprint.mission.monew.common.filter;
 
 import com.sprint.mission.monew.common.exception.UnauthorizedException;
+import com.sprint.mission.monew.common.util.RequestUtils;
 import com.sprint.mission.monew.domain.user.document.UserSession;
 import com.sprint.mission.monew.domain.user.repository.UserSessionRepository;
 import jakarta.servlet.Filter;
@@ -70,6 +71,11 @@ public class AuthFilter implements Filter {
       UUID sessionToken = UUID.fromString(token);
       UserSession session = userSessionRepository.findById(sessionToken)
           .orElseThrow(UnauthorizedException::of);
+      String currentIp = RequestUtils.resolveClientIp(request);
+      if (!isSameSubnet24(session.getIp(), currentIp)) {
+        userSessionRepository.deleteById(session.getId());
+        throw UnauthorizedException.of();
+      }
       session.refreshExpiry(sessionTimeoutMinutes);
       userSessionRepository.save(session);
       chain.doFilter(new UserIdHeaderWrapper(request, session.getUserId()), response);
@@ -81,6 +87,15 @@ public class AuthFilter implements Filter {
   private boolean isExcluded(String method, String uri) {
     return EXCLUDED.stream()
         .anyMatch(e -> e.method().equalsIgnoreCase(method) && PATH_MATCHER.match(e.path(), uri));
+  }
+
+  private boolean isSameSubnet24(String a, String b) {
+    String[] pa = a.split("\\.");
+    String[] pb = b.split("\\.");
+    if (pa.length < 3 || pb.length < 3) {
+      return false;
+    }
+    return pa[0].equals(pb[0]) && pa[1].equals(pb[1]) && pa[2].equals(pb[2]);
   }
 
   private static class UserIdHeaderWrapper extends HttpServletRequestWrapper {

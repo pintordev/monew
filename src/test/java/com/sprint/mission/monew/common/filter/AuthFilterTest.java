@@ -115,6 +115,7 @@ class AuthFilterTest {
       com.sprint.mission.monew.domain.user.document.UserSession session =
           com.sprint.mission.monew.domain.user.document.UserSession.create(userId, "1.2.3.4", "fp", 30);
       request.addHeader("Monew-Request-User-ID", session.getId().toString());
+      request.setRemoteAddr("1.2.3.10");
       given(userSessionRepository.findById(session.getId())).willReturn(java.util.Optional.of(session));
 
       // when
@@ -135,6 +136,7 @@ class AuthFilterTest {
       com.sprint.mission.monew.domain.user.document.UserSession session =
           com.sprint.mission.monew.domain.user.document.UserSession.create(userId, "1.2.3.4", "fp", 30);
       request.addHeader("Monew-Request-User-ID", session.getId().toString());
+      request.setRemoteAddr("1.2.3.10");
       given(userSessionRepository.findById(session.getId())).willReturn(java.util.Optional.of(session));
       java.time.Instant before = session.getExpiresAt();
 

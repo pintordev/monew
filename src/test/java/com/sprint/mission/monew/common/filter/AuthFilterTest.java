@@ -119,5 +119,23 @@ class AuthFilterTest {
           (jakarta.servlet.http.HttpServletRequest) chain.getRequest();
       assertThat(wrapped.getHeader("Monew-Request-User-ID")).isEqualTo(userId.toString());
     }
+
+    @Test
+    @DisplayName("성공 시 expiresAt 슬라이딩 갱신")
+    void 성공_시_expiresAt_슬라이딩_갱신() throws Exception {
+      // given
+      UUID userId = UUID.randomUUID();
+      com.sprint.mission.monew.domain.user.document.UserSession session =
+          com.sprint.mission.monew.domain.user.document.UserSession.create(userId, "1.2.3.4", "fp", 30);
+      request.addHeader("Monew-Request-User-ID", session.getId().toString());
+      given(userSessionRepository.findById(session.getId())).willReturn(java.util.Optional.of(session));
+      java.time.Instant before = session.getExpiresAt();
+
+      // when
+      authFilter.doFilter(request, response, chain);
+
+      // then
+      assertThat(session.getExpiresAt()).isAfter(before);
+    }
   }
 }

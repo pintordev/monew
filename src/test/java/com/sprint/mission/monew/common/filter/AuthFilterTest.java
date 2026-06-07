@@ -99,5 +99,25 @@ class AuthFilterTest {
           org.mockito.ArgumentMatchers.any()
       );
     }
+
+    @Test
+    @DisplayName("성공 시 chain 실행 및 Monew-Request-User-ID 헤더가 userId로 교체")
+    void 성공_시_chain_실행_및_헤더가_userId로_교체() throws Exception {
+      // given
+      UUID userId = UUID.randomUUID();
+      com.sprint.mission.monew.domain.user.document.UserSession session =
+          com.sprint.mission.monew.domain.user.document.UserSession.create(userId, "1.2.3.4", "fp", 30);
+      request.addHeader("Monew-Request-User-ID", session.getId().toString());
+      given(userSessionRepository.findById(session.getId())).willReturn(java.util.Optional.of(session));
+
+      // when
+      authFilter.doFilter(request, response, chain);
+
+      // then
+      assertThat(chain.getRequest()).isNotNull();
+      jakarta.servlet.http.HttpServletRequest wrapped =
+          (jakarta.servlet.http.HttpServletRequest) chain.getRequest();
+      assertThat(wrapped.getHeader("Monew-Request-User-ID")).isEqualTo(userId.toString());
+    }
   }
 }

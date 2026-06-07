@@ -7,6 +7,15 @@ public final class RequestUtils {
   private RequestUtils() {
   }
 
+  public static boolean isSameSubnet24(String a, String b) {
+    return subnet24(a).equals(subnet24(b));
+  }
+
+  private static String subnet24(String ip) {
+    int last = ip.lastIndexOf('.');
+    return last < 0 ? ip : ip.substring(0, last);
+  }
+
   public static String resolveClientIp(HttpServletRequest request) {
     String cf = request.getHeader("CF-Connecting-IP");
     if (cf != null && !cf.isBlank()) {

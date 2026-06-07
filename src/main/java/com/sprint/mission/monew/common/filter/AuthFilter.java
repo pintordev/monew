@@ -13,6 +13,7 @@ import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletRequestWrapper;
 import jakarta.servlet.http.HttpServletResponse;
 import java.io.IOException;
+import org.springframework.http.HttpMethod;
 import java.util.Collections;
 import java.util.Enumeration;
 import java.util.List;
@@ -29,14 +30,14 @@ public class AuthFilter implements Filter {
 
   private static final AntPathMatcher PATH_MATCHER = new AntPathMatcher();
 
-  private record MethodPath(String method, String path) {}
+  private record MethodPath(HttpMethod method, String path) {}
 
   private static final List<MethodPath> EXCLUDED = List.of(
-      new MethodPath("POST", "/api/users"),
-      new MethodPath("POST", "/api/users/login"),
-      new MethodPath("GET", "/api/users/verify"),
-      new MethodPath("POST", "/api/users/password/reset"),
-      new MethodPath("POST", "/api/users/unlock")
+      new MethodPath(HttpMethod.POST, "/api/users"),
+      new MethodPath(HttpMethod.POST, "/api/users/login"),
+      new MethodPath(HttpMethod.GET, "/api/users/verify"),
+      new MethodPath(HttpMethod.POST, "/api/users/password/reset"),
+      new MethodPath(HttpMethod.POST, "/api/users/unlock")
   );
 
   private final UserSessionRepository userSessionRepository;
@@ -72,7 +73,7 @@ public class AuthFilter implements Filter {
       UserSession session = userSessionRepository.findById(sessionToken)
           .orElseThrow(UnauthorizedException::of);
       String currentIp = RequestUtils.resolveClientIp(request);
-      if (!isSameSubnet24(session.getIp(), currentIp)) {
+      if (!RequestUtils.isSameSubnet24(session.getIp(), currentIp)) {
         userSessionRepository.deleteById(session.getId());
         throw UnauthorizedException.of();
       }
@@ -85,17 +86,9 @@ public class AuthFilter implements Filter {
   }
 
   private boolean isExcluded(String method, String uri) {
+    HttpMethod httpMethod = HttpMethod.valueOf(method);
     return EXCLUDED.stream()
-        .anyMatch(e -> e.method().equalsIgnoreCase(method) && PATH_MATCHER.match(e.path(), uri));
-  }
-
-  private boolean isSameSubnet24(String a, String b) {
-    String[] pa = a.split("\\.");
-    String[] pb = b.split("\\.");
-    if (pa.length < 3 || pb.length < 3) {
-      return false;
-    }
-    return pa[0].equals(pb[0]) && pa[1].equals(pb[1]) && pa[2].equals(pb[2]);
+        .anyMatch(e -> e.method() == httpMethod && PATH_MATCHER.match(e.path(), uri));
   }
 
   private static class UserIdHeaderWrapper extends HttpServletRequestWrapper {
@@ -109,7 +102,7 @@ public class AuthFilter implements Filter {
 
     @Override
     public String getHeader(String name) {
-      if ("Monew-Request-User-ID".equalsIgnoreCase(name)) {
+      if ("Monew-Request-User-ID".equals(name)) {
         return userId;
       }
       return super.getHeader(name);
@@ -117,7 +110,7 @@ public class AuthFilter implements Filter {
 
     @Override
     public Enumeration<String> getHeaders(String name) {
-      if ("Monew-Request-User-ID".equalsIgnoreCase(name)) {
+      if ("Monew-Request-User-ID".equals(name)) {
         return Collections.enumeration(List.of(userId));
       }
       return super.getHeaders(name);

@@ -37,7 +37,8 @@ public class AuthFilter implements Filter {
       new MethodPath(HttpMethod.POST, "/api/users/login"),
       new MethodPath(HttpMethod.GET, "/api/users/verify"),
       new MethodPath(HttpMethod.POST, "/api/users/password/reset"),
-      new MethodPath(HttpMethod.POST, "/api/users/unlock")
+      new MethodPath(HttpMethod.POST, "/api/users/unlock"),
+      new MethodPath(HttpMethod.DELETE, "/api/users/*/hard")
   );
 
   private final UserSessionRepository userSessionRepository;

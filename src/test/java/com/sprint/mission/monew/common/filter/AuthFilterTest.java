@@ -58,5 +58,26 @@ class AuthFilterTest {
           org.mockito.ArgumentMatchers.any()
       );
     }
+
+    @Test
+    @DisplayName("세션 없음(만료 포함) → 401, chain 미실행")
+    void 세션_없음_만료_포함_401_chain_미실행() throws Exception {
+      // given
+      UUID sessionToken = UUID.randomUUID();
+      request.addHeader("Monew-Request-User-ID", sessionToken.toString());
+      given(userSessionRepository.findById(sessionToken)).willReturn(Optional.empty());
+
+      // when
+      authFilter.doFilter(request, response, chain);
+
+      // then
+      assertThat(chain.getRequest()).isNull();
+      then(handlerExceptionResolver).should().resolveException(
+          org.mockito.ArgumentMatchers.any(),
+          org.mockito.ArgumentMatchers.any(),
+          org.mockito.ArgumentMatchers.isNull(),
+          org.mockito.ArgumentMatchers.any()
+      );
+    }
   }
 }

@@ -6,9 +6,9 @@ import static org.mockito.BDDMockito.then;
 import static org.mockito.Mockito.never;
 
 import com.sprint.mission.monew.domain.user.repository.UserSessionRepository;
-import jakarta.servlet.FilterChain;
 import java.util.Optional;
 import java.util.UUID;
+
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
@@ -24,14 +24,14 @@ import org.springframework.web.servlet.HandlerExceptionResolver;
 @ExtendWith(MockitoExtension.class)
 class AuthFilterTest {
 
-  @InjectMocks
-  private AuthFilter authFilter;
-
   @Mock
   private UserSessionRepository userSessionRepository;
 
   @Mock
   private HandlerExceptionResolver handlerExceptionResolver;
+
+  @InjectMocks
+  private AuthFilter authFilter;
 
   private final MockHttpServletRequest request = new MockHttpServletRequest();
   private final MockHttpServletResponse response = new MockHttpServletResponse();
@@ -81,9 +81,10 @@ class AuthFilterTest {
     }
 
     @Test
-    @DisplayName("제외 경로는 헤더 없어도 chain 통과")
+    @DisplayName("제외 경로(POST /api/users/login)는 헤더 없어도 chain 통과")
     void 제외_경로는_헤더_없어도_chain_통과() throws Exception {
       // given
+      request.setMethod("POST");
       request.setRequestURI("/api/users/login");
 
       // when

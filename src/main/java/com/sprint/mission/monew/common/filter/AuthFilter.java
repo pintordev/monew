@@ -2,7 +2,6 @@ package com.sprint.mission.monew.common.filter;
 
 import com.sprint.mission.monew.common.exception.UnauthorizedException;
 import com.sprint.mission.monew.domain.user.repository.UserSessionRepository;
-import java.util.UUID;
 import jakarta.servlet.Filter;
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
@@ -11,25 +10,49 @@ import jakarta.servlet.ServletResponse;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import java.io.IOException;
-import lombok.RequiredArgsConstructor;
+import java.util.List;
+import java.util.UUID;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.stereotype.Component;
+import org.springframework.util.AntPathMatcher;
 import org.springframework.web.servlet.HandlerExceptionResolver;
 
 @Component
-@RequiredArgsConstructor
 public class AuthFilter implements Filter {
 
-  private final UserSessionRepository userSessionRepository;
+  private static final AntPathMatcher PATH_MATCHER = new AntPathMatcher();
 
-  @Qualifier("handlerExceptionResolver")
+  private record MethodPath(String method, String path) {}
+
+  private static final List<MethodPath> EXCLUDED = List.of(
+      new MethodPath("POST", "/api/users"),
+      new MethodPath("POST", "/api/users/login"),
+      new MethodPath("GET", "/api/users/verify"),
+      new MethodPath("POST", "/api/users/password/reset"),
+      new MethodPath("POST", "/api/users/unlock")
+  );
+
+  private final UserSessionRepository userSessionRepository;
   private final HandlerExceptionResolver handlerExceptionResolver;
+
+  @Autowired
+  public AuthFilter(UserSessionRepository userSessionRepository,
+      @Qualifier("handlerExceptionResolver") HandlerExceptionResolver handlerExceptionResolver) {
+    this.userSessionRepository = userSessionRepository;
+    this.handlerExceptionResolver = handlerExceptionResolver;
+  }
 
   @Override
   public void doFilter(ServletRequest servletRequest, ServletResponse servletResponse,
       FilterChain chain) throws IOException, ServletException {
     HttpServletRequest request = (HttpServletRequest) servletRequest;
     HttpServletResponse response = (HttpServletResponse) servletResponse;
+
+    if (isExcluded(request.getMethod(), request.getRequestURI())) {
+      chain.doFilter(request, response);
+      return;
+    }
 
     try {
       String token = request.getHeader("Monew-Request-User-ID");
@@ -43,5 +66,10 @@ public class AuthFilter implements Filter {
     } catch (UnauthorizedException e) {
       handlerExceptionResolver.resolveException(request, response, null, e);
     }
+  }
+
+  private boolean isExcluded(String method, String uri) {
+    return EXCLUDED.stream()
+        .anyMatch(e -> e.method().equalsIgnoreCase(method) && PATH_MATCHER.match(e.path(), uri));
   }
 }

@@ -12,6 +12,8 @@ import static org.springframework.test.web.servlet.request.MockMvcRequestBuilder
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.content;
+import static org.hamcrest.Matchers.containsString;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.sprint.mission.monew.domain.user.document.UserSession;
@@ -47,6 +49,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.web.servlet.MockMvc;
+import org.springframework.http.MediaType;
 
 @WebMvcTest(UserController.class)
 class UserControllerTest {
@@ -362,6 +365,19 @@ class UserControllerTest {
           )
           .andExpect(status().isOk());
     }
+
+    @Test
+    @DisplayName("인증 성공 시 HTML 페이지 반환")
+    void 인증_성공_시_HTML_페이지_반환() throws Exception {
+      // when & then
+      mockMvc.perform(get("/api/users/verify")
+              .param("token", "valid-token"))
+          .andExpect(status().isOk())
+          .andExpect(content().contentType("text/html;charset=UTF-8"))
+          .andExpect(content().string(containsString("이메일 인증 완료")))
+          .andExpect(content().string(containsString("/#/login")));
+    }
+
   }
 
   @Nested

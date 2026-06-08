@@ -14,10 +14,13 @@ import com.sprint.mission.monew.domain.user.dto.UserUpdateRequest;
 import com.sprint.mission.monew.domain.user.service.UserService;
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.NotBlank;
+import java.nio.charset.StandardCharsets;
 import java.util.UUID;
 import lombok.RequiredArgsConstructor;
 import jakarta.servlet.http.HttpServletRequest;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpStatus;
+import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.DeleteMapping;
@@ -39,6 +42,9 @@ public class UserController implements UserApi {
 
   private final UserService userService;
 
+  @Value("${monew.base-url}")
+  private String baseUrl;
+
   @PostMapping
   @Override
   public ResponseEntity<UserResponse> create(@Valid @RequestBody UserCreateRequest request) {
@@ -57,11 +63,22 @@ public class UserController implements UserApi {
         .body(result.response());
   }
 
-  @GetMapping("/verify")
+  @GetMapping(value = "/verify", produces = "text/html;charset=UTF-8")
   @Override
-  public ResponseEntity<Void> verifyEmail(@NotBlank @RequestParam String token) {
+  public ResponseEntity<String> verifyEmail(@NotBlank @RequestParam String token) {
     userService.verifyEmail(token);
-    return ResponseEntity.ok().build();
+    String html = "<html><head><meta charset='UTF-8'>"
+        + "<meta http-equiv='refresh' content='5;url=" + baseUrl + "/#/login'>"
+        + "<title>이메일 인증 완료</title></head>"
+        + "<body style='display:flex;justify-content:center;align-items:center;"
+        + "height:100vh;font-family:Arial'>"
+        + "<div style='text-align:center'>"
+        + "<h1>✅ 이메일 인증 완료!</h1>"
+        + "<p>5초 후 로그인 페이지로 이동합니다.</p>"
+        + "</div></body></html>";
+    return ResponseEntity.ok()
+        .contentType(new MediaType(MediaType.TEXT_HTML, StandardCharsets.UTF_8))
+        .body(html);
   }
 
   @PatchMapping("/{userId}")

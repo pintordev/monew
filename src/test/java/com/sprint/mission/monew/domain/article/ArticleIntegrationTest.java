@@ -417,6 +417,9 @@ class ArticleIntegrationTest {
     @Test
     @DisplayName("admin token 없이 요청하면 403을 반환한다")
     void admin_token_없이_요청하면_403을_반환한다() throws Exception {
+      // given — 헤더 없음
+
+      // when & then
       mockMvc
           .perform(delete(URL + "/{articleId}/hard", UUID.randomUUID()))
           .andExpect(status().isForbidden());
@@ -425,6 +428,9 @@ class ArticleIntegrationTest {
     @Test
     @DisplayName("잘못된 admin token으로 요청하면 403을 반환한다")
     void 잘못된_admin_token으로_요청하면_403을_반환한다() throws Exception {
+      // given — 잘못된 토큰
+
+      // when & then
       mockMvc
           .perform(delete(URL + "/{articleId}/hard", UUID.randomUUID())
               .header(USER_ID_HEADER, "wrong-token"))

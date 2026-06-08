@@ -110,7 +110,9 @@ public class UserController implements UserApi {
 
   @DeleteMapping("/{userId}/hard")
   @Override
-  public ResponseEntity<Void> hardDelete(@PathVariable UUID userId) {
+  public ResponseEntity<Void> hardDelete(
+      @RequestHeader("Monew-Request-User-ID") String adminToken,
+      @PathVariable UUID userId) {
     userService.hardDelete(userId);
     return ResponseEntity.noContent().build();
   }

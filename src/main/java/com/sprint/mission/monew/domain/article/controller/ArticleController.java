@@ -67,7 +67,9 @@ public class ArticleController implements ArticleApi {
 
   @DeleteMapping("/{articleId}/hard")
   @Override
-  public ResponseEntity<Void> hardDelete(@PathVariable UUID articleId) {
+  public ResponseEntity<Void> hardDelete(
+      @RequestHeader("Monew-Request-User-ID") String adminToken,
+      @PathVariable UUID articleId) {
     articleService.hardDelete(articleId);
     return ResponseEntity.noContent().build();
   }

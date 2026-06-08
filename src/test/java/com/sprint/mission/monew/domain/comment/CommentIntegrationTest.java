@@ -313,6 +313,9 @@ public class CommentIntegrationTest {
     @Test
     @DisplayName("댓글 물리삭제 실패 - admin token 없음 403")
     void 댓글_물리삭제_실패_admin_token_없음() throws Exception {
+      // given — 헤더 없음
+
+      // when & then
       mockMvc.perform(delete("/api/comments/{commentId}/hard", comment.getId()))
           .andExpect(status().isForbidden());
     }
@@ -320,6 +323,9 @@ public class CommentIntegrationTest {
     @Test
     @DisplayName("댓글 물리삭제 실패 - 잘못된 admin token 403")
     void 댓글_물리삭제_실패_잘못된_admin_token() throws Exception {
+      // given — 잘못된 토큰
+
+      // when & then
       mockMvc.perform(delete("/api/comments/{commentId}/hard", comment.getId())
               .header("Monew-Request-User-ID", "wrong-token"))
           .andExpect(status().isForbidden());

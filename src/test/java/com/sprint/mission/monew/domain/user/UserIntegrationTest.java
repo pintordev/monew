@@ -1,7 +1,5 @@
 package com.sprint.mission.monew.domain.user;
 
-import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.BDDMockito.given;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.delete;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
@@ -9,6 +7,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.sprint.mission.monew.common.config.MongoContainerConfig;
 import com.sprint.mission.monew.domain.user.document.UserSession;
 import com.sprint.mission.monew.domain.user.dto.UserCreateRequest;
 import com.sprint.mission.monew.domain.user.dto.UserLoginRequest;
@@ -18,29 +17,23 @@ import com.sprint.mission.monew.domain.user.repository.PasswordResetTokenReposit
 import com.sprint.mission.monew.domain.user.repository.UserRepository;
 import com.sprint.mission.monew.domain.user.repository.UserSessionRepository;
 import com.sprint.mission.monew.domain.user.repository.UserUnlockTokenRepository;
-import java.util.Optional;
 import java.util.UUID;
 import org.junit.jupiter.api.AfterEach;
-import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
+import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.context.SpringBootTest;
-import org.springframework.boot.test.mock.mockito.MockBean;
+import org.springframework.context.annotation.Import;
 import org.springframework.http.MediaType;
 import org.springframework.test.context.ActiveProfiles;
-import org.springframework.test.context.TestPropertySource;
 import org.springframework.test.web.servlet.MockMvc;
 
 @SpringBootTest
-@AutoConfigureMockMvc
 @ActiveProfiles("test")
-@TestPropertySource(properties = {
-    "batch.news-collect.chunk-size=10",
-    "batch.notification-cleanup.chunk-size=10",
-    "batch.user-cleanup.chunk-size=10"
-})
+@AutoConfigureMockMvc
+@Import(MongoContainerConfig.class)
 class UserIntegrationTest {
 
   @Autowired
@@ -61,23 +54,12 @@ class UserIntegrationTest {
   @Autowired
   private PasswordResetTokenRepository passwordResetTokenRepository;
 
-  @MockBean
+  @Autowired
   private UserSessionRepository userSessionRepository;
-
-  @BeforeEach
-  void setUp() {
-    given(userSessionRepository.save(any(UserSession.class)))
-        .willAnswer(inv -> inv.getArgument(0));
-    given(userSessionRepository.findById(any(UUID.class)))
-        .willAnswer(inv -> {
-          UUID id = inv.getArgument(0);
-          return Optional.of(UserSession.create(
-              id, "127.0.0.1", "1acaf8f7bdf7054e8279b8a17955fc66", 30));
-        });
-  }
 
   @AfterEach
   void tearDown() {
+    userSessionRepository.deleteAll();
     userUnlockTokenRepository.deleteAll();
     passwordResetTokenRepository.deleteAll();
     emailVerificationRepository.deleteAll();
@@ -210,9 +192,12 @@ class UserIntegrationTest {
     mockMvc.perform(get("/api/users/verify").param("token", token))
         .andExpect(status().isOk());
 
-    // when - 논리 삭제 (userId를 sessionToken으로 사용 — mock이 동일 UUID로 세션 반환)
+    // when - 논리 삭제
+    UserSession session = UserSession.create(
+        userId, "127.0.0.1", "1acaf8f7bdf7054e8279b8a17955fc66", 30);
+    userSessionRepository.save(session);
     mockMvc.perform(delete("/api/users/" + userId)
-            .header("Monew-Request-User-ID", userId))
+            .header("Monew-Request-User-ID", session.getId()))
         .andExpect(status().isNoContent());
 
     // then - 로그인 불가
@@ -221,5 +206,61 @@ class UserIntegrationTest {
             .contentType(MediaType.APPLICATION_JSON)
             .content(objectMapper.writeValueAsString(loginRequest)))
         .andExpect(status().isUnauthorized());
+  }
+
+  @Nested
+  @DisplayName("DELETE /api/users/{userId}/hard — 물리 삭제")
+  class HardDelete {
+
+    private static final String ADMIN_TOKEN = "test-admin-token";
+
+    @Test
+    @DisplayName("admin token 없이 요청 시 403 반환")
+    void admin_token_없이_요청_시_403_반환() throws Exception {
+      // given — 헤더 없음
+
+      // when & then
+      mockMvc.perform(delete("/api/users/{userId}/hard", UUID.randomUUID()))
+          .andExpect(status().isForbidden());
+    }
+
+    @Test
+    @DisplayName("잘못된 admin token으로 요청 시 403 반환")
+    void 잘못된_admin_token으로_요청_시_403_반환() throws Exception {
+      // given — 잘못된 토큰
+
+      // when & then
+      mockMvc.perform(
+              delete("/api/users/{userId}/hard", UUID.randomUUID())
+                  .header("Monew-Request-User-ID", "wrong-token"))
+          .andExpect(status().isForbidden());
+    }
+
+    @Test
+    @DisplayName("유효한 admin token으로 요청 시 204 반환")
+    void 유효한_admin_token으로_요청_시_204_반환() throws Exception {
+      // given — 유저 생성 후 소프트딜리트(물리 삭제 대상 조건)
+      UserCreateRequest createRequest = new UserCreateRequest(
+          "harddelete@test.com", "삭제대상", "test1234");
+      String response = mockMvc.perform(post("/api/users")
+              .contentType(MediaType.APPLICATION_JSON)
+              .content(objectMapper.writeValueAsString(createRequest)))
+          .andExpect(status().isCreated())
+          .andReturn().getResponse().getContentAsString();
+      UUID userId = UUID.fromString(objectMapper.readTree(response).get("id").asText());
+
+      UserSession session = UserSession.create(
+          userId, "127.0.0.1", "1acaf8f7bdf7054e8279b8a17955fc66", 30);
+      userSessionRepository.save(session);
+      mockMvc.perform(delete("/api/users/{userId}", userId)
+              .header("Monew-Request-User-ID", session.getId()))
+          .andExpect(status().isNoContent());
+
+      // when & then
+      mockMvc.perform(
+              delete("/api/users/{userId}/hard", userId)
+                  .header("Monew-Request-User-ID", ADMIN_TOKEN))
+          .andExpect(status().isNoContent());
+    }
   }
 }

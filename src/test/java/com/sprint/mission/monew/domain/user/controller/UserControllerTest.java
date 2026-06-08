@@ -1,5 +1,6 @@
 package com.sprint.mission.monew.domain.user.controller;
 
+import static org.hamcrest.Matchers.containsString;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.BDDMockito.given;
@@ -10,10 +11,9 @@ import static org.springframework.test.web.servlet.request.MockMvcRequestBuilder
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.patch;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.content;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.content;
-import static org.hamcrest.Matchers.containsString;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.sprint.mission.monew.domain.user.document.UserSession;
@@ -49,7 +49,6 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.web.servlet.MockMvc;
-import org.springframework.http.MediaType;
 
 @WebMvcTest(UserController.class)
 class UserControllerTest {
@@ -674,17 +673,21 @@ class UserControllerTest {
     @Test
     @DisplayName("admin token 없이 요청 시 403 반환")
     void admin_token_없이_요청_시_403_반환() throws Exception {
-      UUID userId = UUID.randomUUID();
-      mockMvc.perform(delete("/api/users/{userId}/hard", userId))
+      // given — 헤더 없음
+
+      // when & then
+      mockMvc.perform(delete("/api/users/{userId}/hard", UUID.randomUUID()))
           .andExpect(status().isForbidden());
     }
 
     @Test
     @DisplayName("잘못된 admin token으로 요청 시 403 반환")
     void 잘못된_admin_token으로_요청_시_403_반환() throws Exception {
-      UUID userId = UUID.randomUUID();
+      // given — 잘못된 토큰
+
+      // when & then
       mockMvc.perform(
-              delete("/api/users/{userId}/hard", userId)
+              delete("/api/users/{userId}/hard", UUID.randomUUID())
                   .header("Monew-Request-User-ID", "wrong-token"))
           .andExpect(status().isForbidden());
     }

@@ -73,12 +73,15 @@ public interface CommentApi {
   @Operation(summary = "댓글 물리 삭제", description = "댓글을 물리적으로 삭제합니다.")
   @ApiResponses(value = {
       @ApiResponse(responseCode = "204", description = "삭제 성공"),
+      @ApiResponse(responseCode = "403", description = "관리자 권한 없음",
+          content = @Content(schema = @Schema(implementation = ErrorResponse.class))),
       @ApiResponse(responseCode = "404", description = "댓글 정보 없음",
           content = @Content(schema = @Schema(implementation = ErrorResponse.class))),
       @ApiResponse(responseCode = "500", description = "서버 내부 오류",
           content = @Content(schema = @Schema(implementation = ErrorResponse.class)))
   })
   ResponseEntity<Void> hardDeleteComment(
+      @RequestHeader("Monew-Request-User-Id") @Parameter(description = "어드민 토큰") String adminToken,
       @PathVariable @Parameter(description = "댓글 ID") UUID commentId
   );
 

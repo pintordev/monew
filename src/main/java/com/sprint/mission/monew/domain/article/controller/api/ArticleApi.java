@@ -114,6 +114,10 @@ public interface ArticleApi {
   @ApiResponses({
     @ApiResponse(responseCode = "204", description = "삭제 성공"),
     @ApiResponse(
+        responseCode = "403",
+        description = "관리자 권한 없음",
+        content = @Content(schema = @Schema(implementation = ErrorResponse.class))),
+    @ApiResponse(
         responseCode = "404",
         description = "뉴스 기사 정보 없음",
         content = @Content(schema = @Schema(implementation = ErrorResponse.class))),
@@ -123,6 +127,7 @@ public interface ArticleApi {
         content = @Content(schema = @Schema(implementation = ErrorResponse.class)))
   })
   ResponseEntity<Void> hardDelete(
+      @RequestHeader("Monew-Request-User-Id") @Parameter(description = "어드민 토큰") String adminToken,
       @Parameter(description = "뉴스 기사 ID") @PathVariable UUID articleId);
 
   @Operation(summary = "뉴스 기사 논리 삭제", description = "뉴스 기사를 논리적으로 삭제합니다.")

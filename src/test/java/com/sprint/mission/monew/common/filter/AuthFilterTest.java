@@ -299,5 +299,25 @@ class AuthFilterTest {
               && ((MonewException) e).getErrorCode() == ErrorCode.FORBIDDEN_ADMIN)
       );
     }
+
+    @Test
+    @DisplayName("일반 세션 토큰으로 hard delete 접근 시 403 — chain 미실행")
+    void 일반_세션_토큰으로_hard_delete_접근_시_403() throws Exception {
+      // given
+      request.setMethod("DELETE");
+      request.setRequestURI("/api/articles/some-id/hard");
+      request.addHeader("Monew-Request-User-ID", UUID.randomUUID().toString());
+
+      // when
+      authFilter.doFilter(request, response, chain);
+
+      // then
+      assertThat(chain.getRequest()).isNull();
+      then(handlerExceptionResolver).should().resolveException(
+          any(), any(), isNull(),
+          argThat(e -> e instanceof MonewException
+              && ((MonewException) e).getErrorCode() == ErrorCode.FORBIDDEN_ADMIN)
+      );
+    }
   }
 }

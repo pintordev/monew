@@ -279,5 +279,25 @@ class AuthFilterTest {
               && ((MonewException) e).getErrorCode() == ErrorCode.FORBIDDEN_ADMIN)
       );
     }
+
+    @Test
+    @DisplayName("잘못된 admin token으로 hard delete 요청 시 403 — chain 미실행")
+    void 잘못된_admin_token으로_hard_delete_요청_시_403() throws Exception {
+      // given
+      request.setMethod("DELETE");
+      request.setRequestURI("/api/articles/some-id/hard");
+      request.addHeader("Monew-Request-User-ID", "wrong-token");
+
+      // when
+      authFilter.doFilter(request, response, chain);
+
+      // then
+      assertThat(chain.getRequest()).isNull();
+      then(handlerExceptionResolver).should().resolveException(
+          any(), any(), isNull(),
+          argThat(e -> e instanceof MonewException
+              && ((MonewException) e).getErrorCode() == ErrorCode.FORBIDDEN_ADMIN)
+      );
+    }
   }
 }

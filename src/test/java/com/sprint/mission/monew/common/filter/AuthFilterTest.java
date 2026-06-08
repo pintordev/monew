@@ -174,9 +174,14 @@ class AuthFilterTest {
     void 성공_시_chain_실행_및_헤더가_userId로_교체() throws Exception {
       // given
       UUID userId = UUID.randomUUID();
+      // fingerprint = MD5("TestAgent|ko|gzip") = 901761a5646e37a1aebb5f65f55c43bc
       com.sprint.mission.monew.domain.user.document.UserSession session =
-          com.sprint.mission.monew.domain.user.document.UserSession.create(userId, "1.2.3.4", "fp", 30);
+          com.sprint.mission.monew.domain.user.document.UserSession.create(
+              userId, "1.2.3.4", "901761a5646e37a1aebb5f65f55c43bc", 30);
       request.addHeader("Monew-Request-User-ID", session.getId().toString());
+      request.addHeader("User-Agent", "TestAgent");
+      request.addHeader("Accept-Language", "ko");
+      request.addHeader("Accept-Encoding", "gzip");
       request.setRemoteAddr("1.2.3.10");
       given(userSessionRepository.findById(session.getId())).willReturn(java.util.Optional.of(session));
 
@@ -195,9 +200,14 @@ class AuthFilterTest {
     void 성공_시_expiresAt_슬라이딩_갱신() throws Exception {
       // given
       UUID userId = UUID.randomUUID();
+      // fingerprint = MD5("TestAgent|ko|gzip") = 901761a5646e37a1aebb5f65f55c43bc
       com.sprint.mission.monew.domain.user.document.UserSession session =
-          com.sprint.mission.monew.domain.user.document.UserSession.create(userId, "1.2.3.4", "fp", 30);
+          com.sprint.mission.monew.domain.user.document.UserSession.create(
+              userId, "1.2.3.4", "901761a5646e37a1aebb5f65f55c43bc", 30);
       request.addHeader("Monew-Request-User-ID", session.getId().toString());
+      request.addHeader("User-Agent", "TestAgent");
+      request.addHeader("Accept-Language", "ko");
+      request.addHeader("Accept-Encoding", "gzip");
       request.setRemoteAddr("1.2.3.10");
       given(userSessionRepository.findById(session.getId())).willReturn(java.util.Optional.of(session));
       java.time.Instant before = session.getExpiresAt();

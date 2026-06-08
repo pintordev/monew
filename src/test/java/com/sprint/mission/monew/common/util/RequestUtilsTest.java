@@ -12,6 +12,39 @@ import org.junit.jupiter.api.Test;
 class RequestUtilsTest {
 
   @Nested
+  @DisplayName("buildFingerprint")
+  class BuildFingerprint {
+
+    @Test
+    @DisplayName("동일한 헤더 조합은 항상 같은 MD5 지문을 반환한다")
+    void 동일한_헤더_조합은_항상_같은_MD5_지문을_반환한다() {
+      HttpServletRequest req = mock(HttpServletRequest.class);
+      given(req.getHeader("User-Agent")).willReturn("TestAgent");
+      given(req.getHeader("Accept-Language")).willReturn("ko-KR");
+      given(req.getHeader("Accept-Encoding")).willReturn("gzip");
+
+      assertThat(RequestUtils.buildFingerprint(req)).isEqualTo("56e28c358634c9e1a9a4f6ad8f5fdc80");
+    }
+
+    @Test
+    @DisplayName("헤더 값이 다르면 다른 지문을 반환한다")
+    void 헤더_값이_다르면_다른_지문을_반환한다() {
+      HttpServletRequest req1 = mock(HttpServletRequest.class);
+      given(req1.getHeader("User-Agent")).willReturn("AgentA");
+      given(req1.getHeader("Accept-Language")).willReturn("en-US");
+      given(req1.getHeader("Accept-Encoding")).willReturn("gzip");
+
+      HttpServletRequest req2 = mock(HttpServletRequest.class);
+      given(req2.getHeader("User-Agent")).willReturn("AgentB");
+      given(req2.getHeader("Accept-Language")).willReturn("en-US");
+      given(req2.getHeader("Accept-Encoding")).willReturn("gzip");
+
+      assertThat(RequestUtils.buildFingerprint(req1))
+          .isNotEqualTo(RequestUtils.buildFingerprint(req2));
+    }
+  }
+
+  @Nested
   @DisplayName("isSameSubnet24")
   class IsSameSubnet24 {
 

@@ -17,7 +17,6 @@ import java.util.Collections;
 import java.util.Enumeration;
 import java.util.List;
 import java.util.UUID;
-import lombok.extern.slf4j.Slf4j;
 import org.slf4j.MDC;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
@@ -27,7 +26,6 @@ import org.springframework.stereotype.Component;
 import org.springframework.util.AntPathMatcher;
 import org.springframework.web.servlet.HandlerExceptionResolver;
 
-@Slf4j
 @Component
 public class AuthFilter implements Filter {
 
@@ -111,8 +109,8 @@ public class AuthFilter implements Filter {
       }
       String currentFingerprint = RequestUtils.buildFingerprint(request);
       if (!session.getDeviceFingerprint().equals(currentFingerprint)) {
-        log.warn("fingerprint mismatch | sessionId={} expected={} actual={}",
-            session.getId(), session.getDeviceFingerprint(), currentFingerprint);
+        userSessionRepository.deleteById(session.getId());
+        throw UnauthorizedException.of();
       }
       session.refreshExpiry(sessionTimeoutMinutes);
       userSessionRepository.save(session);

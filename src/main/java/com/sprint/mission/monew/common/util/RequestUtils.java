@@ -1,6 +1,7 @@
 package com.sprint.mission.monew.common.util;
 
 import jakarta.servlet.http.HttpServletRequest;
+import java.nio.charset.StandardCharsets;
 import org.springframework.util.DigestUtils;
 
 public final class RequestUtils {
@@ -12,7 +13,7 @@ public final class RequestUtils {
     String raw = request.getHeader("User-Agent") + "|"
         + request.getHeader("Accept-Language") + "|"
         + request.getHeader("Accept-Encoding");
-    return DigestUtils.md5DigestAsHex(raw.getBytes());
+    return DigestUtils.md5DigestAsHex(raw.getBytes(StandardCharsets.UTF_8));
   }
 
   public static boolean isSameSubnet24(String a, String b) {

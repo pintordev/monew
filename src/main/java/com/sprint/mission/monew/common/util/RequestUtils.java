@@ -1,10 +1,18 @@
 package com.sprint.mission.monew.common.util;
 
 import jakarta.servlet.http.HttpServletRequest;
+import org.springframework.util.DigestUtils;
 
 public final class RequestUtils {
 
   private RequestUtils() {
+  }
+
+  public static String buildFingerprint(HttpServletRequest request) {
+    String raw = request.getHeader("User-Agent") + "|"
+        + request.getHeader("Accept-Language") + "|"
+        + request.getHeader("Accept-Encoding");
+    return DigestUtils.md5DigestAsHex(raw.getBytes());
   }
 
   public static boolean isSameSubnet24(String a, String b) {

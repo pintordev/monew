@@ -50,18 +50,11 @@ public class UserController implements UserApi {
   public ResponseEntity<UserResponse> login(@Valid @RequestBody UserLoginRequest request,
       HttpServletRequest httpRequest) {
     String ip = RequestUtils.resolveClientIp(httpRequest);
-    String fingerprint = buildFingerprint(httpRequest);
+    String fingerprint = RequestUtils.buildFingerprint(httpRequest);
     LoginResult result = userService.login(request, ip, fingerprint);
     return ResponseEntity.ok()
         .header("Monew-Request-User-ID", result.sessionToken().toString())
         .body(result.response());
-  }
-
-  private String buildFingerprint(HttpServletRequest req) {
-    String raw = req.getHeader("User-Agent") + "|"
-        + req.getHeader("Accept-Language") + "|"
-        + req.getHeader("Accept-Encoding");
-    return org.springframework.util.DigestUtils.md5DigestAsHex(raw.getBytes());
   }
 
   @GetMapping("/verify")

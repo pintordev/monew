@@ -56,6 +56,8 @@ public class UserService {
   private final UserSessionRepository userSessionRepository;
   private final EmailQueue emailQueue;
   private final UserMetrics userMetrics;
+  private final LoginFailureHandler loginFailureHandler;
+  private final LoginSuccessHandler loginSuccessHandler;
 
   @Value("${monew.session.timeout-minutes}")
   private int sessionTimeoutMinutes;
@@ -105,14 +107,14 @@ public class UserService {
     }
 
     if (!passwordEncoder.matches(request.password(), user.getPassword())) {
-      user.incrementLoginFailCount();
-      if (user.hasExceededLoginFailLimit()) {
-        user.lock();
+      boolean isLocked = loginFailureHandler.handle(user.getId());
+      if (isLocked) {
+        throw UserAccountLockedException.withEmail(request.email());
       }
       throw UserLoginFailedException.withPassword();
     }
 
-    user.resetLoginFailCount();
+    loginSuccessHandler.handle(user.getId());
     UserSession session = userSessionRepository.save(
         UserSession.create(user.getId(), ip, deviceFingerprint, sessionTimeoutMinutes));
     log.info("로그인 완료 | userId={}", user.getId());

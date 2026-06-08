@@ -60,6 +60,9 @@ public class AuthFilter implements Filter {
   @Value("${monew.session.timeout-minutes}")
   private int sessionTimeoutMinutes;
 
+  @Value("${monew.admin-token}")
+  private String adminToken;
+
   @Autowired
   public AuthFilter(UserSessionRepository userSessionRepository,
       @Qualifier("handlerExceptionResolver") HandlerExceptionResolver handlerExceptionResolver) {

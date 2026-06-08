@@ -1,9 +1,15 @@
 package com.sprint.mission.monew.common.filter;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.argThat;
+import static org.mockito.ArgumentMatchers.isNull;
 import static org.mockito.BDDMockito.given;
 import static org.mockito.BDDMockito.then;
 import static org.mockito.Mockito.never;
+
+import com.sprint.mission.monew.common.exception.ErrorCode;
+import com.sprint.mission.monew.common.exception.MonewException;
 
 import com.sprint.mission.monew.domain.user.repository.UserSessionRepository;
 import java.util.Optional;
@@ -242,6 +248,35 @@ class AuthFilterTest {
           org.mockito.ArgumentMatchers.any(),
           org.mockito.ArgumentMatchers.isNull(),
           org.mockito.ArgumentMatchers.any()
+      );
+    }
+  }
+
+  @Nested
+  @DisplayName("어드민 토큰 인증 (hard delete 경로)")
+  class AdminTokenAuth {
+
+    @BeforeEach
+    void setUpAdmin() {
+      ReflectionTestUtils.setField(authFilter, "adminToken", "test-admin-token");
+    }
+
+    @Test
+    @DisplayName("admin token 없이 hard delete 요청 시 403 — chain 미실행")
+    void admin_token_없이_hard_delete_요청_시_403() throws Exception {
+      // given
+      request.setMethod("DELETE");
+      request.setRequestURI("/api/articles/some-id/hard");
+
+      // when
+      authFilter.doFilter(request, response, chain);
+
+      // then
+      assertThat(chain.getRequest()).isNull();
+      then(handlerExceptionResolver).should().resolveException(
+          any(), any(), isNull(),
+          argThat(e -> e instanceof MonewException
+              && ((MonewException) e).getErrorCode() == ErrorCode.FORBIDDEN_ADMIN)
       );
     }
   }

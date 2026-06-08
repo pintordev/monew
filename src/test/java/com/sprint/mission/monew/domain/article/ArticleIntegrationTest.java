@@ -53,7 +53,7 @@ class ArticleIntegrationTest {
   void setUp() {
     articleRepository.deleteAll();
 
-    UserSession session = UserSession.create(UUID.randomUUID(), "127.0.0.1", "fp", 30);
+    UserSession session = UserSession.create(UUID.randomUUID(), "127.0.0.1", "1acaf8f7bdf7054e8279b8a17955fc66", 30);
     userSessionRepository.save(session);
     sessionToken = session.getId();
   }
@@ -315,7 +315,7 @@ class ArticleIntegrationTest {
       UUID userId = UUID.randomUUID();
       articleViewRepository.save(ArticleView.create(userId, article));
 
-      UserSession session = UserSession.create(userId, "127.0.0.1", "fp", 30);
+      UserSession session = UserSession.create(userId, "127.0.0.1", "1acaf8f7bdf7054e8279b8a17955fc66", 30);
       userSessionRepository.save(session);
 
       // when & then
@@ -374,7 +374,7 @@ class ArticleIntegrationTest {
       Article article = articleRepository.save(Article.create(
           ArticleSource.NAVER, "https://example.com/news/1", "테스트 기사", Instant.now(), "요약"));
       UUID userId = UUID.randomUUID();
-      UserSession session = UserSession.create(userId, "127.0.0.1", "fp", 30);
+      UserSession session = UserSession.create(userId, "127.0.0.1", "1acaf8f7bdf7054e8279b8a17955fc66", 30);
       userSessionRepository.save(session);
 
       // when & then
@@ -396,7 +396,7 @@ class ArticleIntegrationTest {
       UUID userId = UUID.randomUUID();
       articleViewRepository.save(ArticleView.create(userId, article));
 
-      UserSession session = UserSession.create(userId, "127.0.0.1", "fp", 30);
+      UserSession session = UserSession.create(userId, "127.0.0.1", "1acaf8f7bdf7054e8279b8a17955fc66", 30);
       userSessionRepository.save(session);
 
       // when & then

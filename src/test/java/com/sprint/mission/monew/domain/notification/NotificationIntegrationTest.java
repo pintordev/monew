@@ -54,7 +54,7 @@ public class NotificationIntegrationTest {
   void setUp() {
     user = userRepository.save(User.create("notify@test.com", "알림테스트유저", "password123!"));
 
-    UserSession session = UserSession.create(user.getId(), "127.0.0.1", "fp", 30);
+    UserSession session = UserSession.create(user.getId(), "127.0.0.1", "1acaf8f7bdf7054e8279b8a17955fc66", 30);
     userSessionRepository.save(session);
     sessionToken = session.getId();
   }

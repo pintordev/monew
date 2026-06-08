@@ -80,11 +80,11 @@ public class CommentLikeIntegrationTest {
         Comment.create(article, user, "댓글 내용")
     );
 
-    UserSession session = UserSession.create(user.getId(), "127.0.0.1", "fp", 30);
+    UserSession session = UserSession.create(user.getId(), "127.0.0.1", "1acaf8f7bdf7054e8279b8a17955fc66", 30);
     userSessionRepository.save(session);
     sessionToken = session.getId();
 
-    UserSession ghostSession = UserSession.create(UUID.randomUUID(), "127.0.0.1", "fp", 30);
+    UserSession ghostSession = UserSession.create(UUID.randomUUID(), "127.0.0.1", "1acaf8f7bdf7054e8279b8a17955fc66", 30);
     userSessionRepository.save(ghostSession);
     ghostSessionToken = ghostSession.getId();
   }

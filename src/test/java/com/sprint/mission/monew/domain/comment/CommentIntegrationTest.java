@@ -85,12 +85,12 @@ public class CommentIntegrationTest {
     content = "댓글 내용";
     comment = commentRepository.save(Comment.create(article, user, content));
 
-    UserSession session = UserSession.create(user.getId(), "127.0.0.1", "fp", 30);
+    UserSession session = UserSession.create(user.getId(), "127.0.0.1", "1acaf8f7bdf7054e8279b8a17955fc66", 30);
     userSessionRepository.save(session);
     sessionToken = session.getId();
 
     User anotherUser = userRepository.save(User.create("another@naver.com", "another", "12345678"));
-    UserSession anotherSession = UserSession.create(anotherUser.getId(), "127.0.0.1", "fp", 30);
+    UserSession anotherSession = UserSession.create(anotherUser.getId(), "127.0.0.1", "1acaf8f7bdf7054e8279b8a17955fc66", 30);
     userSessionRepository.save(anotherSession);
     anotherSessionToken = anotherSession.getId();
   }

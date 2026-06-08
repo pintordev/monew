@@ -71,7 +71,7 @@ public class CommentControllerTest {
     userId = UUID.randomUUID();
     sessionToken = UUID.randomUUID();
     commentId = UUID.randomUUID();
-    UserSession session = UserSession.create(userId, "127.0.0.1", "fp", 30);
+    UserSession session = UserSession.create(userId, "127.0.0.1", "1acaf8f7bdf7054e8279b8a17955fc66", 30);
     given(userSessionRepository.findById(any(UUID.class))).willReturn(Optional.of(session));
     firstCommentId = UUID.randomUUID();
     secondCommentId = UUID.randomUUID();

@@ -55,7 +55,7 @@ class InterestControllerTest {
   @BeforeEach
   void setUpAuth() {
     userId = UUID.randomUUID();
-    UserSession session = UserSession.create(userId, "127.0.0.1", "fp", 30);
+    UserSession session = UserSession.create(userId, "127.0.0.1", "1acaf8f7bdf7054e8279b8a17955fc66", 30);
     sessionToken = session.getId();
     given(userSessionRepository.findById(sessionToken)).willReturn(Optional.of(session));
   }

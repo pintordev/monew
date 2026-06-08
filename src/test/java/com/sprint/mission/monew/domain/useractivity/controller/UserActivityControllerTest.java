@@ -1,6 +1,5 @@
 package com.sprint.mission.monew.domain.useractivity.controller;
 
-import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.BDDMockito.given;
 import static org.mockito.BDDMockito.willThrow;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
@@ -43,7 +42,7 @@ class UserActivityControllerTest {
   @BeforeEach
   void setUpAuth() {
     userId = UUID.randomUUID();
-    UserSession session = UserSession.create(userId, "127.0.0.1", "fp", 30);
+    UserSession session = UserSession.create(userId, "127.0.0.1", "1acaf8f7bdf7054e8279b8a17955fc66", 30);
     sessionToken = session.getId();
     given(userSessionRepository.findById(sessionToken)).willReturn(Optional.of(session));
   }

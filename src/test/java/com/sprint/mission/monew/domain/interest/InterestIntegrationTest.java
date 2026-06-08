@@ -60,7 +60,7 @@ class InterestIntegrationTest {
     interestRepository.deleteAll();
     userRepository.deleteAll();
 
-    UserSession anySession = UserSession.create(UUID.randomUUID(), "127.0.0.1", "fp", 30);
+    UserSession anySession = UserSession.create(UUID.randomUUID(), "127.0.0.1", "1acaf8f7bdf7054e8279b8a17955fc66", 30);
     userSessionRepository.save(anySession);
     anySessionToken = anySession.getId();
   }
@@ -112,7 +112,7 @@ class InterestIntegrationTest {
       User user = userRepository.save(User.create("test@test.com", "테스터", "password123!"));
       subscriptionRepository.save(Subscription.create(interest, user));
 
-      UserSession session = UserSession.create(user.getId(), "127.0.0.1", "fp", 30);
+      UserSession session = UserSession.create(user.getId(), "127.0.0.1", "1acaf8f7bdf7054e8279b8a17955fc66", 30);
       userSessionRepository.save(session);
 
       // when & then
@@ -258,7 +258,7 @@ class InterestIntegrationTest {
       interest = interestRepository.save(Interest.create("인공지능", List.of("AI", "머신러닝")));
       user = userRepository.save(User.create("test@test.com", "테스터", "password123!"));
 
-      UserSession session = UserSession.create(user.getId(), "127.0.0.1", "fp", 30);
+      UserSession session = UserSession.create(user.getId(), "127.0.0.1", "1acaf8f7bdf7054e8279b8a17955fc66", 30);
       userSessionRepository.save(session);
       sessionToken = session.getId();
     }
@@ -318,7 +318,7 @@ class InterestIntegrationTest {
       interest = interestRepository.save(Interest.create("인공지능", List.of("AI", "머신러닝")));
       user = userRepository.save(User.create("test@test.com", "테스터", "password123!"));
 
-      UserSession session = UserSession.create(user.getId(), "127.0.0.1", "fp", 30);
+      UserSession session = UserSession.create(user.getId(), "127.0.0.1", "1acaf8f7bdf7054e8279b8a17955fc66", 30);
       userSessionRepository.save(session);
       sessionToken = session.getId();
     }

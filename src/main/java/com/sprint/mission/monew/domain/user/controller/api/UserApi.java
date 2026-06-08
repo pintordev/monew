@@ -11,6 +11,7 @@ import com.sprint.mission.monew.domain.user.dto.UserUnlockRequest;
 import com.sprint.mission.monew.domain.user.dto.UserUpdateRequest;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
+import io.swagger.v3.oas.annotations.enums.ParameterIn;
 import io.swagger.v3.oas.annotations.media.Content;
 import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
@@ -116,7 +117,11 @@ public interface UserApi {
       @PathVariable UUID userId,
       @RequestHeader("Monew-Request-User-ID") UUID requestUserId);
 
-  @Operation(summary = "사용자 물리 삭제", description = "사용자를 즉시 물리적으로 삭제합니다.")
+  @Operation(
+      summary = "사용자 물리 삭제",
+      description = "사용자를 즉시 물리적으로 삭제합니다.",
+      parameters = @Parameter(name = "Monew-Request-User-ID", in = ParameterIn.HEADER,
+          description = "어드민 토큰 (ADR-11: 세션 토큰과 동일 헤더를 어드민 경로에서 재사용)", required = true))
   @ApiResponses({
       @ApiResponse(responseCode = "204", description = "물리 삭제 성공"),
       @ApiResponse(responseCode = "403", description = "관리자 권한 없음",
@@ -126,9 +131,7 @@ public interface UserApi {
       @ApiResponse(responseCode = "500", description = "서버 내부 오류",
           content = @Content(schema = @Schema(implementation = ErrorResponse.class)))
   })
-  ResponseEntity<Void> hardDelete(
-      @RequestHeader("Monew-Request-User-Id") @Parameter(description = "어드민 토큰") String adminToken,
-      @PathVariable UUID userId);
+  ResponseEntity<Void> hardDelete(@PathVariable UUID userId);
 
   @Operation(summary = "비밀번호 재설정 요청", description = "이메일로 비밀번호 재설정 코드를 발송합니다.")
   @ApiResponses({

@@ -96,6 +96,7 @@ public class AuthFilter implements Filter {
         return;
       }
 
+      // Monew-Request-User-ID 헤더를 어드민 경로에서 정적 토큰으로 재사용 (의도된 설계)
       if (isAdminOnly(request.getMethod(), request.getRequestURI())) {
         String token = request.getHeader("Monew-Request-User-ID");
         if (token == null || !token.equals(adminToken)) {

@@ -9,6 +9,7 @@ import com.sprint.mission.monew.domain.article.dto.ArticleViewResponse;
 import com.sprint.mission.monew.domain.article.entity.ArticleSource;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
+import io.swagger.v3.oas.annotations.enums.ParameterIn;
 import io.swagger.v3.oas.annotations.media.ArraySchema;
 import io.swagger.v3.oas.annotations.media.Content;
 import io.swagger.v3.oas.annotations.media.Schema;
@@ -110,7 +111,11 @@ public interface ArticleApi {
       @Parameter(description = "요청자 ID") @RequestHeader("Monew-Request-User-ID")
           UUID requestUserId);
 
-  @Operation(summary = "뉴스 기사 물리 삭제", description = "뉴스 기사를 물리적으로 삭제합니다.")
+  @Operation(
+      summary = "뉴스 기사 물리 삭제",
+      description = "뉴스 기사를 물리적으로 삭제합니다.",
+      parameters = @Parameter(name = "Monew-Request-User-ID", in = ParameterIn.HEADER,
+          description = "어드민 토큰 (ADR-11: 세션 토큰과 동일 헤더를 어드민 경로에서 재사용)", required = true))
   @ApiResponses({
     @ApiResponse(responseCode = "204", description = "삭제 성공"),
     @ApiResponse(
@@ -126,9 +131,7 @@ public interface ArticleApi {
         description = "서버 내부 오류",
         content = @Content(schema = @Schema(implementation = ErrorResponse.class)))
   })
-  ResponseEntity<Void> hardDelete(
-      @RequestHeader("Monew-Request-User-Id") @Parameter(description = "어드민 토큰") String adminToken,
-      @Parameter(description = "뉴스 기사 ID") @PathVariable UUID articleId);
+  ResponseEntity<Void> hardDelete(@Parameter(description = "뉴스 기사 ID") @PathVariable UUID articleId);
 
   @Operation(summary = "뉴스 기사 논리 삭제", description = "뉴스 기사를 논리적으로 삭제합니다.")
   @ApiResponses({

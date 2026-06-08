@@ -193,9 +193,7 @@ class UserIntegrationTest {
         .andExpect(status().isOk());
 
     // when - 논리 삭제
-    UserSession session = UserSession.create(
-        userId, "127.0.0.1", "1acaf8f7bdf7054e8279b8a17955fc66", 30);
-    userSessionRepository.save(session);
+    UserSession session = createAndSaveSession(userId);
     mockMvc.perform(delete("/api/users/" + userId)
             .header("Monew-Request-User-ID", session.getId()))
         .andExpect(status().isNoContent());
@@ -206,6 +204,13 @@ class UserIntegrationTest {
             .contentType(MediaType.APPLICATION_JSON)
             .content(objectMapper.writeValueAsString(loginRequest)))
         .andExpect(status().isUnauthorized());
+  }
+
+  private UserSession createAndSaveSession(UUID userId) {
+    UserSession session = UserSession.create(
+        userId, "127.0.0.1", "1acaf8f7bdf7054e8279b8a17955fc66", 30);
+    userSessionRepository.save(session);
+    return session;
   }
 
   @Nested
@@ -249,9 +254,7 @@ class UserIntegrationTest {
           .andReturn().getResponse().getContentAsString();
       UUID userId = UUID.fromString(objectMapper.readTree(response).get("id").asText());
 
-      UserSession session = UserSession.create(
-          userId, "127.0.0.1", "1acaf8f7bdf7054e8279b8a17955fc66", 30);
-      userSessionRepository.save(session);
+      UserSession session = createAndSaveSession(userId);
       mockMvc.perform(delete("/api/users/{userId}", userId)
               .header("Monew-Request-User-ID", session.getId()))
           .andExpect(status().isNoContent());

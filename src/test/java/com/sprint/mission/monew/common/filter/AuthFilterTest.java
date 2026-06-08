@@ -319,5 +319,21 @@ class AuthFilterTest {
               && ((MonewException) e).getErrorCode() == ErrorCode.FORBIDDEN_ADMIN)
       );
     }
+
+    @Test
+    @DisplayName("유효한 admin token — articles hard delete → chain 통과")
+    void 유효한_admin_token_articles_hard_delete_chain_통과() throws Exception {
+      // given
+      request.setMethod("DELETE");
+      request.setRequestURI("/api/articles/some-id/hard");
+      request.addHeader("Monew-Request-User-ID", "test-admin-token");
+
+      // when
+      authFilter.doFilter(request, response, chain);
+
+      // then
+      assertThat(chain.getRequest()).isNotNull();
+      then(handlerExceptionResolver).should(never()).resolveException(any(), any(), any(), any());
+    }
   }
 }

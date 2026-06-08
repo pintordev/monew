@@ -67,6 +67,25 @@ class AuthFilterTest {
     }
 
     @Test
+    @DisplayName("Monew-Request-User-ID 헤더가 빈 문자열이면 401 — chain 미실행")
+    void Monew_Request_User_ID_헤더가_빈_문자열이면_401_chain_미실행() throws Exception {
+      // given
+      request.addHeader("Monew-Request-User-ID", "   ");
+
+      // when
+      authFilter.doFilter(request, response, chain);
+
+      // then
+      assertThat(chain.getRequest()).isNull();
+      then(handlerExceptionResolver).should().resolveException(
+          org.mockito.ArgumentMatchers.any(),
+          org.mockito.ArgumentMatchers.any(),
+          org.mockito.ArgumentMatchers.isNull(),
+          org.mockito.ArgumentMatchers.any()
+      );
+    }
+
+    @Test
     @DisplayName("세션 없음(만료 포함) → 401, chain 미실행")
     void 세션_없음_만료_포함_401_chain_미실행() throws Exception {
       // given

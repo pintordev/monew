@@ -335,5 +335,21 @@ class AuthFilterTest {
       assertThat(chain.getRequest()).isNotNull();
       then(handlerExceptionResolver).should(never()).resolveException(any(), any(), any(), any());
     }
+
+    @Test
+    @DisplayName("유효한 admin token — comments hard delete → chain 통과")
+    void 유효한_admin_token_comments_hard_delete_chain_통과() throws Exception {
+      // given
+      request.setMethod("DELETE");
+      request.setRequestURI("/api/comments/some-id/hard");
+      request.addHeader("Monew-Request-User-ID", "test-admin-token");
+
+      // when
+      authFilter.doFilter(request, response, chain);
+
+      // then
+      assertThat(chain.getRequest()).isNotNull();
+      then(handlerExceptionResolver).should(never()).resolveException(any(), any(), any(), any());
+    }
   }
 }

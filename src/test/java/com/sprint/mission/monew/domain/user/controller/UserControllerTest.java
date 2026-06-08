@@ -69,9 +69,9 @@ class UserControllerTest {
   @BeforeEach
   void setUpAuth() {
     userId = UUID.randomUUID();
-    sessionToken = UUID.randomUUID();
     UserSession session = UserSession.create(userId, "127.0.0.1", "fp", 30);
-    given(userSessionRepository.findById(any(UUID.class))).willReturn(Optional.of(session));
+    sessionToken = session.getId();
+    given(userSessionRepository.findById(sessionToken)).willReturn(Optional.of(session));
   }
 
   @Nested
@@ -316,7 +316,6 @@ class UserControllerTest {
       // when & then
       mockMvc.perform(
               get("/api/users/unlock")
-                  .header("Monew-Request-User-ID", sessionToken)
                   .param("token", invalidToken)
           )
           .andExpect(status().isBadRequest());
@@ -331,7 +330,6 @@ class UserControllerTest {
       // when & then
       mockMvc.perform(
               get("/api/users/unlock")
-                  .header("Monew-Request-User-ID", sessionToken)
                   .param("token", validToken)
           )
           .andExpect(status().isOk());

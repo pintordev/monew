@@ -86,8 +86,51 @@ class AuthFilterTest {
     }
 
     @Test
-    @DisplayName("세션 없음(만료 포함) → 401, chain 미실행")
-    void 세션_없음_만료_포함_401_chain_미실행() throws Exception {
+    @DisplayName("UUID 형식이 아닌 토큰이면 401 — chain 미실행")
+    void UUID_형식이_아닌_토큰이면_401_chain_미실행() throws Exception {
+      // given
+      request.addHeader("Monew-Request-User-ID", "not-a-uuid");
+
+      // when
+      authFilter.doFilter(request, response, chain);
+
+      // then
+      assertThat(chain.getRequest()).isNull();
+      then(handlerExceptionResolver).should().resolveException(
+          org.mockito.ArgumentMatchers.any(),
+          org.mockito.ArgumentMatchers.any(),
+          org.mockito.ArgumentMatchers.isNull(),
+          org.mockito.ArgumentMatchers.any()
+      );
+    }
+
+    @Test
+    @DisplayName("만료된 세션이면 세션 삭제 후 401 — chain 미실행")
+    void 만료된_세션이면_세션_삭제_후_401_chain_미실행() throws Exception {
+      // given
+      UUID userId = UUID.randomUUID();
+      com.sprint.mission.monew.domain.user.document.UserSession session =
+          com.sprint.mission.monew.domain.user.document.UserSession.create(userId, "1.2.3.4", "fp", -1);
+      request.addHeader("Monew-Request-User-ID", session.getId().toString());
+      given(userSessionRepository.findById(session.getId())).willReturn(Optional.of(session));
+
+      // when
+      authFilter.doFilter(request, response, chain);
+
+      // then
+      assertThat(chain.getRequest()).isNull();
+      then(userSessionRepository).should().deleteById(session.getId());
+      then(handlerExceptionResolver).should().resolveException(
+          org.mockito.ArgumentMatchers.any(),
+          org.mockito.ArgumentMatchers.any(),
+          org.mockito.ArgumentMatchers.isNull(),
+          org.mockito.ArgumentMatchers.any()
+      );
+    }
+
+    @Test
+    @DisplayName("세션 없음 → 401, chain 미실행")
+    void 세션_없음_401_chain_미실행() throws Exception {
       // given
       UUID sessionToken = UUID.randomUUID();
       request.addHeader("Monew-Request-User-ID", sessionToken.toString());

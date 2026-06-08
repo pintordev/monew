@@ -50,7 +50,9 @@ public class AuthFilter implements Filter {
       new MethodPath(HttpMethod.POST, "/api/users/login"),
       new MethodPath(HttpMethod.GET, "/api/users/verify"),
       new MethodPath(HttpMethod.POST, "/api/users/password/reset"),
+      new MethodPath(HttpMethod.PATCH, "/api/users/password/reset"),
       new MethodPath(HttpMethod.POST, "/api/users/unlock"),
+      new MethodPath(HttpMethod.GET, "/api/users/unlock"),
       new MethodPath(HttpMethod.DELETE, "/api/users/*/hard")
   );
 
@@ -90,9 +92,18 @@ public class AuthFilter implements Filter {
       if (token == null || token.isBlank()) {
         throw UnauthorizedException.of();
       }
-      UUID sessionToken = UUID.fromString(token);
+      UUID sessionToken;
+      try {
+        sessionToken = UUID.fromString(token);
+      } catch (IllegalArgumentException e) {
+        throw UnauthorizedException.of();
+      }
       UserSession session = userSessionRepository.findById(sessionToken)
           .orElseThrow(UnauthorizedException::of);
+      if (session.getExpiresAt().isBefore(java.time.Instant.now())) {
+        userSessionRepository.deleteById(session.getId());
+        throw UnauthorizedException.of();
+      }
       String currentIp = RequestUtils.resolveClientIp(request);
       if (!RequestUtils.isSameSubnet24(session.getIp(), currentIp)) {
         userSessionRepository.deleteById(session.getId());

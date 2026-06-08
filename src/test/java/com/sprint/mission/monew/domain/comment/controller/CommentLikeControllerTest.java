@@ -72,11 +72,11 @@ public class CommentLikeControllerTest {
 
     articleId = article.getId();
     userId = user.getId();
-    sessionToken = UUID.randomUUID();
     commentId = comment.getId();
     commentLikeId = UUID.randomUUID();
     UserSession session = UserSession.create(userId, "127.0.0.1", "fp", 30);
-    given(userSessionRepository.findById(any(UUID.class))).willReturn(Optional.of(session));
+    sessionToken = session.getId();
+    given(userSessionRepository.findById(sessionToken)).willReturn(Optional.of(session));
 
     response = new CommentLikeResponse(
         commentLikeId,

@@ -10,6 +10,7 @@ import static org.mockito.BDDMockito.then;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.times;
 import com.sprint.mission.monew.domain.user.document.UserSession;
+import org.mockito.ArgumentCaptor;
 import com.sprint.mission.monew.domain.user.dto.LoginResult;
 import com.sprint.mission.monew.domain.user.dto.UserCreateRequest;
 import com.sprint.mission.monew.domain.user.dto.UserLoginRequest;
@@ -341,8 +342,11 @@ class UserServiceTest {
       LoginResult result = userService.login(request, "127.0.0.1", "fp-test");
 
       // then
-      then(userSessionRepository).should().save(any(UserSession.class));
+      ArgumentCaptor<UserSession> captor = ArgumentCaptor.forClass(UserSession.class);
+      then(userSessionRepository).should().save(captor.capture());
       assertThat(result.sessionToken()).isNotNull();
+      assertThat(captor.getValue().getIp()).isEqualTo("127.0.0.1");
+      assertThat(captor.getValue().getDeviceFingerprint()).isEqualTo("fp-test");
     }
   }
 

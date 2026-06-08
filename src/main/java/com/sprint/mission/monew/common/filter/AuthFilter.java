@@ -13,14 +13,15 @@ import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletRequestWrapper;
 import jakarta.servlet.http.HttpServletResponse;
 import java.io.IOException;
-import org.springframework.http.HttpMethod;
 import java.util.Collections;
 import java.util.Enumeration;
 import java.util.List;
 import java.util.UUID;
+import org.slf4j.MDC;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.http.HttpMethod;
 import org.springframework.stereotype.Component;
 import org.springframework.util.AntPathMatcher;
 import org.springframework.web.servlet.HandlerExceptionResolver;
@@ -33,6 +34,16 @@ public class AuthFilter implements Filter {
   private record MethodPath(HttpMethod method, String path) {}
 
   private static final List<MethodPath> EXCLUDED = List.of(
+      new MethodPath(HttpMethod.GET, "/"),
+      new MethodPath(HttpMethod.GET, "/#/**"),
+      new MethodPath(HttpMethod.GET, "/index.html"),
+      new MethodPath(HttpMethod.GET, "/favicon.ico"),
+      new MethodPath(HttpMethod.GET, "/assets/**"),
+      new MethodPath(HttpMethod.GET, "/fonts/**"),
+      new MethodPath(HttpMethod.GET, "/.well-known/**"),
+      new MethodPath(HttpMethod.GET, "/swagger-ui/**"),
+      new MethodPath(HttpMethod.GET, "/v3/api-docs/**"),
+      new MethodPath(HttpMethod.GET, "/actuator/**"),
       new MethodPath(HttpMethod.POST, "/api/users"),
       new MethodPath(HttpMethod.POST, "/api/users/login"),
       new MethodPath(HttpMethod.GET, "/api/users/verify"),
@@ -60,12 +71,19 @@ public class AuthFilter implements Filter {
     HttpServletRequest request = (HttpServletRequest) servletRequest;
     HttpServletResponse response = (HttpServletResponse) servletResponse;
 
-    if (isExcluded(request.getMethod(), request.getRequestURI())) {
-      chain.doFilter(request, response);
-      return;
-    }
+    String requestId = UUID.randomUUID().toString().substring(0, 8);
+    MDC.put("requestId", requestId);
+    MDC.put("method", request.getMethod());
+    MDC.put("url", request.getRequestURI());
+    MDC.put("clientIp", RequestUtils.resolveClientIp(request));
+    response.setHeader("Monew-Request-ID", requestId);
 
     try {
+      if (isExcluded(request.getMethod(), request.getRequestURI())) {
+        chain.doFilter(request, response);
+        return;
+      }
+
       String token = request.getHeader("Monew-Request-User-ID");
       if (token == null || token.isBlank()) {
         throw UnauthorizedException.of();
@@ -83,6 +101,8 @@ public class AuthFilter implements Filter {
       chain.doFilter(new UserIdHeaderWrapper(request, session.getUserId()), response);
     } catch (UnauthorizedException e) {
       handlerExceptionResolver.resolveException(request, response, null, e);
+    } finally {
+      MDC.clear();
     }
   }
 

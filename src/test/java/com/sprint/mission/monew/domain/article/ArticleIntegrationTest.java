@@ -412,13 +412,31 @@ class ArticleIntegrationTest {
   @DisplayName("DELETE /api/articles/{articleId}/hard — 뉴스 기사 물리 삭제")
   class HardDelete {
 
+    private static final String ADMIN_TOKEN = "test-admin-token";
+
+    @Test
+    @DisplayName("admin token 없이 요청하면 403을 반환한다")
+    void admin_token_없이_요청하면_403을_반환한다() throws Exception {
+      mockMvc
+          .perform(delete(URL + "/{articleId}/hard", UUID.randomUUID()))
+          .andExpect(status().isForbidden());
+    }
+
+    @Test
+    @DisplayName("잘못된 admin token으로 요청하면 403을 반환한다")
+    void 잘못된_admin_token으로_요청하면_403을_반환한다() throws Exception {
+      mockMvc
+          .perform(delete(URL + "/{articleId}/hard", UUID.randomUUID())
+              .header(USER_ID_HEADER, "wrong-token"))
+          .andExpect(status().isForbidden());
+    }
+
     @Test
     @DisplayName("존재하지 않는 기사이면 404를 반환한다")
     void 존재하지_않는_기사이면_404를_반환한다() throws Exception {
-      // when & then
       mockMvc
           .perform(delete(URL + "/{articleId}/hard", UUID.randomUUID())
-              .header(USER_ID_HEADER, sessionToken))
+              .header(USER_ID_HEADER, ADMIN_TOKEN))
           .andExpect(status().isNotFound());
     }
 
@@ -435,7 +453,7 @@ class ArticleIntegrationTest {
       // when & then
       mockMvc
           .perform(delete(URL + "/{articleId}/hard", article.getId())
-              .header(USER_ID_HEADER, sessionToken))
+              .header(USER_ID_HEADER, ADMIN_TOKEN))
           .andExpect(status().isNoContent());
     }
 
@@ -450,7 +468,7 @@ class ArticleIntegrationTest {
       // when
       mockMvc
           .perform(delete(URL + "/{articleId}/hard", article.getId())
-              .header(USER_ID_HEADER, sessionToken))
+              .header(USER_ID_HEADER, ADMIN_TOKEN))
           .andExpect(status().isNoContent());
 
       // then
@@ -474,7 +492,7 @@ class ArticleIntegrationTest {
       // when
       mockMvc
           .perform(delete(URL + "/{articleId}/hard", articleId)
-              .header(USER_ID_HEADER, sessionToken))
+              .header(USER_ID_HEADER, ADMIN_TOKEN))
           .andExpect(status().isNoContent());
 
       // then — 삭제 후 세션 초기화: delete된 Article을 참조하는 ArticleView가 세션에 남아 flush 충돌 방지

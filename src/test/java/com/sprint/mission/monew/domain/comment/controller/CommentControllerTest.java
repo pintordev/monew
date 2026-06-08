@@ -372,32 +372,44 @@ public class CommentControllerTest {
   @DisplayName("댓글 물리 삭제하기")
   class Controller_HardDelete_Comment {
 
+    private static final String ADMIN_TOKEN = "test-admin-token";
+
+    @Test
+    @DisplayName("댓글 물리삭제 실패 - admin token 없음 403")
+    void 댓글_물리삭제_실패_admin_token_없음() throws Exception {
+      mockMvc.perform(delete("/api/comments/{commentId}/hard", commentId))
+          .andExpect(status().isForbidden());
+    }
+
+    @Test
+    @DisplayName("댓글 물리삭제 실패 - 잘못된 admin token 403")
+    void 댓글_물리삭제_실패_잘못된_admin_token() throws Exception {
+      mockMvc.perform(
+              delete("/api/comments/{commentId}/hard", commentId)
+                  .header("Monew-Request-User-ID", "wrong-token"))
+          .andExpect(status().isForbidden());
+    }
+
     @Test
     @DisplayName("댓글 물리삭제 실패 - 댓글이 존재하지 않음")
     void 댓글_물리삭제_실패_댓글_없음() throws Exception {
-      // given
       doThrow(CommentNotFoundException.withId(commentId)).when(commentService)
           .hardDelete(commentId);
 
-      // when & then
       mockMvc.perform(
               delete("/api/comments/{commentId}/hard", commentId)
-                  .header("Monew-Request-User-ID", sessionToken)
-          )
+                  .header("Monew-Request-User-ID", ADMIN_TOKEN))
           .andExpect(status().isNotFound());
     }
 
     @Test
     @DisplayName("댓글 물리삭제 성공")
     void 댓글_물리삭제_성공() throws Exception {
-      // given
       doNothing().when(commentService).hardDelete(commentId);
 
-      // when & then
       mockMvc.perform(
               delete("/api/comments/{commentId}/hard", commentId)
-                  .header("Monew-Request-User-ID", sessionToken)
-          )
+                  .header("Monew-Request-User-ID", ADMIN_TOKEN))
           .andExpect(status().isNoContent());
     }
   }

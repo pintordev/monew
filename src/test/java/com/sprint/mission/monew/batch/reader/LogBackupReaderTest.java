@@ -98,5 +98,29 @@ class LogBackupReaderTest {
       assertThat(result.date()).isEqualTo(yesterday);
       assertThat(new String(result.lines(), StandardCharsets.UTF_8)).isEqualTo("line1\nline2");
     }
+
+    @Test
+    @DisplayName("여러 페이지에 걸친 로그를 nextToken으로 모두 수집한다")
+    void 여러_페이지에_걸친_로그를_nextToken으로_모두_수집한다() throws Exception {
+      // given
+      LocalDate yesterday = LocalDate.now().minusDays(1);
+      FilterLogEventsResponse firstPage = FilterLogEventsResponse.builder()
+          .events(List.of(FilteredLogEvent.builder().message("line1").build()))
+          .nextToken("token123")
+          .build();
+      FilterLogEventsResponse secondPage = FilterLogEventsResponse.builder()
+          .events(List.of(FilteredLogEvent.builder().message("line2").build()))
+          .build();
+      given(cloudWatchLogsClient.filterLogEvents(any(FilterLogEventsRequest.class)))
+          .willReturn(firstPage, secondPage);
+
+      // when
+      LogContent result = reader.read();
+
+      // then
+      assertThat(result).isNotNull();
+      assertThat(result.date()).isEqualTo(yesterday);
+      assertThat(new String(result.lines(), StandardCharsets.UTF_8)).isEqualTo("line1\nline2");
+    }
   }
 }

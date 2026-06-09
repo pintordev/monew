@@ -53,5 +53,23 @@ class LogBackupReaderTest {
       // then
       assertThat(result).isNull();
     }
+
+    @Test
+    @DisplayName("read()를 두 번 호출하면 두 번째는 null을 반환한다")
+    void read를_두_번_호출하면_두_번째는_null을_반환한다() throws Exception {
+      // given
+      FilterLogEventsResponse response = FilterLogEventsResponse.builder()
+          .events(Collections.emptyList())
+          .build();
+      given(cloudWatchLogsClient.filterLogEvents(any(FilterLogEventsRequest.class)))
+          .willReturn(response);
+
+      // when
+      reader.read();
+      LogContent secondResult = reader.read();
+
+      // then
+      assertThat(secondResult).isNull();
+    }
   }
 }

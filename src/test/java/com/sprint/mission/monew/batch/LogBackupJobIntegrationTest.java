@@ -7,6 +7,8 @@ import static org.mockito.BDDMockito.given;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 
+import org.mockito.ArgumentCaptor;
+
 import com.sprint.mission.monew.batch.metrics.LogBackupMetrics;
 import java.time.Instant;
 import java.util.List;
@@ -111,7 +113,15 @@ class LogBackupJobIntegrationTest {
 
       // then
       assertThat(execution.getStatus()).isEqualTo(BatchStatus.COMPLETED);
-      verify(s3Client, times(2)).putObject(any(PutObjectRequest.class), any(RequestBody.class));
+
+      ArgumentCaptor<PutObjectRequest> putReqCaptor = ArgumentCaptor.forClass(PutObjectRequest.class);
+      verify(s3Client, times(2)).putObject(putReqCaptor.capture(), any(RequestBody.class));
+      List<String> uploadedKeys = putReqCaptor.getAllValues().stream()
+          .map(PutObjectRequest::key)
+          .toList();
+      assertThat(uploadedKeys).doesNotHaveDuplicates();
+      assertThat(uploadedKeys).anyMatch(k -> k.endsWith("-001.log.gz"));
+      assertThat(uploadedKeys).anyMatch(k -> k.endsWith("-002.log.gz"));
       verify(metrics, times(2)).countUploaded();
     }
   }

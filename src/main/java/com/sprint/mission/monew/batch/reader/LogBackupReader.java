@@ -41,38 +41,41 @@ public class LogBackupReader implements ItemReader<LogContent> {
     }
 
     if (!initialized) {
-      date = LocalDate.now().minusDays(1);
+      date = LocalDate.now(ZoneOffset.UTC).minusDays(1);
       startTime = date.atStartOfDay(ZoneOffset.UTC).toInstant().toEpochMilli();
       endTime = date.plusDays(1).atStartOfDay(ZoneOffset.UTC).toInstant().toEpochMilli() - 1;
       initialized = true;
     }
 
-    FilterLogEventsRequest.Builder requestBuilder = FilterLogEventsRequest.builder()
-        .logGroupName(logGroup)
-        .startTime(startTime)
-        .endTime(endTime);
-    if (nextToken != null) {
-      requestBuilder.nextToken(nextToken);
+    while (!done) {
+      FilterLogEventsRequest.Builder requestBuilder = FilterLogEventsRequest.builder()
+          .logGroupName(logGroup)
+          .startTime(startTime)
+          .endTime(endTime);
+      if (nextToken != null) {
+        requestBuilder.nextToken(nextToken);
+      }
+
+      FilterLogEventsResponse response = cloudWatchLogsClient.filterLogEvents(requestBuilder.build());
+      List<String> lines = response.events().stream()
+          .map(e -> e.message())
+          .toList();
+
+      nextToken = response.nextToken();
+      if (nextToken == null) {
+        done = true;
+      }
+
+      if (!lines.isEmpty()) {
+        pageNumber++;
+        byte[] content = String.join("\n", lines).getBytes(StandardCharsets.UTF_8);
+        return new LogContent(date, content, pageNumber);
+      }
     }
 
-    FilterLogEventsResponse response = cloudWatchLogsClient.filterLogEvents(requestBuilder.build());
-    List<String> lines = response.events().stream()
-        .map(e -> e.message())
-        .toList();
-
-    nextToken = response.nextToken();
-
-    if (nextToken == null) {
-      done = true;
-    }
-
-    if (lines.isEmpty()) {
+    if (pageNumber == 0) {
       log.warn("CloudWatch에서 어제({}) 로그를 찾을 수 없음: {}", date, logGroup);
-      return null;
     }
-
-    pageNumber++;
-    byte[] content = String.join("\n", lines).getBytes(StandardCharsets.UTF_8);
-    return new LogContent(date, content, pageNumber);
+    return null;
   }
 }

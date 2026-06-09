@@ -52,12 +52,14 @@ public class CommentLikeService {
     CommentLike commentLike = CommentLike.create(user, comment);
 
     CommentLike savedCommentLike;
+    CommentLikeResponse response;
     try {
       savedCommentLike = commentLikeRepository.saveAndFlush(commentLike);
+      response = commentLikeMapper.toResponse(savedCommentLike, comment.getLikeCount() + 1);
+      commentRepository.increaseLikeCount(commentId);
     } catch (DataIntegrityViolationException e) {
       throw CommentLikeAlreadyExistsException.withId(userId, commentId);
     }
-    commentRepository.increaseLikeCount(commentId);
 
     log.info("댓글 좋아요 등록 완료 | commentLikeId={}, commentId={}, userId={}",
         savedCommentLike.getId(), commentId, userId);
@@ -69,7 +71,7 @@ public class CommentLikeService {
           new CommentLikedNotificationEvent(authorId, message, ResourceType.COMMENT, commentId));
     }
 
-    return commentLikeMapper.toResponse(savedCommentLike);
+    return response;
   }
 
   @Transactional

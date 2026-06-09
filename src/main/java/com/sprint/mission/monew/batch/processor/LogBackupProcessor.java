@@ -14,7 +14,8 @@ public class LogBackupProcessor implements ItemProcessor<LogContent, UploadPaylo
   @Override
   public UploadPayload process(LogContent item) throws Exception {
     String s3Key = "logs/" + item.date().format(BatchGzipUtils.PATH_FORMATTER)
-        + "/app-" + item.date().format(BatchGzipUtils.FILE_FORMATTER) + ".log.gz";
+        + "/app-" + item.date().format(BatchGzipUtils.FILE_FORMATTER)
+        + String.format("-%03d", item.pageNumber()) + ".log.gz";
 
     byte[] compressed = BatchGzipUtils.gzip(item.lines());
 

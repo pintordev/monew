@@ -5,8 +5,13 @@ import static org.assertj.core.api.Assertions.assertThat;
 import com.sprint.mission.monew.batch.dto.LogContent;
 import com.sprint.mission.monew.batch.dto.UploadPayload;
 import com.sprint.mission.monew.batch.util.BatchGzipUtils;
+import java.io.ByteArrayInputStream;
+import java.io.ByteArrayOutputStream;
+import java.io.IOException;
+import java.nio.charset.StandardCharsets;
 import java.nio.file.Path;
 import java.time.LocalDate;
+import java.util.zip.GZIPInputStream;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
@@ -71,6 +76,29 @@ class LogBackupProcessorTest {
               + "/app-" + yesterday.format(BatchGzipUtils.FILE_FORMATTER) + ".log.gz"
       );
       assertThat(result.compressedData()).isNotEmpty();
+    }
+
+    @Test
+    @DisplayName("압축된 데이터를 원본으로 복원할 수 있다")
+    void 압축된_데이터를_원본으로_복원할_수_있다() throws Exception {
+      // given
+      byte[] lines = "log content".getBytes(StandardCharsets.UTF_8);
+      LogContent item = new LogContent(yesterday, lines);
+
+      // when
+      UploadPayload result = processor.process(item);
+
+      // then
+      byte[] decompressed = decompress(result.compressedData());
+      assertThat(new String(decompressed, StandardCharsets.UTF_8)).isEqualTo("log content");
+    }
+  }
+
+  private byte[] decompress(byte[] compressed) throws IOException {
+    try (GZIPInputStream gis = new GZIPInputStream(new ByteArrayInputStream(compressed));
+        ByteArrayOutputStream out = new ByteArrayOutputStream()) {
+      gis.transferTo(out);
+      return out.toByteArray();
     }
   }
 }

@@ -55,6 +55,10 @@ public class CommentLikeService {
     CommentLikeResponse response;
     try {
       savedCommentLike = commentLikeRepository.saveAndFlush(commentLike);
+      // IMPORTANT: 응답 매핑을 increaseLikeCount() 이전에 수행해야 함
+      // increaseLikeCount()의 clearAutomatically=true가 영속성 컨텍스트를 초기화하므로,
+      // 지연 로딩되는 연관 엔티티(comment.article, comment.user 등) 접근은 그 전에 완료되어야 함
+      // 증가 후 예상되는 좋아요 수를 미리 계산하여 응답 생성 (실제 증가는 다음 라인에서 수행)
       response = commentLikeMapper.toResponse(savedCommentLike, comment.getLikeCount() + 1);
       commentRepository.increaseLikeCount(commentId);
     } catch (DataIntegrityViolationException e) {

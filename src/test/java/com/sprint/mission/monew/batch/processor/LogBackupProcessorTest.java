@@ -94,6 +94,27 @@ class LogBackupProcessorTest {
     }
   }
 
+  @Nested
+  @DisplayName("LogContent 방어적 복사")
+  class LogContentDefensiveCopy {
+
+    @Test
+    @DisplayName("lines() 조회 시 내부 배열이 변하지 않고 보호된다")
+    void lines_getter_방어적_복사() {
+      // given
+      byte[] original = {1, 2, 3};
+      LogContent content = new LogContent(yesterday, original);
+
+      // when
+      byte[] copy = content.lines();
+      original[0] = 99;
+      copy[0] = 99;
+
+      // then
+      assertThat(content.lines()[0]).isEqualTo((byte) 1);
+    }
+  }
+
   private byte[] decompress(byte[] compressed) throws IOException {
     try (GZIPInputStream gis = new GZIPInputStream(new ByteArrayInputStream(compressed));
         ByteArrayOutputStream out = new ByteArrayOutputStream()) {

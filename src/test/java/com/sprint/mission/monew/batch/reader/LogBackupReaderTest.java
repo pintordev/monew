@@ -1,83 +1,57 @@
 package com.sprint.mission.monew.batch.reader;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.BDDMockito.given;
 
-import java.nio.file.Files;
-import java.nio.file.Path;
-import java.time.LocalDate;
+import com.sprint.mission.monew.batch.dto.LogContent;
+import java.util.Collections;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
-import org.junit.jupiter.api.io.TempDir;
 import org.mockito.InjectMocks;
+import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.test.util.ReflectionTestUtils;
+import software.amazon.awssdk.services.cloudwatchlogs.CloudWatchLogsClient;
+import software.amazon.awssdk.services.cloudwatchlogs.model.FilterLogEventsRequest;
+import software.amazon.awssdk.services.cloudwatchlogs.model.FilterLogEventsResponse;
 
 @ExtendWith(MockitoExtension.class)
-public class LogBackupReaderTest {
+class LogBackupReaderTest {
 
-  @TempDir
-  Path tempDir;
+  @Mock
+  private CloudWatchLogsClient cloudWatchLogsClient;
 
   @InjectMocks
   private LogBackupReader reader;
 
   @BeforeEach
   void setUp() {
-    ReflectionTestUtils.setField(reader, "logDir", tempDir.toString());
+    ReflectionTestUtils.setField(reader, "logGroup", "test-log-group");
   }
 
   @Nested
-  @DisplayName("백업 로그 파일 읽기")
-  class Reader {
+  @DisplayName("CloudWatch 로그 읽기")
+  class Read {
 
     @Test
-    @DisplayName("전날 로그 파일이 없으면 null을 반환한다")
-    void 전날_로그_파일이_없으면_null을_반환한다() throws Exception {
+    @DisplayName("CloudWatch에 어제 로그 이벤트가 없으면 null을 반환한다")
+    void CloudWatch에_어제_로그_이벤트가_없으면_null을_반환한다() throws Exception {
       // given
-      // tempDir에 로그 파일 없는 상태
+      FilterLogEventsResponse emptyResponse = FilterLogEventsResponse.builder()
+          .events(Collections.emptyList())
+          .build();
+      given(cloudWatchLogsClient.filterLogEvents(any(FilterLogEventsRequest.class)))
+          .willReturn(emptyResponse);
 
       // when
-      Path result = reader.read();
+      LogContent result = reader.read();
 
       // then
       assertThat(result).isNull();
     }
-
-    @Test
-    @DisplayName("로그 파일이 존재하면 Path를 반환한다")
-    void 로그_파일이_존재하면_Path를_반환한다() throws Exception {
-      // given
-      LocalDate yesterday = LocalDate.now().minusDays(1);
-      Path logFile = tempDir.resolve("monew." + yesterday + ".log");
-      Files.writeString(logFile, "log content");
-
-      // when
-      Path result = reader.read();
-
-      // then
-      assertThat(result).isNotNull();
-      assertThat(result).isEqualTo(logFile);
-    }
-
-    @Test
-    @DisplayName("read()를 두 번 호출하면 두 번째는 null을 반환한다")
-    void read를_두_번_호출하면_두_번째는_null을_반환한다() throws Exception {
-      // given
-      LocalDate yesterday = LocalDate.now().minusDays(1);
-      Path logFile = tempDir.resolve("monew." + yesterday + ".log");
-      Files.writeString(logFile, "log content");
-
-      // when
-      Path firstResult = reader.read();
-      Path secondResult = reader.read();
-
-      // then
-      assertThat(firstResult).isNotNull();
-      assertThat(secondResult).isNull();
-    }
   }
-
 }

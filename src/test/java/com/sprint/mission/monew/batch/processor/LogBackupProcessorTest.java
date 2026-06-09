@@ -9,7 +9,6 @@ import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
-import java.nio.file.Path;
 import java.time.LocalDate;
 import java.util.zip.GZIPInputStream;
 import org.junit.jupiter.api.BeforeEach;
@@ -43,7 +42,6 @@ class LogBackupProcessorTest {
       // given
       byte[] original = {1, 2, 3};
       UploadPayload payload = new UploadPayload(
-          Path.of("test.log"),
           "s3-key",
           original
       );

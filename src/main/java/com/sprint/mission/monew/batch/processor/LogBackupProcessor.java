@@ -18,6 +18,6 @@ public class LogBackupProcessor implements ItemProcessor<LogContent, UploadPaylo
 
     byte[] compressed = BatchGzipUtils.gzip(item.lines());
 
-    return new UploadPayload(null, s3Key, compressed);
+    return new UploadPayload(s3Key, compressed);
   }
 }

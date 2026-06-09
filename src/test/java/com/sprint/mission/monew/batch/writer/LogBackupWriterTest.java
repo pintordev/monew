@@ -200,5 +200,19 @@ public class LogBackupWriterTest {
       verify(metrics).recordBytes(anyLong());
       verify(metrics).recordDuration(any(Duration.class));
     }
+
+    @Test
+    @DisplayName("logFile이 null이어도 업로드가 정상 동작한다")
+    void logFile이_null이어도_업로드가_정상_동작한다() {
+      // given
+      UploadPayload nullFilePayload = new UploadPayload(null, "key", "data".getBytes());
+      given(s3Client.headObject(any(Consumer.class)))
+          .willThrow(NoSuchKeyException.builder().build());
+      Chunk<UploadPayload> chunk = new Chunk<>(List.of(nullFilePayload));
+
+      // when & then (NPE 없이 업로드 호출됨을 검증)
+      writer.write(chunk);
+      verify(s3Client, times(1)).putObject(any(PutObjectRequest.class), any(RequestBody.class));
+    }
   }
 }

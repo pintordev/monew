@@ -62,7 +62,7 @@ class LogBackupProcessorTest {
     void LogContent를_UploadPayload로_변환한다() throws Exception {
       // given
       byte[] lines = "log content".getBytes();
-      LogContent item = new LogContent(yesterday, lines);
+      LogContent item = new LogContent(yesterday, lines, 1);
 
       // when
       UploadPayload result = processor.process(item);
@@ -81,7 +81,7 @@ class LogBackupProcessorTest {
     void 압축된_데이터를_원본으로_복원할_수_있다() throws Exception {
       // given
       byte[] lines = "log content".getBytes(StandardCharsets.UTF_8);
-      LogContent item = new LogContent(yesterday, lines);
+      LogContent item = new LogContent(yesterday, lines, 1);
 
       // when
       UploadPayload result = processor.process(item);
@@ -101,7 +101,7 @@ class LogBackupProcessorTest {
     void lines_getter_방어적_복사() {
       // given
       byte[] original = {1, 2, 3};
-      LogContent content = new LogContent(yesterday, original);
+      LogContent content = new LogContent(yesterday, original, 1);
 
       // when
       byte[] copy = content.lines();

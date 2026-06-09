@@ -7,13 +7,9 @@ import static org.mockito.BDDMockito.given;
 import static org.mockito.Mockito.verify;
 
 import com.sprint.mission.monew.batch.metrics.LogBackupMetrics;
-import java.io.IOException;
-import java.nio.file.Files;
-import java.nio.file.Path;
 import java.time.Instant;
-import java.time.LocalDate;
+import java.util.List;
 import java.util.function.Consumer;
-import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
@@ -28,13 +24,17 @@ import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import software.amazon.awssdk.core.sync.RequestBody;
+import software.amazon.awssdk.services.cloudwatchlogs.CloudWatchLogsClient;
+import software.amazon.awssdk.services.cloudwatchlogs.model.FilterLogEventsRequest;
+import software.amazon.awssdk.services.cloudwatchlogs.model.FilterLogEventsResponse;
+import software.amazon.awssdk.services.cloudwatchlogs.model.FilteredLogEvent;
 import software.amazon.awssdk.services.s3.S3Client;
 import software.amazon.awssdk.services.s3.model.NoSuchKeyException;
 import software.amazon.awssdk.services.s3.model.PutObjectRequest;
 
-@SpringBootTest(properties = {"monew.log-dir=${java.io.tmpdir}/monew-test"})
+@SpringBootTest(properties = {"monew.log-group=test-log-group"})
 @ActiveProfiles("test")
-public class LogBackupJobIntegrationTest {
+class LogBackupJobIntegrationTest {
 
   @Autowired
   private JobLauncher jobLauncher;
@@ -48,19 +48,8 @@ public class LogBackupJobIntegrationTest {
   @MockitoBean
   private LogBackupMetrics metrics;
 
-  private LocalDate yesterday;
-  private Path logFile;
-
-  private Path baseDir;
-
-  @BeforeEach
-  void setUp() throws IOException {
-    yesterday = LocalDate.now().minusDays(1);
-    baseDir = Path.of(System.getProperty("java.io.tmpdir"), "monew-test");
-
-    Files.createDirectories(baseDir);
-    logFile = baseDir.resolve("monew." + yesterday + ".log");
-  }
+  @MockitoBean
+  private CloudWatchLogsClient cloudWatchLogsClient;
 
   @Nested
   @DisplayName("로그 백업 배치 통합 테스트하기")
@@ -70,11 +59,13 @@ public class LogBackupJobIntegrationTest {
     @DisplayName("로그 백업 배치 Job이 정상적으로 실행되어 S3 업로드까지 수행된다")
     void 로그_백업_배치_Job이_정상적으로_실행되어_S3_업로드까지_수행된다() throws Exception {
       // given
-      Files.writeString(logFile, "log content");
-
+      FilterLogEventsResponse response = FilterLogEventsResponse.builder()
+          .events(List.of(FilteredLogEvent.builder().message("log line").build()))
+          .build();
+      given(cloudWatchLogsClient.filterLogEvents(any(FilterLogEventsRequest.class)))
+          .willReturn(response);
       given(s3Client.headObject(any(Consumer.class)))
           .willThrow(NoSuchKeyException.builder().build());
-
       given(s3Client.putObject(any(PutObjectRequest.class), any(RequestBody.class)))
           .willReturn(null);
 
@@ -87,7 +78,6 @@ public class LogBackupJobIntegrationTest {
 
       // then
       assertThat(execution.getStatus()).isEqualTo(BatchStatus.COMPLETED);
-
       verify(s3Client).putObject(any(PutObjectRequest.class), any(RequestBody.class));
       verify(metrics).countUploaded();
       verify(metrics).recordBytes(anyLong());

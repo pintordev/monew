@@ -2,9 +2,9 @@ package com.sprint.mission.monew.batch.processor;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
-import com.sprint.mission.monew.batch.util.BatchGzipUtils;
+import com.sprint.mission.monew.batch.dto.LogContent;
 import com.sprint.mission.monew.batch.dto.UploadPayload;
-import java.nio.file.Files;
+import com.sprint.mission.monew.batch.util.BatchGzipUtils;
 import java.nio.file.Path;
 import java.time.LocalDate;
 import org.junit.jupiter.api.BeforeEach;
@@ -12,27 +12,20 @@ import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
-import org.junit.jupiter.api.io.TempDir;
 import org.mockito.InjectMocks;
 import org.mockito.junit.jupiter.MockitoExtension;
 
 @ExtendWith(MockitoExtension.class)
-public class LogBackupProcessorTest {
-
-  @TempDir
-  Path tempDir;
+class LogBackupProcessorTest {
 
   @InjectMocks
   private LogBackupProcessor processor;
 
   private LocalDate yesterday;
-  private Path file;
 
   @BeforeEach
   void setUp() {
     yesterday = LocalDate.now().minusDays(1);
-    file = tempDir
-        .resolve("monew." + yesterday + ".log");
   }
 
   @Nested
@@ -62,35 +55,21 @@ public class LogBackupProcessorTest {
     }
 
     @Test
-    @DisplayName("백업 로그 파일 변환")
-    void 백업_로그_파일_변환() throws Exception {
+    @DisplayName("LogContent를 UploadPayload로 변환한다")
+    void LogContent를_UploadPayload로_변환한다() throws Exception {
       // given
-      // BeforeEach에서 로그 파일 초기화
-      Files.writeString(file, "log content");
+      byte[] lines = "log content".getBytes();
+      LogContent item = new LogContent(yesterday, lines);
 
       // when
-      UploadPayload result = processor.process(file);
+      UploadPayload result = processor.process(item);
 
       // then
-
-      // UploadPayLoad 검증
       assertThat(result).isNotNull();
-      assertThat(result.logFile()).isEqualTo(file);
-      assertThat(result.s3Key()).isNotBlank();
-      assertThat(result.compressedData()).isNotEmpty();
-
-      // S3 key 검증
-      assertThat(result.s3Key()).contains("logs/").contains(String.valueOf(yesterday.getYear()));
-
-      String expectedKey =
+      assertThat(result.s3Key()).isEqualTo(
           "logs/" + yesterday.format(BatchGzipUtils.PATH_FORMATTER)
-              + "/app-" + yesterday.format(BatchGzipUtils.FILE_FORMATTER)
-              + ".log.gz";
-
-      assertThat(result.s3Key()).isEqualTo(expectedKey);
-      assertThat(result.s3Key()).contains("logs/").contains(String.valueOf(yesterday.getYear()));
-
-      // gzip로 압축됐는지 검증
+              + "/app-" + yesterday.format(BatchGzipUtils.FILE_FORMATTER) + ".log.gz"
+      );
       assertThat(result.compressedData()).isNotEmpty();
     }
   }

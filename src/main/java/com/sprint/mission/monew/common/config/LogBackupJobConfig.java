@@ -1,10 +1,10 @@
 package com.sprint.mission.monew.common.config;
 
+import com.sprint.mission.monew.batch.dto.LogContent;
 import com.sprint.mission.monew.batch.dto.UploadPayload;
 import com.sprint.mission.monew.batch.processor.LogBackupProcessor;
 import com.sprint.mission.monew.batch.reader.LogBackupReader;
 import com.sprint.mission.monew.batch.writer.LogBackupWriter;
-import java.nio.file.Path;
 import lombok.RequiredArgsConstructor;
 import org.springframework.batch.core.Job;
 import org.springframework.batch.core.Step;
@@ -36,7 +36,7 @@ public class LogBackupJobConfig {
   @Bean
   public Step logBackupStep() {
     return new StepBuilder("logBackupStep", jobRepository)
-        .<Path, UploadPayload>chunk(1, transactionManager)
+        .<LogContent, UploadPayload>chunk(1, transactionManager)
         .reader(logBackupReader)
         .processor(logBackupProcessor)
         .writer(logBackupWriter)

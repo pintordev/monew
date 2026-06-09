@@ -85,5 +85,23 @@ class LogBackupReaderTest {
       assertThat(second.pageNumber()).isEqualTo(2);
       assertThat(new String(second.lines(), StandardCharsets.UTF_8)).isEqualTo("line2");
     }
+
+    @Test
+    @DisplayName("마지막 페이지 이후 read()는 null을 반환한다")
+    void 마지막_페이지_이후_read는_null을_반환한다() throws Exception {
+      // given
+      FilterLogEventsResponse onlyPage = FilterLogEventsResponse.builder()
+          .events(List.of(FilteredLogEvent.builder().message("line1").build()))
+          .build();
+      given(cloudWatchLogsClient.filterLogEvents(any(FilterLogEventsRequest.class)))
+          .willReturn(onlyPage);
+
+      // when
+      reader.read();
+      LogContent afterLast = reader.read();
+
+      // then
+      assertThat(afterLast).isNull();
+    }
   }
 }

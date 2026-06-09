@@ -111,6 +111,16 @@ class LogBackupProcessorTest {
       // then
       assertThat(content.lines()[0]).isEqualTo((byte) 1);
     }
+
+    @Test
+    @DisplayName("lines가 null이면 null을 반환한다")
+    void lines가_null이면_null을_반환한다() {
+      // given
+      LogContent content = new LogContent(yesterday, null, 1);
+
+      // when & then
+      assertThat(content.lines()).isNull();
+    }
   }
 
   private byte[] decompress(byte[] compressed) throws IOException {

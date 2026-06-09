@@ -5,7 +5,10 @@ import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.BDDMockito.given;
 
 import com.sprint.mission.monew.batch.dto.LogContent;
+import java.nio.charset.StandardCharsets;
+import java.time.LocalDate;
 import java.util.Collections;
+import java.util.List;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
@@ -18,6 +21,7 @@ import org.springframework.test.util.ReflectionTestUtils;
 import software.amazon.awssdk.services.cloudwatchlogs.CloudWatchLogsClient;
 import software.amazon.awssdk.services.cloudwatchlogs.model.FilterLogEventsRequest;
 import software.amazon.awssdk.services.cloudwatchlogs.model.FilterLogEventsResponse;
+import software.amazon.awssdk.services.cloudwatchlogs.model.FilteredLogEvent;
 
 @ExtendWith(MockitoExtension.class)
 class LogBackupReaderTest {
@@ -70,6 +74,29 @@ class LogBackupReaderTest {
 
       // then
       assertThat(secondResult).isNull();
+    }
+
+    @Test
+    @DisplayName("CloudWatch 로그 이벤트를 수집해 LogContent를 반환한다")
+    void CloudWatch_로그_이벤트를_수집해_LogContent를_반환한다() throws Exception {
+      // given
+      LocalDate yesterday = LocalDate.now().minusDays(1);
+      FilterLogEventsResponse response = FilterLogEventsResponse.builder()
+          .events(List.of(
+              FilteredLogEvent.builder().message("line1").build(),
+              FilteredLogEvent.builder().message("line2").build()
+          ))
+          .build();
+      given(cloudWatchLogsClient.filterLogEvents(any(FilterLogEventsRequest.class)))
+          .willReturn(response);
+
+      // when
+      LogContent result = reader.read();
+
+      // then
+      assertThat(result).isNotNull();
+      assertThat(result.date()).isEqualTo(yesterday);
+      assertThat(new String(result.lines(), StandardCharsets.UTF_8)).isEqualTo("line1\nline2");
     }
   }
 }

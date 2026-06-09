@@ -58,6 +58,16 @@ class LogBackupProcessorTest {
     }
 
     @Test
+    @DisplayName("compressedData가 null이면 null을 반환한다")
+    void compressedData가_null이면_null을_반환한다() {
+      // given
+      UploadPayload payload = new UploadPayload("s3-key", null);
+
+      // when & then
+      assertThat(payload.compressedData()).isNull();
+    }
+
+    @Test
     @DisplayName("LogContent를 UploadPayload로 변환한다")
     void LogContent를_UploadPayload로_변환한다() throws Exception {
       // given

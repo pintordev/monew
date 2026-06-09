@@ -5,6 +5,7 @@ import static org.springframework.test.web.servlet.request.MockMvcRequestBuilder
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
+import static org.assertj.core.api.Assertions.assertThat;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.sprint.mission.monew.common.config.MongoContainerConfig;
@@ -29,6 +30,8 @@ import org.springframework.context.annotation.Import;
 import org.springframework.http.MediaType;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.web.servlet.MockMvc;
+import org.springframework.test.web.servlet.MvcResult;
+
 
 @SpringBootTest
 @ActiveProfiles("test")
@@ -223,7 +226,6 @@ class UserIntegrationTest {
     @DisplayName("admin token 없이 요청 시 403 반환")
     void admin_token_없이_요청_시_403_반환() throws Exception {
       // given — 헤더 없음
-
       // when & then
       mockMvc.perform(delete("/api/users/{userId}/hard", UUID.randomUUID()))
           .andExpect(status().isForbidden());
@@ -233,7 +235,6 @@ class UserIntegrationTest {
     @DisplayName("잘못된 admin token으로 요청 시 403 반환")
     void 잘못된_admin_token으로_요청_시_403_반환() throws Exception {
       // given — 잘못된 토큰
-
       // when & then
       mockMvc.perform(
               delete("/api/users/{userId}/hard", UUID.randomUUID())
@@ -264,6 +265,62 @@ class UserIntegrationTest {
               delete("/api/users/{userId}/hard", userId)
                   .header("Monew-Request-User-ID", ADMIN_TOKEN))
           .andExpect(status().isNoContent());
+    }
+  }
+
+  @Nested
+  @DisplayName("DELETE /api/users/logout — 로그아웃")
+  class Logout {
+
+    @Test
+    @DisplayName("세션 없이 요청 시 401 반환")
+    void 세션_없이_요청_시_401_반환() throws Exception {
+      // given & when & then
+      mockMvc.perform(delete("/api/users/logout"))
+          .andExpect(status().isUnauthorized());
+    }
+
+    @Test
+    @DisplayName("로그아웃 성공 시 전체 세션이 삭제되고 204 반환")
+    void 로그아웃_성공_시_전체_세션이_삭제되고_204_반환() throws Exception {
+      // given — 회원가입 → 이메일 인증 → 로그인 2회
+      UserCreateRequest createRequest = new UserCreateRequest(
+          "logout@test.com", "로그아웃테스터", "test1234");
+      mockMvc.perform(post("/api/users")
+              .contentType(MediaType.APPLICATION_JSON)
+              .content(objectMapper.writeValueAsString(createRequest)))
+          .andExpect(status().isCreated());
+      String verifyToken = emailVerificationRepository.findAll().stream()
+          .findFirst().orElseThrow().getToken();
+      mockMvc.perform(get("/api/users/verify").param("token", verifyToken))
+          .andExpect(status().isOk());
+
+      UserLoginRequest loginRequest = new UserLoginRequest("logout@test.com", "test1234");
+      MvcResult loginResult1 = mockMvc.perform(post("/api/users/login")
+              .contentType(MediaType.APPLICATION_JSON)
+              .content(objectMapper.writeValueAsString(loginRequest)))
+          .andExpect(status().isOk())
+          .andReturn();
+      String sessionToken1 = loginResult1.getResponse().getHeader("Monew-Request-User-ID");
+
+      MvcResult loginResult2 = mockMvc.perform(post("/api/users/login")
+              .contentType(MediaType.APPLICATION_JSON)
+              .content(objectMapper.writeValueAsString(loginRequest)))
+          .andExpect(status().isOk())
+          .andReturn();
+      String sessionToken2 = loginResult2.getResponse().getHeader("Monew-Request-User-ID");
+
+      assertThat(sessionToken1).isNotBlank();
+      assertThat(sessionToken2).isNotBlank();
+      assertThat(userSessionRepository.findAll()).hasSize(2);
+
+      // when
+      mockMvc.perform(delete("/api/users/logout")
+              .header("Monew-Request-User-ID", sessionToken1))
+          .andExpect(status().isNoContent());
+
+      // then — 전체 세션 삭제 확인
+      assertThat(userSessionRepository.findAll()).isEmpty();
     }
   }
 }

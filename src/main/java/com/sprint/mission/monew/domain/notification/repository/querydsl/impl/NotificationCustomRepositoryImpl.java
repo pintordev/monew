@@ -60,9 +60,9 @@ public class NotificationCustomRepositoryImpl implements NotificationCustomRepos
       nextIdAfter = last.id();
     }
 
-    // 미확인 개수는 페이지마다 동일하므로 첫 페이지(커서 없음)에서만 집계하고
-    // 이후 페이지는 null로 반환해 불필요한 count(*) 쿼리를 줄인다.
-    Long totalElements = condition.cursor() == null ? countUnconfirmed(userId) : null;
+    // 프론트는 매 응답의 totalElements로 "총 N건"을 다시 그리므로,
+    // 커서 페이지에서도 항상 미확인 총 개수를 집계해 일관되게 반환한다.
+    Long totalElements = countUnconfirmed(userId);
 
     return CursorPageResponse.of(
         content,

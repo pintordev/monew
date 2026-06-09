@@ -152,7 +152,6 @@ class NotificationRepositoryTest {
               userId, new NotificationQueryCondition(null, null, null, 2));
 
       // then - 최신순(newest, middle)으로 반환되고 다음 페이지가 있다
-      // 첫 페이지(커서 없음)에서만 전체 미확인 개수를 집계한다
       assertThat(first.content())
           .extracting(NotificationResponse::id)
           .containsExactly(newest.getId(), middle.getId());
@@ -166,12 +165,12 @@ class NotificationRepositoryTest {
               new NotificationQueryCondition(
                   first.nextCursor(), first.nextAfter(), first.nextIdAfter(), 2));
 
-      // then - 남은 1건(oldest)만 누락·중복 없이 이어지고, 커서 페이지는 count를 생략한다
+      // then - 남은 1건(oldest)만 누락·중복 없이 이어지고, 커서 페이지에서도 전체 미확인 개수가 유지된다
       assertThat(second.content())
           .extracting(NotificationResponse::id)
           .containsExactly(oldest.getId());
       assertThat(second.hasNext()).isFalse();
-      assertThat(second.totalElements()).isNull();
+      assertThat(second.totalElements()).isEqualTo(3L);
     }
   }
 

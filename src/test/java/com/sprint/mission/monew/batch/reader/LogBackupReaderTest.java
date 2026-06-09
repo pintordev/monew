@@ -61,5 +61,29 @@ class LogBackupReaderTest {
       assertThat(result.date()).isEqualTo(yesterday);
       assertThat(new String(result.lines(), StandardCharsets.UTF_8)).isEqualTo("line1");
     }
+
+    @Test
+    @DisplayName("두 번째 read()는 nextToken으로 pageNumber=2를 반환한다")
+    void 두_번째_read는_nextToken으로_pageNumber_2를_반환한다() throws Exception {
+      // given
+      FilterLogEventsResponse firstPage = FilterLogEventsResponse.builder()
+          .events(List.of(FilteredLogEvent.builder().message("line1").build()))
+          .nextToken("token123")
+          .build();
+      FilterLogEventsResponse secondPage = FilterLogEventsResponse.builder()
+          .events(List.of(FilteredLogEvent.builder().message("line2").build()))
+          .build();
+      given(cloudWatchLogsClient.filterLogEvents(any(FilterLogEventsRequest.class)))
+          .willReturn(firstPage, secondPage);
+
+      // when
+      reader.read();
+      LogContent second = reader.read();
+
+      // then
+      assertThat(second).isNotNull();
+      assertThat(second.pageNumber()).isEqualTo(2);
+      assertThat(new String(second.lines(), StandardCharsets.UTF_8)).isEqualTo("line2");
+    }
   }
 }

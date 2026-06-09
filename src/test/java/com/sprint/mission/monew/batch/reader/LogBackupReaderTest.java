@@ -103,5 +103,22 @@ class LogBackupReaderTest {
       // then
       assertThat(afterLast).isNull();
     }
+
+    @Test
+    @DisplayName("CloudWatch에 어제 로그 이벤트가 없으면 null을 반환한다")
+    void CloudWatch에_어제_로그_이벤트가_없으면_null을_반환한다() throws Exception {
+      // given
+      FilterLogEventsResponse emptyResponse = FilterLogEventsResponse.builder()
+          .events(Collections.emptyList())
+          .build();
+      given(cloudWatchLogsClient.filterLogEvents(any(FilterLogEventsRequest.class)))
+          .willReturn(emptyResponse);
+
+      // when
+      LogContent result = reader.read();
+
+      // then
+      assertThat(result).isNull();
+    }
   }
 }

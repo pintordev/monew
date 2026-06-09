@@ -4,6 +4,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyLong;
 import static org.mockito.BDDMockito.given;
+import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 
 import com.sprint.mission.monew.batch.metrics.LogBackupMetrics;
@@ -81,6 +82,37 @@ class LogBackupJobIntegrationTest {
       verify(s3Client).putObject(any(PutObjectRequest.class), any(RequestBody.class));
       verify(metrics).countUploaded();
       verify(metrics).recordBytes(anyLong());
+    }
+
+    @Test
+    @DisplayName("두 페이지에 걸친 로그가 각각 별도 파일로 S3에 업로드된다")
+    void 두_페이지에_걸친_로그가_각각_별도_파일로_S3에_업로드된다() throws Exception {
+      // given
+      FilterLogEventsResponse firstPage = FilterLogEventsResponse.builder()
+          .events(List.of(FilteredLogEvent.builder().message("page1-log").build()))
+          .nextToken("token")
+          .build();
+      FilterLogEventsResponse secondPage = FilterLogEventsResponse.builder()
+          .events(List.of(FilteredLogEvent.builder().message("page2-log").build()))
+          .build();
+      given(cloudWatchLogsClient.filterLogEvents(any(FilterLogEventsRequest.class)))
+          .willReturn(firstPage, secondPage);
+      given(s3Client.headObject(any(Consumer.class)))
+          .willThrow(NoSuchKeyException.builder().build());
+      given(s3Client.putObject(any(PutObjectRequest.class), any(RequestBody.class)))
+          .willReturn(null);
+
+      JobParameters params = new JobParametersBuilder()
+          .addLong("time", Instant.now().toEpochMilli())
+          .toJobParameters();
+
+      // when
+      JobExecution execution = jobLauncher.run(logBackupJob, params);
+
+      // then
+      assertThat(execution.getStatus()).isEqualTo(BatchStatus.COMPLETED);
+      verify(s3Client, times(2)).putObject(any(PutObjectRequest.class), any(RequestBody.class));
+      verify(metrics, times(2)).countUploaded();
     }
   }
 }

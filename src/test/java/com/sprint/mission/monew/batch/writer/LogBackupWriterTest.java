@@ -70,13 +70,10 @@ public class LogBackupWriterTest {
   class Writer {
 
     @Test
-    @DisplayName("이미 S3에 존재하면 업로드를 건너뛰고 로컬 파일을 삭제한다")
-    void 이미_S3에_존재하면_skip() throws IOException {
+    @DisplayName("이미 S3에 존재하면 업로드를 건너뛴다")
+    void 이미_S3에_존재하면_skip() {
       // given
-      Files.writeString(logFile, "log content");
       Chunk<UploadPayload> chunk = new Chunk<>(List.of(payload));
-
-      // headObject 성공 = 이미 존재
       given(s3Client.headObject(any(Consumer.class)))
           .willReturn(null);
 
@@ -86,9 +83,6 @@ public class LogBackupWriterTest {
       // then
       verify(metrics).countSkipped();
       verify(s3Client, never()).putObject(any(PutObjectRequest.class), any(RequestBody.class));
-
-      // 로컬 파일 삭제됐는지 검증
-      assertThat(logFile).doesNotExist();
     }
 
     @Test
@@ -123,53 +117,9 @@ public class LogBackupWriterTest {
     }
 
     @Test
-    @DisplayName("로컬 파일 삭제 실패 시 LogBackupDeleteFailedException 발생으로 Job이 실패한다")
-    void 로컬_파일_삭제_실패_시_Job_실패() throws Exception {
+    @DisplayName("S3에 없으면 업로드한다")
+    void S3에_없으면_업로드한다() {
       // given
-      Files.writeString(logFile, "log content");
-
-      given(s3Client.headObject(any(Consumer.class)))
-          .willThrow(NoSuchKeyException.builder().build());
-
-      given(s3Client.putObject(any(PutObjectRequest.class), any(RequestBody.class)))
-          .willReturn(null);
-
-      Chunk<UploadPayload> chunk = new Chunk<>(List.of(payload));
-
-      try (MockedStatic<Files> filesMock = mockStatic(Files.class)) {
-        filesMock.when(() -> Files.exists(any())).thenReturn(true);
-        filesMock.when(() -> Files.readAllBytes(any())).thenReturn("log content".getBytes());
-        filesMock.when(() -> Files.delete(any())).thenThrow(new IOException("삭제 실패"));
-
-        // when & then
-        assertThatThrownBy(() -> writer.write(chunk))
-            .isInstanceOf(LogBackupDeleteFailedException.class);
-      }
-    }
-
-    @Test
-    @DisplayName("S3에 파일 업로드")
-    void S3에_파일_업로드() throws IOException {
-      // given
-      Files.writeString(logFile, "log content");
-
-      given(s3Client.headObject(any(Consumer.class)))
-          .willThrow(NoSuchKeyException.builder().build());
-
-      Chunk<UploadPayload> chunk = new Chunk<>(List.of(payload));
-
-      // when
-      writer.write(chunk);
-
-      // then
-      verify(s3Client, times(1)).putObject(any(PutObjectRequest.class), any(RequestBody.class));
-    }
-
-    @Test
-    @DisplayName("로그 파일이 존재하고 S3에 없으면 업로드 후 로컬 파일을 삭제한다")
-    void 로그_파일이_존재하고_S3에_없으면_업로드_후_로컬_파일을_삭제한다() throws IOException {
-      // given
-      Files.writeString(logFile, "log content");
       given(s3Client.headObject(any(Consumer.class)))
           .willThrow(NoSuchKeyException.builder().build());
       Chunk<UploadPayload> chunk = new Chunk<>(List.of(payload));
@@ -179,7 +129,6 @@ public class LogBackupWriterTest {
 
       // then
       verify(s3Client, times(1)).putObject(any(PutObjectRequest.class), any(RequestBody.class));
-      assertThat(logFile).doesNotExist();
     }
 
     @Test

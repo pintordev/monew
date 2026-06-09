@@ -71,7 +71,7 @@ class LogBackupProcessorTest {
       assertThat(result).isNotNull();
       assertThat(result.s3Key()).isEqualTo(
           "logs/" + yesterday.format(BatchGzipUtils.PATH_FORMATTER)
-              + "/app-" + yesterday.format(BatchGzipUtils.FILE_FORMATTER) + ".log.gz"
+              + "/app-" + yesterday.format(BatchGzipUtils.FILE_FORMATTER) + "-001.log.gz"
       );
       assertThat(result.compressedData()).isNotEmpty();
     }

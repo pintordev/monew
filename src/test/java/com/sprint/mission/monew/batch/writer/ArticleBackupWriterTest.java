@@ -1,6 +1,7 @@
 package com.sprint.mission.monew.batch.writer;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.BDDMockito.given;
 import static org.mockito.Mockito.verify;
@@ -8,6 +9,7 @@ import static org.mockito.Mockito.verify;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.sprint.mission.monew.batch.dto.ArticleBackupItem;
+import com.sprint.mission.monew.batch.exception.ArticleBackupFailedException;
 import com.sprint.mission.monew.batch.metrics.ArticleBackupMetrics;
 import com.sprint.mission.monew.domain.article.entity.ArticleSource;
 import java.time.Instant;
@@ -84,6 +86,20 @@ class ArticleBackupWriterTest {
       ArgumentCaptor<PutObjectRequest> captor = ArgumentCaptor.forClass(PutObjectRequest.class);
       verify(s3Client).putObject(captor.capture(), any(RequestBody.class));
       assertThat(captor.getValue().key()).contains("-001.json.gz");
+    }
+
+    @Test
+    @DisplayName("업로드 실패 시 ArticleBackupFailedException이 발생한다")
+    void 업로드_실패_시_ArticleBackupFailedException_발생() throws Exception {
+      // given
+      Chunk<ArticleBackupItem> chunk = new Chunk<>(List.of(item));
+      given(s3Client.putObject(any(PutObjectRequest.class), any(RequestBody.class)))
+          .willThrow(new RuntimeException("S3 오류"));
+
+      // when & then
+      assertThatThrownBy(() -> writer.write(chunk))
+          .isInstanceOf(ArticleBackupFailedException.class);
+      verify(metrics).countFailed();
     }
   }
 }

@@ -1,5 +1,6 @@
 package com.sprint.mission.monew.batch.writer;
 
+import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.BDDMockito.given;
 import static org.mockito.Mockito.verify;
@@ -17,6 +18,7 @@ import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.ArgumentCaptor;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
@@ -67,6 +69,21 @@ class ArticleBackupWriterTest {
 
       // then
       verify(s3Client).putObject(any(PutObjectRequest.class), any(RequestBody.class));
+    }
+
+    @Test
+    @DisplayName("S3 키에 청크 인덱스가 포함된다")
+    void S3_키에_청크_인덱스가_포함된다() throws Exception {
+      // given
+      Chunk<ArticleBackupItem> chunk = new Chunk<>(List.of(item));
+
+      // when
+      writer.write(chunk);
+
+      // then
+      ArgumentCaptor<PutObjectRequest> captor = ArgumentCaptor.forClass(PutObjectRequest.class);
+      verify(s3Client).putObject(captor.capture(), any(RequestBody.class));
+      assertThat(captor.getValue().key()).contains("-001.json.gz");
     }
   }
 }

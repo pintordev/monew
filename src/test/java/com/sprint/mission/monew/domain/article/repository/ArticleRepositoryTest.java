@@ -142,6 +142,24 @@ class ArticleRepositoryTest {
       assertThat(result.get(0).getId()).isEqualTo(largerId);
     }
 
+    @Test
+    @DisplayName("Pageable size 제한이 적용된다")
+    void pageable_size_제한이_적용된다() {
+      // given
+      articleRepository.save(
+          Article.create(ArticleSource.NAVER, "https://example.com/c1", "기사1", Instant.now(), null));
+      articleRepository.save(
+          Article.create(ArticleSource.NAVER, "https://example.com/c2", "기사2", Instant.now(), null));
+      articleRepository.save(
+          Article.create(ArticleSource.NAVER, "https://example.com/c3", "기사3", Instant.now(), null));
+
+      // when
+      List<Article> result = articleRepository.findArticlesForBackup(
+          from, to, MIN_UUID, PageRequest.of(0, 2));
+
+      // then
+      assertThat(result).hasSize(2);
+    }
   }
 
   @Nested

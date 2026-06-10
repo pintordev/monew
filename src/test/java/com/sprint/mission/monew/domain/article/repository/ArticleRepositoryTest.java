@@ -85,6 +85,24 @@ class ArticleRepositoryTest {
       // then
       assertThat(result).isEmpty();
     }
+
+    @Test
+    @DisplayName("from~to 범위 밖 기사는 반환하지 않는다")
+    void 범위_밖_기사는_반환하지_않는다() {
+      // given
+      articleRepository.save(
+          Article.create(ArticleSource.NAVER, "https://example.com/out", "범위밖기사", Instant.now(), null));
+
+      Instant futureFrom = Instant.now().plusSeconds(3600);
+      Instant futureTo = futureFrom.plusSeconds(3600);
+
+      // when
+      List<Article> result = articleRepository.findArticlesForBackup(
+          futureFrom, futureTo, MIN_UUID, PageRequest.of(0, 10));
+
+      // then
+      assertThat(result).isEmpty();
+    }
   }
 
   @Nested

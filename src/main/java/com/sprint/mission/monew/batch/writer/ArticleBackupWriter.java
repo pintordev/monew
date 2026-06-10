@@ -35,13 +35,13 @@ public class ArticleBackupWriter implements ItemWriter<ArticleBackupItem> {
   @Value("${cloud.aws.s3.bucket}")
   private String bucket;
 
+  private final LocalDate targetDate = LocalDate.now(KST).minusDays(1);
   private final AtomicInteger chunkCounter = new AtomicInteger(0);
 
   @Override
   public void write(Chunk<? extends ArticleBackupItem> chunk) throws Exception {
     int index = chunkCounter.incrementAndGet();
-    LocalDate yesterday = LocalDate.now(KST).minusDays(1);
-    String s3Key = BatchGzipUtils.articleS3Key(yesterday, index);
+    String s3Key = BatchGzipUtils.articleS3Key(targetDate, index);
 
     long start = System.nanoTime();
     try {

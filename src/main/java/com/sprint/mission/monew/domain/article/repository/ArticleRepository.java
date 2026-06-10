@@ -6,9 +6,11 @@ import java.time.Instant;
 import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
+import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
+import org.springframework.data.repository.query.Param;
 
 public interface ArticleRepository extends JpaRepository<Article, UUID>, ArticleCustomRepository {
 
@@ -20,6 +22,19 @@ public interface ArticleRepository extends JpaRepository<Article, UUID>, Article
 
   List<Article> findByCreatedAtGreaterThanEqualAndCreatedAtLessThanAndDeletedAtIsNull(
       Instant from, Instant to);
+
+  @Query("""
+      SELECT a FROM Article a
+      WHERE a.deletedAt IS NULL
+      AND a.createdAt >= :from AND a.createdAt < :to
+      AND a.id > :lastId
+      ORDER BY a.id ASC
+      """)
+  List<Article> findArticlesForBackup(
+      @Param("from") Instant from,
+      @Param("to") Instant to,
+      @Param("lastId") UUID lastId,
+      Pageable pageable);
 
   @Modifying(clearAutomatically = true, flushAutomatically = true)
   @Query("""

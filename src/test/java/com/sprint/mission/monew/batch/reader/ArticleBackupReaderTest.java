@@ -4,11 +4,12 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.BDDMockito.given;
 
-import com.sprint.mission.monew.domain.article.entity.Article;
+import com.sprint.mission.monew.batch.dto.ArticleBackupItem;
 import com.sprint.mission.monew.domain.article.entity.ArticleSource;
 import com.sprint.mission.monew.domain.article.repository.ArticleRepository;
 import java.time.Instant;
 import java.util.List;
+import java.util.UUID;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
@@ -33,10 +34,10 @@ class ArticleBackupReaderTest {
     ReflectionTestUtils.setField(reader, "chunkSize", 100);
   }
 
-  private Article stubArticle() {
-    return Article.create(
-        ArticleSource.NAVER, "https://example.com/" + System.nanoTime(),
-        "제목", Instant.now(), "요약");
+  private ArticleBackupItem stubItem() {
+    return new ArticleBackupItem(
+        UUID.randomUUID(), ArticleSource.NAVER, "https://example.com/" + System.nanoTime(),
+        "제목", Instant.now(), "요약", 0, 0, Instant.now());
   }
 
   @Nested
@@ -51,7 +52,7 @@ class ArticleBackupReaderTest {
           .willReturn(List.of());
 
       // when
-      Article result = reader.read();
+      ArticleBackupItem result = reader.read();
 
       // then
       assertThat(result).isNull();
@@ -61,20 +62,20 @@ class ArticleBackupReaderTest {
     @DisplayName("기사가 있으면 순차적으로 반환하고 끝나면 null을 반환한다")
     void 기사_순차_반환_후_null() {
       // given
-      Article article1 = stubArticle();
-      Article article2 = stubArticle();
+      ArticleBackupItem item1 = stubItem();
+      ArticleBackupItem item2 = stubItem();
 
       given(articleRepository.findArticlesForBackup(any(), any(), any(), any()))
-          .willReturn(List.of(article1, article2), List.of());
+          .willReturn(List.of(item1, item2), List.of());
 
       // when
-      Article r1 = reader.read();
-      Article r2 = reader.read();
-      Article r3 = reader.read();
+      ArticleBackupItem r1 = reader.read();
+      ArticleBackupItem r2 = reader.read();
+      ArticleBackupItem r3 = reader.read();
 
       // then
-      assertThat(r1).isSameAs(article1);
-      assertThat(r2).isSameAs(article2);
+      assertThat(r1).isSameAs(item1);
+      assertThat(r2).isSameAs(item2);
       assertThat(r3).isNull();
     }
   }

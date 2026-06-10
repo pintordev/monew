@@ -1,5 +1,6 @@
 package com.sprint.mission.monew.domain.article.repository;
 
+import com.sprint.mission.monew.batch.dto.ArticleBackupItem;
 import com.sprint.mission.monew.domain.article.entity.Article;
 import com.sprint.mission.monew.domain.article.repository.querydsl.ArticleCustomRepository;
 import java.time.Instant;
@@ -24,13 +25,16 @@ public interface ArticleRepository extends JpaRepository<Article, UUID>, Article
       Instant from, Instant to);
 
   @Query("""
-      SELECT a FROM Article a
+      SELECT new com.sprint.mission.monew.batch.dto.ArticleBackupItem(
+          a.id, a.source, a.sourceUrl, a.title, a.publishDate, a.summary,
+          a.commentCount, a.viewCount, a.createdAt)
+      FROM Article a
       WHERE a.deletedAt IS NULL
       AND a.createdAt >= :from AND a.createdAt < :to
       AND a.id > :lastId
       ORDER BY a.id ASC
       """)
-  List<Article> findArticlesForBackup(
+  List<ArticleBackupItem> findArticlesForBackup(
       @Param("from") Instant from,
       @Param("to") Instant to,
       @Param("lastId") UUID lastId,

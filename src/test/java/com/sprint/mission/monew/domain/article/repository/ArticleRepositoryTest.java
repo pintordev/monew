@@ -3,6 +3,7 @@ package com.sprint.mission.monew.domain.article.repository;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatCode;
 
+import com.sprint.mission.monew.batch.dto.ArticleBackupItem;
 import com.sprint.mission.monew.common.config.JpaConfig;
 import com.sprint.mission.monew.common.config.QuerydslConfig;
 import com.sprint.mission.monew.common.dto.SortDirection;
@@ -78,7 +79,7 @@ class ArticleRepositoryTest {
       articleRepository.save(article);
 
       // when
-      List<Article> result = articleRepository.findArticlesForBackup(
+      List<ArticleBackupItem> result = articleRepository.findArticlesForBackup(
           from, to, MIN_UUID, PageRequest.of(0, 10));
 
       // then
@@ -96,7 +97,7 @@ class ArticleRepositoryTest {
       Instant futureTo = futureFrom.plusSeconds(3600);
 
       // when
-      List<Article> result = articleRepository.findArticlesForBackup(
+      List<ArticleBackupItem> result = articleRepository.findArticlesForBackup(
           futureFrom, futureTo, MIN_UUID, PageRequest.of(0, 10));
 
       // then
@@ -113,7 +114,7 @@ class ArticleRepositoryTest {
           Article.create(ArticleSource.NAVER, "https://example.com/a2", "기사2", Instant.now(), null));
 
       // when
-      List<Article> result = articleRepository.findArticlesForBackup(
+      List<ArticleBackupItem> result = articleRepository.findArticlesForBackup(
           from, to, MIN_UUID, PageRequest.of(0, 10));
 
       // then
@@ -124,22 +125,23 @@ class ArticleRepositoryTest {
     @DisplayName("lastId 커서 이후 기사만 반환한다")
     void lastId_커서_이후_기사만_반환한다() {
       // given
-      Article a1 = articleRepository.save(
+      articleRepository.save(
           Article.create(ArticleSource.NAVER, "https://example.com/b1", "기사A", Instant.now(), null));
-      Article a2 = articleRepository.save(
+      articleRepository.save(
           Article.create(ArticleSource.NAVER, "https://example.com/b2", "기사B", Instant.now(), null));
 
-      // id 오름차순으로 정렬해 작은 쪽을 커서로 사용
-      UUID smallerId = a1.getId().compareTo(a2.getId()) < 0 ? a1.getId() : a2.getId();
-      UUID largerId = a1.getId().compareTo(a2.getId()) < 0 ? a2.getId() : a1.getId();
+      // DB 정렬 기준(PostgreSQL UUID 사전순)으로 전체 조회 후 첫 번째 id를 커서로 사용
+      List<ArticleBackupItem> all = articleRepository.findArticlesForBackup(
+          from, to, MIN_UUID, PageRequest.of(0, 10));
+      UUID firstId = all.get(0).id();
 
       // when
-      List<Article> result = articleRepository.findArticlesForBackup(
-          from, to, smallerId, PageRequest.of(0, 10));
+      List<ArticleBackupItem> result = articleRepository.findArticlesForBackup(
+          from, to, firstId, PageRequest.of(0, 10));
 
-      // then — smallerId보다 큰 id의 기사(largerId)만 반환
+      // then — DB 기준 첫 번째 이후 기사만 반환
       assertThat(result).hasSize(1);
-      assertThat(result.get(0).getId()).isEqualTo(largerId);
+      assertThat(result.get(0).id()).isEqualTo(all.get(1).id());
     }
 
     @Test
@@ -154,7 +156,7 @@ class ArticleRepositoryTest {
           Article.create(ArticleSource.NAVER, "https://example.com/c3", "기사3", Instant.now(), null));
 
       // when
-      List<Article> result = articleRepository.findArticlesForBackup(
+      List<ArticleBackupItem> result = articleRepository.findArticlesForBackup(
           from, to, MIN_UUID, PageRequest.of(0, 2));
 
       // then

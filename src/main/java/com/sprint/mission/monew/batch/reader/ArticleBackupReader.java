@@ -1,6 +1,6 @@
 package com.sprint.mission.monew.batch.reader;
 
-import com.sprint.mission.monew.domain.article.entity.Article;
+import com.sprint.mission.monew.batch.dto.ArticleBackupItem;
 import com.sprint.mission.monew.domain.article.repository.ArticleRepository;
 import java.time.Instant;
 import java.time.LocalDate;
@@ -20,7 +20,7 @@ import org.springframework.stereotype.Component;
 @Component
 @StepScope
 @RequiredArgsConstructor
-public class ArticleBackupReader implements ItemReader<Article> {
+public class ArticleBackupReader implements ItemReader<ArticleBackupItem> {
 
   private static final ZoneId KST = ZoneId.of("Asia/Seoul");
 
@@ -33,10 +33,10 @@ public class ArticleBackupReader implements ItemReader<Article> {
   private Instant to;
   private UUID lastId;
 
-  private Iterator<Article> iterator;
+  private Iterator<ArticleBackupItem> iterator;
 
   @Override
-  public Article read() {
+  public ArticleBackupItem read() {
     if (from == null) {
       LocalDate yesterday = LocalDate.now(KST).minusDays(1);
       from = yesterday.atStartOfDay(KST).toInstant();
@@ -47,8 +47,12 @@ public class ArticleBackupReader implements ItemReader<Article> {
     }
 
     while (iterator == null || !iterator.hasNext()) {
-      List<Article> items = articleRepository.findArticlesForBackup(
-          from, to, lastId, PageRequest.of(0, chunkSize));
+      List<ArticleBackupItem> items = articleRepository.findArticlesForBackup(
+          from,
+          to,
+          lastId,
+          PageRequest.of(0, chunkSize)
+      );
 
       if (items.isEmpty()) {
         return null;
@@ -58,8 +62,8 @@ public class ArticleBackupReader implements ItemReader<Article> {
       log.info("ArticleBackupReader chunk load 완료: size={}", items.size());
     }
 
-    Article item = iterator.next();
-    lastId = item.getId();
+    ArticleBackupItem item = iterator.next();
+    lastId = item.id();
     return item;
   }
 }

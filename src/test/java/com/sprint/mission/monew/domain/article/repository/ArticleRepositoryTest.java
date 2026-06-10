@@ -2,7 +2,6 @@ package com.sprint.mission.monew.domain.article.repository;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatCode;
-import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 import com.sprint.mission.monew.common.config.JpaConfig;
 import com.sprint.mission.monew.common.config.QuerydslConfig;
@@ -19,7 +18,6 @@ import jakarta.persistence.EntityManager;
 import java.time.Instant;
 import java.util.List;
 import java.util.UUID;
-import org.springframework.data.domain.PageRequest;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
@@ -28,6 +26,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.jdbc.AutoConfigureTestDatabase;
 import org.springframework.boot.test.autoconfigure.orm.jpa.DataJpaTest;
 import org.springframework.context.annotation.Import;
+import org.springframework.data.domain.PageRequest;
 import org.springframework.test.context.ActiveProfiles;
 
 @DataJpaTest
@@ -102,6 +101,23 @@ class ArticleRepositoryTest {
 
       // then
       assertThat(result).isEmpty();
+    }
+
+    @Test
+    @DisplayName("from~to 범위 내 기사를 반환한다")
+    void 범위_내_기사를_반환한다() {
+      // given
+      articleRepository.save(
+          Article.create(ArticleSource.NAVER, "https://example.com/a1", "기사1", Instant.now(), null));
+      articleRepository.save(
+          Article.create(ArticleSource.NAVER, "https://example.com/a2", "기사2", Instant.now(), null));
+
+      // when
+      List<Article> result = articleRepository.findArticlesForBackup(
+          from, to, MIN_UUID, PageRequest.of(0, 10));
+
+      // then
+      assertThat(result).hasSize(2);
     }
   }
 

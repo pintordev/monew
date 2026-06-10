@@ -19,6 +19,7 @@ import jakarta.persistence.EntityManager;
 import java.time.Instant;
 import java.util.List;
 import java.util.UUID;
+import org.springframework.data.domain.PageRequest;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
@@ -57,6 +58,33 @@ class ArticleRepositoryTest {
         null, null, null, null, null,
         ArticleOrderBy.PUBLISH_DATE, SortDirection.DESC,
         null, null, null, limit);
+  }
+
+  private static final UUID MIN_UUID = new UUID(0L, 0L);
+
+  @Nested
+  @DisplayName("findArticlesForBackup")
+  class FindArticlesForBackup {
+
+    private final Instant from = Instant.now().minusSeconds(60);
+    private final Instant to = Instant.now().plusSeconds(60);
+
+    @Test
+    @DisplayName("소프트딜리트된 기사는 반환하지 않는다")
+    void 소프트딜리트된_기사는_반환하지_않는다() {
+      // given
+      Article article = articleRepository.save(
+          Article.create(ArticleSource.NAVER, "https://example.com/deleted", "삭제기사", Instant.now(), null));
+      article.softDelete();
+      articleRepository.save(article);
+
+      // when
+      List<Article> result = articleRepository.findArticlesForBackup(
+          from, to, MIN_UUID, PageRequest.of(0, 10));
+
+      // then
+      assertThat(result).isEmpty();
+    }
   }
 
   @Nested

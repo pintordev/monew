@@ -3,6 +3,7 @@ package com.sprint.mission.monew.batch;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.BDDMockito.given;
+import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
 
 import com.sprint.mission.monew.batch.metrics.ArticleBackupMetrics;
@@ -78,6 +79,25 @@ class ArticleBackupJobIntegrationTest {
       assertThat(execution.getStatus()).isEqualTo(BatchStatus.COMPLETED);
       verify(s3Client).putObject(any(PutObjectRequest.class), any(RequestBody.class));
       verify(metrics).countUploaded();
+    }
+
+    @Test
+    @DisplayName("대상 기사가 없으면 S3 업로드 없이 COMPLETED가 된다")
+    void 대상_기사가_없으면_S3_업로드_없이_COMPLETED가_된다() throws Exception {
+      // given
+      given(articleRepository.findArticlesForBackup(any(), any(), any(UUID.class), any(Pageable.class)))
+          .willReturn(List.of());
+
+      JobParameters params = new JobParametersBuilder()
+          .addLong("time", Instant.now().toEpochMilli() + 1)
+          .toJobParameters();
+
+      // when
+      JobExecution execution = jobLauncher.run(articleBackupJob, params);
+
+      // then
+      assertThat(execution.getStatus()).isEqualTo(BatchStatus.COMPLETED);
+      verify(s3Client, never()).putObject(any(PutObjectRequest.class), any(RequestBody.class));
     }
   }
 }

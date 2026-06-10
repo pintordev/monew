@@ -1,8 +1,8 @@
 package com.sprint.mission.monew.batch.scheduler;
 
-import static org.assertj.core.api.Assertions.assertThatCode;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
+import static org.mockito.BDDMockito.then;
 import static org.mockito.Mockito.doThrow;
-import static org.mockito.Mockito.verify;
 
 import com.sprint.mission.monew.batch.service.ArticleBackupService;
 import org.junit.jupiter.api.DisplayName;
@@ -18,6 +18,7 @@ class ArticleBackupSchedulerTest {
 
   @InjectMocks
   ArticleBackupScheduler articleBackupScheduler;
+
   @Mock
   ArticleBackupService articleBackupService;
 
@@ -26,23 +27,24 @@ class ArticleBackupSchedulerTest {
   class BackupSchedule {
 
     @Test
-    @DisplayName("backup 호출 시 ArticleBackupService에 위임한다")
-    void backup_호출_시_서비스에_위임한다() {
+    @DisplayName("executeBackup 호출 시 ArticleBackupService에 위임한다")
+    void executeBackup_호출_시_서비스에_위임한다() throws Exception {
       // when
-      articleBackupScheduler.backup();
+      articleBackupScheduler.executeBackup();
 
       // then
-      verify(articleBackupService).backup();
+      then(articleBackupService).should().executeBackup();
     }
 
     @Test
-    @DisplayName("backup 중 예외 발생 시 예외를 외부로 전파하지 않는다")
-    void backup_중_예외_발생_시_전파하지_않는다() {
+    @DisplayName("executeBackup 중 예외 발생 시 외부로 전파한다")
+    void executeBackup_중_예외_발생_시_외부로_전파한다() throws Exception {
       // given
-      doThrow(new RuntimeException("S3 연결 실패")).when(articleBackupService).backup();
+      doThrow(new RuntimeException("배치 실패")).when(articleBackupService).executeBackup();
 
       // when & then
-      assertThatCode(() -> articleBackupScheduler.backup()).doesNotThrowAnyException();
+      assertThatThrownBy(() -> articleBackupScheduler.executeBackup())
+          .isInstanceOf(RuntimeException.class);
     }
   }
 }

@@ -2,6 +2,7 @@ package com.sprint.mission.monew.batch.reader;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.BDDMockito.given;
+import static org.mockito.Mockito.mock;
 
 import com.sprint.mission.monew.domain.article.entity.Article;
 import org.junit.jupiter.api.BeforeEach;
@@ -49,6 +50,22 @@ class ArticleBackupReaderTest {
 
       // then
       assertThat(result).isNull();
+    }
+
+    @Test
+    @DisplayName("기사가 있으면 순차적으로 반환하고 끝나면 null을 반환한다")
+    void 기사_순차_반환_후_null() throws Exception {
+      // given
+      Article article = mock(Article.class);
+      given(delegate.read()).willReturn(article, (Article) null);
+
+      // when
+      Article r1 = reader.read();
+      Article r2 = reader.read();
+
+      // then
+      assertThat(r1).isSameAs(article);
+      assertThat(r2).isNull();
     }
   }
 }

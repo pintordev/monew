@@ -119,6 +119,29 @@ class ArticleRepositoryTest {
       // then
       assertThat(result).hasSize(2);
     }
+
+    @Test
+    @DisplayName("lastId 커서 이후 기사만 반환한다")
+    void lastId_커서_이후_기사만_반환한다() {
+      // given
+      Article a1 = articleRepository.save(
+          Article.create(ArticleSource.NAVER, "https://example.com/b1", "기사A", Instant.now(), null));
+      Article a2 = articleRepository.save(
+          Article.create(ArticleSource.NAVER, "https://example.com/b2", "기사B", Instant.now(), null));
+
+      // id 오름차순으로 정렬해 작은 쪽을 커서로 사용
+      UUID smallerId = a1.getId().compareTo(a2.getId()) < 0 ? a1.getId() : a2.getId();
+      UUID largerId = a1.getId().compareTo(a2.getId()) < 0 ? a2.getId() : a1.getId();
+
+      // when
+      List<Article> result = articleRepository.findArticlesForBackup(
+          from, to, smallerId, PageRequest.of(0, 10));
+
+      // then — smallerId보다 큰 id의 기사(largerId)만 반환
+      assertThat(result).hasSize(1);
+      assertThat(result.get(0).getId()).isEqualTo(largerId);
+    }
+
   }
 
   @Nested

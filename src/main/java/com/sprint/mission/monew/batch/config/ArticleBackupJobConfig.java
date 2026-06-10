@@ -1,11 +1,14 @@
 package com.sprint.mission.monew.batch.config;
 
+import com.sprint.mission.monew.batch.dto.ArticleBackupItem;
 import com.sprint.mission.monew.batch.reader.ArticleBackupReader;
 import com.sprint.mission.monew.batch.writer.ArticleBackupWriter;
 import lombok.RequiredArgsConstructor;
 import org.springframework.batch.core.Job;
 import org.springframework.batch.core.Step;
+import org.springframework.batch.core.job.builder.JobBuilder;
 import org.springframework.batch.core.repository.JobRepository;
+import org.springframework.batch.core.step.builder.StepBuilder;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -25,11 +28,17 @@ public class ArticleBackupJobConfig {
 
   @Bean(name = "articleBackupJob")
   public Job articleBackupJob() {
-    throw new UnsupportedOperationException("미구현");
+    return new JobBuilder("articleBackupJob", jobRepository)
+        .start(articleBackupStep())
+        .build();
   }
 
   @Bean
   public Step articleBackupStep() {
-    throw new UnsupportedOperationException("미구현");
+    return new StepBuilder("articleBackupStep", jobRepository)
+        .<ArticleBackupItem, ArticleBackupItem>chunk(chunkSize, transactionManager)
+        .reader(articleBackupReader)
+        .writer(articleBackupWriter)
+        .build();
   }
 }

@@ -2,7 +2,7 @@ package com.sprint.mission.monew.batch.service;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.sprint.mission.monew.batch.dto.ArticleBackupDto;
+import com.sprint.mission.monew.batch.dto.ArticleBackupItem;
 import com.sprint.mission.monew.batch.exception.ArticleBackupFailedException;
 import com.sprint.mission.monew.batch.metrics.ArticleBackupMetrics;
 import com.sprint.mission.monew.batch.util.BatchGzipUtils;
@@ -78,7 +78,7 @@ public class ArticleBackupService {
     }
 
     try {
-      List<ArticleBackupDto> dtos = articles.stream().map(ArticleBackupDto::from).toList();
+      List<ArticleBackupItem> dtos = articles.stream().map(ArticleBackupItem::from).toList();
       byte[] compressed = BatchGzipUtils.gzip(serialize(dtos));
       s3Client.putObject(
           PutObjectRequest.builder()
@@ -97,7 +97,7 @@ public class ArticleBackupService {
     }
   }
 
-  private byte[] serialize(List<ArticleBackupDto> dtos) throws JsonProcessingException {
+  private byte[] serialize(List<ArticleBackupItem> dtos) throws JsonProcessingException {
     return objectMapper.writeValueAsBytes(dtos);
   }
 }

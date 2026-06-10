@@ -5,7 +5,7 @@ import com.sprint.mission.monew.domain.article.entity.ArticleSource;
 import java.time.Instant;
 import java.util.UUID;
 
-public record ArticleBackupDto(
+public record ArticleBackupItem(
     UUID id,
     ArticleSource source,
     String sourceUrl,
@@ -16,8 +16,8 @@ public record ArticleBackupDto(
     int viewCount,
     Instant createdAt) {
 
-  public static ArticleBackupDto from(Article article) {
-    return new ArticleBackupDto(
+  public static ArticleBackupItem from(Article article) {
+    return new ArticleBackupItem(
         article.getId(),
         article.getSource(),
         article.getSourceUrl(),

@@ -18,6 +18,11 @@ public final class BatchGzipUtils {
         + "/articles-" + date.format(FILE_FORMATTER) + ".json.gz";
   }
 
+  public static String articleS3Key(LocalDate date, int chunkIndex) {
+    return "articles/" + date.format(PATH_FORMATTER)
+        + "/articles-" + date.format(FILE_FORMATTER) + String.format("-%03d", chunkIndex) + ".json.gz";
+  }
+
   public static String logS3Key(LocalDate date) {
     return "logs/" + date.format(PATH_FORMATTER)
         + "/app-" + date.format(FILE_FORMATTER) + ".log.gz";

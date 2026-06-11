@@ -1,10 +1,11 @@
 package com.sprint.mission.monew.domain.interest.util;
 
 import com.sprint.mission.monew.common.config.SynonymProperties;
-import java.util.HashMap;
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.Comparator;
 import java.util.LinkedHashSet;
 import java.util.List;
-import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
 import java.util.stream.Collectors;
@@ -13,16 +14,19 @@ import org.springframework.stereotype.Component;
 @Component
 public class SynonymUtils {
 
-  private record SynonymMatch(String word, int groupIndex) {}
+  private record SynonymEntry(String normalizedWord, int groupIndex) {}
 
-  private final SynonymProperties props;
-  private final Map<String, Integer> suffixIndex;
-  private final Map<String, Integer> prefixIndex;
+  // 길이 내림차순 정렬 → longest match 보장
+  private final List<SynonymEntry> suffixEntries;
+  private final List<SynonymEntry> prefixEntries;
+  private final List<String> rawSuffixWords;
+  private final List<String> rawPrefixWords;
 
   public SynonymUtils(SynonymProperties props) {
-    this.props = props;
-    this.suffixIndex = buildIndex(props.suffixGroups());
-    this.prefixIndex = buildIndex(props.prefixGroups());
+    this.suffixEntries = buildEntries(props.suffixGroups());
+    this.prefixEntries = buildEntries(props.prefixGroups());
+    this.rawSuffixWords = extractRawWords(props.suffixGroups());
+    this.rawPrefixWords = extractRawWords(props.prefixGroups());
   }
 
   public List<String> expandSearchTokens(List<String> rawTokens) {
@@ -46,22 +50,18 @@ public class SynonymUtils {
   }
 
   private Optional<String> stripRawSuffix(String raw) {
-    for (Set<String> group : props.suffixGroups()) {
-      for (String word : group) {
-        if (raw.endsWith(word) && raw.length() > word.length()) {
-          return Optional.of(raw.substring(0, raw.length() - word.length()));
-        }
+    for (String word : rawSuffixWords) {
+      if (raw.endsWith(word) && raw.length() > word.length()) {
+        return Optional.of(raw.substring(0, raw.length() - word.length()));
       }
     }
     return Optional.empty();
   }
 
   private Optional<String> stripRawPrefix(String raw) {
-    for (Set<String> group : props.prefixGroups()) {
-      for (String word : group) {
-        if (raw.startsWith(word) && raw.length() > word.length()) {
-          return Optional.of(raw.substring(word.length()));
-        }
+    for (String word : rawPrefixWords) {
+      if (raw.startsWith(word) && raw.length() > word.length()) {
+        return Optional.of(raw.substring(word.length()));
       }
     }
     return Optional.empty();
@@ -69,47 +69,54 @@ public class SynonymUtils {
 
   private String canonicalize(String token) {
     return matchSuffix(token)
-        .map(m -> {
-          String core = token.substring(0, token.length() - m.word().length());
-          return stripAnyPrefix(core) + "_S" + m.groupIndex();
+        .map(e -> {
+          String core = token.substring(0, token.length() - e.normalizedWord().length());
+          return stripAnyPrefix(core) + "_S" + e.groupIndex();
         })
         .orElseGet(() -> matchPrefix(token)
-            .map(m -> "P" + m.groupIndex() + "_" + token.substring(m.word().length()))
+            .map(e -> "P" + e.groupIndex() + "_" + token.substring(e.normalizedWord().length()))
             .orElse(token));
   }
 
   private String stripAnyPrefix(String core) {
     return matchPrefix(core)
-        .map(m -> core.substring(m.word().length()))
+        .map(e -> core.substring(e.normalizedWord().length()))
         .orElse(core);
   }
 
-  private Optional<SynonymMatch> matchSuffix(String token) {
-    for (Map.Entry<String, Integer> e : suffixIndex.entrySet()) {
-      if (token.endsWith(e.getKey())) {
-        return Optional.of(new SynonymMatch(e.getKey(), e.getValue()));
+  private Optional<SynonymEntry> matchSuffix(String token) {
+    for (SynonymEntry e : suffixEntries) {
+      if (token.endsWith(e.normalizedWord())) {
+        return Optional.of(e);
       }
     }
     return Optional.empty();
   }
 
-  private Optional<SynonymMatch> matchPrefix(String token) {
-    for (Map.Entry<String, Integer> e : prefixIndex.entrySet()) {
-      String word = e.getKey();
-      if (token.startsWith(word) && token.length() > word.length()) {
-        return Optional.of(new SynonymMatch(word, e.getValue()));
+  private Optional<SynonymEntry> matchPrefix(String token) {
+    for (SynonymEntry e : prefixEntries) {
+      if (token.startsWith(e.normalizedWord()) && token.length() > e.normalizedWord().length()) {
+        return Optional.of(e);
       }
     }
     return Optional.empty();
   }
 
-  private static Map<String, Integer> buildIndex(List<Set<String>> groups) {
-    Map<String, Integer> index = new HashMap<>();
+  private static List<SynonymEntry> buildEntries(List<Set<String>> groups) {
+    List<SynonymEntry> entries = new ArrayList<>();
     for (int i = 0; i < groups.size(); i++) {
       for (String word : groups.get(i)) {
-        index.put(JamoNormalizer.normalize(word), i);
+        entries.add(new SynonymEntry(JamoNormalizer.normalize(word), i));
       }
     }
-    return Map.copyOf(index);
+    entries.sort(Comparator.comparingInt((SynonymEntry e) -> e.normalizedWord().length()).reversed());
+    return List.copyOf(entries);
+  }
+
+  private static List<String> extractRawWords(List<Set<String>> groups) {
+    return groups.stream()
+        .flatMap(Collection::stream)
+        .sorted(Comparator.comparingInt(String::length).reversed())
+        .toList();
   }
 }

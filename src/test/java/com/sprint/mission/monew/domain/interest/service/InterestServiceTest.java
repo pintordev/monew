@@ -10,6 +10,7 @@ import static org.mockito.BDDMockito.given;
 import static org.mockito.BDDMockito.then;
 import static org.mockito.Mockito.mock;
 
+import com.sprint.mission.monew.common.config.StopwordProperties;
 import com.sprint.mission.monew.common.dto.CursorPageResponse;
 import com.sprint.mission.monew.common.dto.SortDirection;
 import com.sprint.mission.monew.domain.interest.dto.InterestCreateRequest;
@@ -32,6 +33,7 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
+import org.mockito.Spy;
 import org.mockito.junit.jupiter.MockitoExtension;
 
 @ExtendWith(MockitoExtension.class)
@@ -45,6 +47,12 @@ class InterestServiceTest {
 
   @Mock
   InterestMapper interestMapper;
+
+  @Spy
+  StopwordProperties stopwordProperties = new StopwordProperties(
+      List.of("뉴스", "소식", "정보", "동향", "이슈", "분석", "전망", "트렌드", "현황", "리뷰"),
+      List.of("관련", "최신", "주요", "핵심")
+  );
 
   @Nested
   @DisplayName("관심사 목록 조회")

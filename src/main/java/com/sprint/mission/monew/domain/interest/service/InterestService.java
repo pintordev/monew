@@ -1,5 +1,6 @@
 package com.sprint.mission.monew.domain.interest.service;
 
+import com.sprint.mission.monew.common.config.StopwordProperties;
 import com.sprint.mission.monew.common.dto.CursorPageResponse;
 import com.sprint.mission.monew.domain.interest.dto.InterestCreateRequest;
 import com.sprint.mission.monew.domain.interest.dto.InterestQueryCondition;
@@ -11,7 +12,12 @@ import com.sprint.mission.monew.domain.interest.exception.InterestNotFoundExcept
 import com.sprint.mission.monew.domain.interest.mapper.InterestMapper;
 import com.sprint.mission.monew.domain.interest.repository.InterestRepository;
 import java.text.Normalizer;
+import java.util.Arrays;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Set;
 import java.util.UUID;
+import java.util.stream.Stream;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
@@ -25,6 +31,7 @@ public class InterestService {
 
   private final InterestRepository interestRepository;
   private final InterestMapper interestMapper;
+  private final StopwordProperties stopwordProperties;
 
   public CursorPageResponse<InterestResponse> findAll(InterestQueryCondition condition, UUID userId) {
     return interestRepository.findInterests(condition, userId);
@@ -48,7 +55,13 @@ public class InterestService {
         .stream()
         .anyMatch(existing -> levenshteinSimilarity(normalized, normalize(existing)) >= 0.8);
 
-    if (typoMatch) {
+    List<String> tokens = tokenize(name);
+    boolean synonymMatch = !tokens.isEmpty() &&
+        interestRepository.findNamesByTokens(tokens)
+            .stream()
+            .anyMatch(existing -> jaccardSimilarity(tokens, tokenize(existing)) >= 0.8);
+
+    if (typoMatch || synonymMatch) {
       throw InterestAlreadyExistsException.withName(name);
     }
 
@@ -79,6 +92,54 @@ public class InterestService {
   private String normalize(String s) {
     return Normalizer.normalize(s.trim().toLowerCase(), Normalizer.Form.NFD)
         .replaceAll("\\s+", "");
+  }
+
+  private List<String> tokenize(String s) {
+    return Arrays.stream(s.trim().split("\\s+"))
+        .map(this::normalize)
+        .filter(t -> !t.isBlank())
+        .toList();
+  }
+
+  private String stripSuffix(String token, List<String> suffixes) {
+    for (String suffix : suffixes) {
+      String ns = normalize(suffix);
+      if (token.endsWith(ns) && token.length() > ns.length()) {
+        return token.substring(0, token.length() - ns.length());
+      }
+    }
+    return token;
+  }
+
+  private String stripPrefix(String token, List<String> prefixes) {
+    for (String prefix : prefixes) {
+      String np = normalize(prefix);
+      if (token.startsWith(np) && token.length() > np.length()) {
+        return token.substring(np.length());
+      }
+    }
+    return token;
+  }
+
+  private double jaccardSimilarity(List<String> tokensA, List<String> tokensB) {
+    List<String> a = tokensA.stream()
+        .map(t -> stripSuffix(stripPrefix(t, stopwordProperties.prefix()), stopwordProperties.suffix()))
+        .filter(t -> !t.isBlank())
+        .toList();
+    List<String> b = tokensB.stream()
+        .map(t -> stripSuffix(stripPrefix(t, stopwordProperties.prefix()), stopwordProperties.suffix()))
+        .filter(t -> !t.isBlank())
+        .toList();
+
+    if (a.isEmpty() || b.isEmpty()) {
+      return levenshteinSimilarity(String.join("", tokensA), String.join("", tokensB));
+    }
+
+    Set<String> setA = new HashSet<>(a);
+    Set<String> setB = new HashSet<>(b);
+    long intersection = setA.stream().filter(setB::contains).count();
+    long union = Stream.concat(setA.stream(), setB.stream()).distinct().count();
+    return union == 0 ? 1.0 : (double) intersection / union;
   }
 
   private double levenshteinSimilarity(String a, String b) {

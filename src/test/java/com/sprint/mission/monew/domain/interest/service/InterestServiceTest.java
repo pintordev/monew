@@ -189,6 +189,22 @@ class InterestServiceTest {
     }
 
     @Test
+    @DisplayName("prefix+suffix 동시 매칭 시 suffix가 우선 적용되어 동일 canonical로 차단한다")
+    void prefix_suffix_동시_매칭_시_suffix_우선_적용() {
+      // given — "핵심AI뉴스" 등록 시도, DB에 "최신AI뉴스" 존재
+      // 두 토큰 모두 suffix=뉴스(S0)가 우선 매칭 → core에서 prefix(핵심/최신) 제거 → canonical "ai_S0"으로 동일
+      // suffix 우선이 아니라면 prefix 그룹이 달라 서로 다른 canonical이 되어 차단되지 않음
+      given(interestRepository.existsByName("핵심AI뉴스")).willReturn(false);
+      given(interestRepository.findTypoCandidates(anyInt(), anyInt())).willReturn(List.of());
+      given(interestRepository.findNamesByTokens(anyList())).willReturn(List.of("최신AI뉴스"));
+
+      // when & then
+      assertThatThrownBy(
+          () -> interestService.create(new InterestCreateRequest("핵심AI뉴스", List.of())))
+          .isInstanceOf(InterestAlreadyExistsException.class);
+    }
+
+    @Test
     @DisplayName("pure 키워드는 decorated 이름과 공존할 수 있다")
     void pure_키워드는_decorated와_공존한다() {
       // given — "AI" 등록 시도, DB에 "AI뉴스" 존재 (AI는 pure → canonical 불일치)

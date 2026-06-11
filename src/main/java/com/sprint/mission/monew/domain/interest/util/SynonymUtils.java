@@ -6,6 +6,7 @@ import java.util.Collection;
 import java.util.Comparator;
 import java.util.LinkedHashSet;
 import java.util.List;
+import java.util.Objects;
 import java.util.Optional;
 import java.util.Set;
 import java.util.stream.Collectors;
@@ -23,6 +24,9 @@ public class SynonymUtils {
   private final List<String> rawPrefixWords;
 
   public SynonymUtils(SynonymProperties props) {
+    Objects.requireNonNull(props, "SynonymProperties must not be null");
+    Objects.requireNonNull(props.suffixGroups(), "suffixGroups must not be null");
+    Objects.requireNonNull(props.prefixGroups(), "prefixGroups must not be null");
     this.suffixEntries = buildEntries(props.suffixGroups());
     this.prefixEntries = buildEntries(props.prefixGroups());
     this.rawSuffixWords = extractRawWords(props.suffixGroups());

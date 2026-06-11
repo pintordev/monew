@@ -6,7 +6,7 @@ public class LevenshteinUtils {
 
   public static double similarity(String a, String b) {
     if (a == null || b == null) {
-      return 0.0;
+      throw new IllegalArgumentException("입력 문자열은 null일 수 없습니다");
     }
     int maxLen = Math.max(a.length(), b.length());
     if (maxLen == 0) {
@@ -16,6 +16,9 @@ public class LevenshteinUtils {
   }
 
   public static int distance(String a, String b) {
+    if (a == null || b == null) {
+      throw new IllegalArgumentException("입력 문자열은 null일 수 없습니다");
+    }
     int[] prev = new int[b.length() + 1];
     for (int j = 0; j <= b.length(); j++) {
       prev[j] = j;

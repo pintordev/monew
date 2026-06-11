@@ -57,8 +57,9 @@ public class InterestService {
 
     List<String> rawTokens = splitRaw(name);
     List<String> normTokens = rawTokens.stream().map(JamoNormalizer::normalize).toList();
+    List<String> searchTokens = synonymUtils.expandSearchTokens(rawTokens);
     boolean synonymMatch = !rawTokens.isEmpty() &&
-        interestRepository.findNamesByTokens(rawTokens)
+        interestRepository.findNamesByTokens(searchTokens)
             .stream()
             .anyMatch(existing -> {
               List<String> existingTokens = splitRaw(existing).stream()

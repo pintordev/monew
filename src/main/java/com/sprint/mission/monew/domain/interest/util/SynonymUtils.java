@@ -2,6 +2,7 @@ package com.sprint.mission.monew.domain.interest.util;
 
 import com.sprint.mission.monew.common.config.SynonymProperties;
 import java.util.HashMap;
+import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
@@ -14,12 +15,26 @@ public class SynonymUtils {
 
   private record SynonymMatch(String word, int groupIndex) {}
 
+  private final SynonymProperties props;
   private final Map<String, Integer> suffixIndex;
   private final Map<String, Integer> prefixIndex;
 
   public SynonymUtils(SynonymProperties props) {
+    this.props = props;
     this.suffixIndex = buildIndex(props.suffixGroups());
     this.prefixIndex = buildIndex(props.prefixGroups());
+  }
+
+  public List<String> expandSearchTokens(List<String> rawTokens) {
+    Set<String> result = new LinkedHashSet<>(rawTokens);
+    for (String raw : rawTokens) {
+      stripRawSuffix(raw).ifPresent(s -> {
+        result.add(s);
+        stripRawPrefix(s).ifPresent(result::add);
+      });
+      stripRawPrefix(raw).ifPresent(result::add);
+    }
+    return List.copyOf(result);
   }
 
   public double jaccardSimilarity(List<String> tokensA, List<String> tokensB) {
@@ -28,6 +43,28 @@ public class SynonymUtils {
     long intersection = a.stream().filter(b::contains).count();
     long union = a.size() + b.size() - intersection;
     return union == 0 ? 1.0 : (double) intersection / union;
+  }
+
+  private Optional<String> stripRawSuffix(String raw) {
+    for (Set<String> group : props.suffixGroups()) {
+      for (String word : group) {
+        if (raw.endsWith(word) && raw.length() > word.length()) {
+          return Optional.of(raw.substring(0, raw.length() - word.length()));
+        }
+      }
+    }
+    return Optional.empty();
+  }
+
+  private Optional<String> stripRawPrefix(String raw) {
+    for (Set<String> group : props.prefixGroups()) {
+      for (String word : group) {
+        if (raw.startsWith(word) && raw.length() > word.length()) {
+          return Optional.of(raw.substring(word.length()));
+        }
+      }
+    }
+    return Optional.empty();
   }
 
   private String canonicalize(String token) {

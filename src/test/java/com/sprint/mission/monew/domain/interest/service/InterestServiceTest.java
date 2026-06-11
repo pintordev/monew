@@ -3,6 +3,7 @@ package com.sprint.mission.monew.domain.interest.service;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyInt;
 import static org.mockito.BDDMockito.given;
 import static org.mockito.BDDMockito.then;
 
@@ -68,7 +69,20 @@ class InterestServiceTest {
 
   @Nested
   @DisplayName("관심사 등록")
-  class Register {
+  class Create {
+    
+    @Test
+    @DisplayName("대소문자·공백 차이 있어도 정규화 후 동일 이름이면 차단한다")
+    void 대소문자_공백_차이_있어도_정규화_후_동일_이름이면_차단한다() {
+      // given — "AI 뉴스" 등록 시도, DB에 "ai뉴스" 존재
+      given(interestRepository.existsByName("AI 뉴스")).willReturn(false);
+      given(interestRepository.findTypoCandidates(anyInt(), anyInt()))
+          .willReturn(List.of("ai뉴스"));
+
+      // when & then
+      assertThatThrownBy(() -> interestService.create(new InterestCreateRequest("AI 뉴스", List.of())))
+          .isInstanceOf(InterestAlreadyExistsException.class);
+    }
 
     @Test
     @DisplayName("80% 이상 유사한 이름이 존재하면 InterestAlreadyExistsException이 발생한다")

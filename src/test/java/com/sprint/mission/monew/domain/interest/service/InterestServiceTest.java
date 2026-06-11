@@ -5,6 +5,7 @@ import static org.assertj.core.api.Assertions.assertThatCode;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyInt;
+import static org.mockito.ArgumentMatchers.anyList;
 import static org.mockito.BDDMockito.given;
 import static org.mockito.BDDMockito.then;
 import static org.mockito.Mockito.mock;
@@ -112,6 +113,19 @@ class InterestServiceTest {
       // when & then
       assertThatCode(() -> interestService.create(new InterestCreateRequest("환경", List.of())))
           .doesNotThrowAnyException();
+    }
+
+    @Test
+    @DisplayName("suffix 제거 후 동일하면 차단한다")
+    void suffix_제거_후_동일하면_차단() {
+      // given — "AI소식" 등록 시도, DB에 "AI뉴스" 존재
+      given(interestRepository.existsByName("AI소식")).willReturn(false);
+      given(interestRepository.findTypoCandidates(anyInt(), anyInt())).willReturn(List.of());
+      given(interestRepository.findNamesByTokens(anyList())).willReturn(List.of("AI뉴스"));
+
+      // when & then
+      assertThatThrownBy(() -> interestService.create(new InterestCreateRequest("AI소식", List.of())))
+          .isInstanceOf(InterestAlreadyExistsException.class);
     }
   }
 

@@ -23,6 +23,7 @@ import com.sprint.mission.monew.domain.interest.exception.InterestAlreadyExistsE
 import com.sprint.mission.monew.domain.interest.exception.InterestNotFoundException;
 import com.sprint.mission.monew.domain.interest.mapper.InterestMapper;
 import com.sprint.mission.monew.domain.interest.repository.InterestRepository;
+import com.sprint.mission.monew.domain.interest.util.SynonymUtils;
 import java.util.List;
 import java.util.Optional;
 import java.util.Set;
@@ -50,7 +51,7 @@ class InterestServiceTest {
   InterestMapper interestMapper;
 
   @Spy
-  SynonymIndex synonymIndex = new SynonymIndex(new SynonymProperties(
+  SynonymUtils synonymUtils = new SynonymUtils(new SynonymProperties(
       List.of(
           Set.of("뉴스", "소식", "속보", "단신"),
           Set.of("정보", "동향", "현황", "상황"),

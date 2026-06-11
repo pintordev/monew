@@ -1,7 +1,6 @@
 package com.sprint.mission.monew.domain.interest.service;
 
 import com.sprint.mission.monew.common.dto.CursorPageResponse;
-import com.sprint.mission.monew.common.util.JamoNormalizer;
 import com.sprint.mission.monew.domain.interest.dto.InterestCreateRequest;
 import com.sprint.mission.monew.domain.interest.dto.InterestQueryCondition;
 import com.sprint.mission.monew.domain.interest.dto.InterestResponse;
@@ -11,11 +10,12 @@ import com.sprint.mission.monew.domain.interest.exception.InterestAlreadyExistsE
 import com.sprint.mission.monew.domain.interest.exception.InterestNotFoundException;
 import com.sprint.mission.monew.domain.interest.mapper.InterestMapper;
 import com.sprint.mission.monew.domain.interest.repository.InterestRepository;
+import com.sprint.mission.monew.domain.interest.util.JamoNormalizer;
+import com.sprint.mission.monew.domain.interest.util.LevenshteinUtils;
+import com.sprint.mission.monew.domain.interest.util.SynonymUtils;
 import java.util.Arrays;
 import java.util.List;
-import java.util.Set;
 import java.util.UUID;
-import java.util.stream.Collectors;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
@@ -29,7 +29,7 @@ public class InterestService {
 
   private final InterestRepository interestRepository;
   private final InterestMapper interestMapper;
-  private final SynonymIndex synonymIndex;
+  private final SynonymUtils synonymUtils;
 
   public CursorPageResponse<InterestResponse> findAll(InterestQueryCondition condition,
       UUID userId) {
@@ -52,7 +52,8 @@ public class InterestService {
 
     boolean typoMatch = interestRepository.findTypoCandidates(minJamo, maxJamo)
         .stream()
-        .anyMatch(existing -> levenshteinSimilarity(normalized, JamoNormalizer.normalize(existing)) >= 0.8);
+        .anyMatch(existing ->
+            LevenshteinUtils.similarity(normalized, JamoNormalizer.normalize(existing)) >= 0.8);
 
     List<String> rawTokens = splitRaw(name);
     List<String> normTokens = rawTokens.stream().map(JamoNormalizer::normalize).toList();
@@ -62,7 +63,7 @@ public class InterestService {
             .anyMatch(existing -> {
               List<String> existingTokens = splitRaw(existing).stream()
                   .map(JamoNormalizer::normalize).toList();
-              return jaccardSimilarity(normTokens, existingTokens) >= 0.8;
+              return synonymUtils.jaccardSimilarity(normTokens, existingTokens) >= 0.8;
             });
 
     if (typoMatch || synonymMatch) {
@@ -97,55 +98,5 @@ public class InterestService {
     return Arrays.stream(s.trim().split("\\s+"))
         .filter(t -> !t.isBlank())
         .toList();
-  }
-
-  private String canonicalize(String token) {
-    return synonymIndex.matchSuffix(token)
-        .map(m -> {
-          String core = token.substring(0, token.length() - m.word().length());
-          return stripAnyPrefix(core) + "_S" + m.groupIndex();
-        })
-        .orElseGet(() -> synonymIndex.matchPrefix(token)
-            .map(m -> "P" + m.groupIndex() + "_" + token.substring(m.word().length()))
-            .orElse(token));
-  }
-
-  private String stripAnyPrefix(String core) {
-    return synonymIndex.matchPrefix(core)
-        .map(m -> core.substring(m.word().length()))
-        .orElse(core);
-  }
-
-  private double jaccardSimilarity(List<String> tokensA, List<String> tokensB) {
-    Set<String> a = tokensA.stream().map(this::canonicalize).collect(Collectors.toSet());
-    Set<String> b = tokensB.stream().map(this::canonicalize).collect(Collectors.toSet());
-    long intersection = a.stream().filter(b::contains).count();
-    long union = a.size() + b.size() - intersection;
-    return union == 0 ? 1.0 : (double) intersection / union;
-  }
-
-  private double levenshteinSimilarity(String a, String b) {
-    int maxLen = Math.max(a.length(), b.length());
-    if (maxLen == 0) {
-      return 1.0;
-    }
-    return 1.0 - (double) levenshtein(a, b) / maxLen;
-  }
-
-  private int levenshtein(String a, String b) {
-    int[] prev = new int[b.length() + 1];
-    for (int j = 0; j <= b.length(); j++) {
-      prev[j] = j;
-    }
-    for (int i = 1; i <= a.length(); i++) {
-      int[] curr = new int[b.length() + 1];
-      curr[0] = i;
-      for (int j = 1; j <= b.length(); j++) {
-        int cost = a.charAt(i - 1) == b.charAt(j - 1) ? 0 : 1;
-        curr[j] = Math.min(Math.min(curr[j - 1] + 1, prev[j] + 1), prev[j - 1] + cost);
-      }
-      prev = curr;
-    }
-    return prev[b.length()];
   }
 }

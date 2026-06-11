@@ -16,6 +16,7 @@ import com.sprint.mission.monew.domain.interest.dto.InterestUpdateRequest;
 import com.sprint.mission.monew.domain.interest.entity.Interest;
 import com.sprint.mission.monew.domain.interest.entity.Subscription;
 import com.sprint.mission.monew.domain.interest.repository.InterestRepository;
+import com.sprint.mission.monew.domain.interest.util.JamoNormalizer;
 import com.sprint.mission.monew.domain.interest.repository.SubscriptionRepository;
 import com.sprint.mission.monew.domain.user.document.UserSession;
 import com.sprint.mission.monew.domain.user.entity.User;
@@ -146,6 +147,26 @@ class InterestIntegrationTest {
                   .header("Monew-Request-User-ID", anySessionToken)
                   .contentType(MediaType.APPLICATION_JSON)
                   .content(objectMapper.writeValueAsString(request)))
+          .andExpect(status().isConflict())
+          .andExpect(jsonPath("$.code").value("INTEREST_ALREADY_EXISTS"));
+    }
+
+    @Test
+    @DisplayName("오탈자 경로: 자모 1개 차이 관심사 등록 시 409를 반환한다")
+    void 오탈자_경로_자모_1개_차이_관심사_등록_시_409를_반환한다() throws Exception {
+      // given — "반도체" 저장, "반도쳬" 등록 시도
+      String existing = "반도체";
+      interestRepository.save(
+          Interest.create(existing, JamoNormalizer.normalize(existing).length(), List.of("반도체")));
+
+      // when & then
+      mockMvc
+          .perform(
+              post("/api/interests")
+                  .header("Monew-Request-User-ID", anySessionToken)
+                  .contentType(MediaType.APPLICATION_JSON)
+                  .content(objectMapper.writeValueAsString(
+                      new InterestCreateRequest("반도쳬", List.of("반도체")))))
           .andExpect(status().isConflict())
           .andExpect(jsonPath("$.code").value("INTEREST_ALREADY_EXISTS"));
     }

@@ -192,6 +192,26 @@ class InterestIntegrationTest {
     }
 
     @Test
+    @DisplayName("prefix 경로: 같은 prefix 그룹 관심사 등록 시 409를 반환한다")
+    void prefix_경로_같은_prefix_그룹_관심사_등록_시_409를_반환한다() throws Exception {
+      // given — "최신AI" 저장, "최근AI" 등록 시도 (둘 다 시간 prefix 그룹)
+      String existing = "최신AI";
+      interestRepository.save(
+          Interest.create(existing, JamoNormalizer.normalize(existing).length(), List.of("AI")));
+
+      // when & then
+      mockMvc
+          .perform(
+              post("/api/interests")
+                  .header("Monew-Request-User-ID", anySessionToken)
+                  .contentType(MediaType.APPLICATION_JSON)
+                  .content(objectMapper.writeValueAsString(
+                      new InterestCreateRequest("최근AI", List.of("AI")))))
+          .andExpect(status().isConflict())
+          .andExpect(jsonPath("$.code").value("INTEREST_ALREADY_EXISTS"));
+    }
+
+    @Test
     @DisplayName("정상 요청이면 201과 저장된 관심사를 반환한다")
     void 정상_요청이면_201과_저장된_관심사를_반환한다() throws Exception {
       // given

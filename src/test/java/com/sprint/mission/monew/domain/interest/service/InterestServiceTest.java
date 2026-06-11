@@ -50,7 +50,7 @@ class InterestServiceTest {
   InterestMapper interestMapper;
 
   @Spy
-  SynonymProperties synonymProperties = new SynonymProperties(
+  SynonymIndex synonymIndex = new SynonymIndex(new SynonymProperties(
       List.of(
           Set.of("뉴스", "소식", "속보", "단신"),
           Set.of("정보", "동향", "현황", "상황"),
@@ -70,7 +70,7 @@ class InterestServiceTest {
           Set.of("주요", "핵심", "관련", "중요"),
           Set.of("첨단", "차세대", "미래")
       )
-  );
+  ));
 
   @Nested
   @DisplayName("관심사 목록 조회")

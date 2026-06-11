@@ -573,5 +573,18 @@ class InterestRepositoryTest {
       // then
       assertThat(result).contains("반도체");
     }
+
+    @Test
+    @DisplayName("jamo_length 범위 밖 이름은 제외한다")
+    void jamo_length_범위_밖_이름은_제외한다() {
+      // given
+      interestRepository.save(Interest.create("삼성전자", 11, List.of()));
+
+      // when
+      List<String> result = interestRepository.findTypoCandidates(6, 9);
+
+      // then
+      assertThat(result).doesNotContain("삼성전자");
+    }
   }
 }

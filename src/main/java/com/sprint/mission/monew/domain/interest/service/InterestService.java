@@ -40,7 +40,7 @@ public class InterestService {
     if (hasSimilar) {
       throw InterestAlreadyExistsException.withName(request.name());
     }
-    Interest saved = interestRepository.save(Interest.create(request.name(), request.keywords()));
+    Interest saved = interestRepository.save(Interest.create(request.name(), 0, request.keywords()));
     log.info("관심사 생성 완료 | interestId={}, name={}", saved.getId(), saved.getName());
     return interestMapper.toResponse(saved);
   }

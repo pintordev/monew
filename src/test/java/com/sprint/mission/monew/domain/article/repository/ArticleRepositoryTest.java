@@ -503,7 +503,7 @@ class ArticleRepositoryTest {
     @DisplayName("interestId로 필터링하면 해당 관심사 연결 기사만 반환한다")
     void interestId로_필터링하면_연결된_기사만_반환한다() {
       // given
-      Interest interest = interestRepository.save(Interest.create("AI", List.of("AI")));
+      Interest interest = interestRepository.save(Interest.create("AI", 2, List.of("AI")));
       Article article1 = articleRepository.save(
           Article.create(ArticleSource.NAVER, "url1", "AI 기사", Instant.now(), null));
       articleRepository.save(

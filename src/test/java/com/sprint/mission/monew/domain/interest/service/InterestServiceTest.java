@@ -75,7 +75,7 @@ class InterestServiceTest {
     void 유사한_이름이_존재하면_예외가_발생한다() {
       // given
       InterestCreateRequest request = new InterestCreateRequest("인공지능", List.of("AI"));
-      Interest existing = Interest.create("인공지능X", List.of("머신러닝")); // 유사도 80% (거리 1, maxLen 5)
+      Interest existing = Interest.create("인공지능X", 12, List.of("머신러닝")); // 유사도 80% (거리 1, maxLen 5)
 
       given(interestRepository.findAll()).willReturn(List.of(existing));
 
@@ -89,7 +89,7 @@ class InterestServiceTest {
     void 유사한_관심사가_없으면_저장_후_InterestDto를_반환한다() {
       // given
       InterestCreateRequest request = new InterestCreateRequest("인공지능", List.of("AI", "머신러닝"));
-      Interest saved = Interest.create("인공지능", List.of("AI", "머신러닝"));
+      Interest saved = Interest.create("인공지능", 11, List.of("AI", "머신러닝"));
       InterestResponse expectedDto =
           new InterestResponse(saved.getId(), "인공지능", List.of("AI", "머신러닝"), 0L, false);
 
@@ -134,7 +134,7 @@ class InterestServiceTest {
     @DisplayName("유효한 관심사 키워드 수정 시 InterestResponse를 반환한다")
     void 유효한_관심사_키워드_수정_시_InterestResponse를_반환한다() {
       // given
-      Interest interest = Interest.create("인공지능", List.of("AI"));
+      Interest interest = Interest.create("인공지능", 11, List.of("AI"));
       InterestResponse expected =
           new InterestResponse(interest.getId(), "인공지능", List.of("자연어처리", "GPT"), 0L, false);
 
@@ -175,7 +175,7 @@ class InterestServiceTest {
     @DisplayName("존재하는 관심사 삭제 시 interestRepository.delete()가 호출된다")
     void 존재하는_관심사_삭제_시_repository_delete가_호출된다() {
       // given
-      Interest interest = Interest.create("인공지능", List.of("AI"));
+      Interest interest = Interest.create("인공지능", 11, List.of("AI"));
       given(interestRepository.findById(interestId)).willReturn(Optional.of(interest));
 
       // when

@@ -587,4 +587,25 @@ class InterestRepositoryTest {
       assertThat(result).doesNotContain("삼성전자");
     }
   }
+
+  @Nested
+  @DisplayName("토큰 OR LIKE 후보 조회")
+  class FindNamesByTokens {
+
+    @Test
+    @DisplayName("토큰 중 하나라도 포함되면 반환한다")
+    void 토큰_중_하나라도_포함되면_반환한다() {
+      // given
+      interestRepository.save(Interest.create("AI 뉴스", 6, List.of()));
+      interestRepository.save(Interest.create("주식 정보", 7, List.of()));
+      interestRepository.save(Interest.create("환경", 4, List.of()));
+
+      // when
+      List<String> result = interestRepository.findNamesByTokens(List.of("뉴스"));
+
+      // then
+      assertThat(result).contains("AI 뉴스");
+      assertThat(result).doesNotContain("주식 정보", "환경");
+    }
+  }
 }

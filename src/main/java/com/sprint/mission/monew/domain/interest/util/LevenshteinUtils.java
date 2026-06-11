@@ -5,6 +5,9 @@ public class LevenshteinUtils {
   private LevenshteinUtils() {}
 
   public static double similarity(String a, String b) {
+    if (a == null || b == null) {
+      return 0.0;
+    }
     int maxLen = Math.max(a.length(), b.length());
     if (maxLen == 0) {
       return 1.0;

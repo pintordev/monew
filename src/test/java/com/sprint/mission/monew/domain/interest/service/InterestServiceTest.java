@@ -1,10 +1,13 @@
 package com.sprint.mission.monew.domain.interest.service;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatCode;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
+import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyInt;
 import static org.mockito.BDDMockito.given;
 import static org.mockito.BDDMockito.then;
+import static org.mockito.Mockito.mock;
 
 import com.sprint.mission.monew.common.dto.CursorPageResponse;
 import com.sprint.mission.monew.common.dto.SortDirection;
@@ -73,7 +76,7 @@ class InterestServiceTest {
     @Test
     @DisplayName("대소문자·공백 차이 있어도 정규화 후 동일 이름이면 차단한다")
     void 대소문자_공백_차이_있어도_정규화_후_동일_이름이면_차단한다() {
-      // given — "AI 뉴스" 등록 시도, DB에 "ai뉴스" 존재
+      // given
       given(interestRepository.existsByName("AI 뉴스")).willReturn(false);
       given(interestRepository.findTypoCandidates(anyInt(), anyInt()))
           .willReturn(List.of("ai뉴스"));
@@ -94,6 +97,21 @@ class InterestServiceTest {
       // when & then
       assertThatThrownBy(() -> interestService.create(new InterestCreateRequest("반도쳬", List.of())))
           .isInstanceOf(InterestAlreadyExistsException.class);
+    }
+
+    @Test
+    @DisplayName("유사도 0.8 미만이면 통과한다")
+    void 유사도_0_8미만이면_통과() {
+      // given — "환경" 등록 시도, DB에 "금융" 존재
+      given(interestRepository.existsByName("환경")).willReturn(false);
+      given(interestRepository.findTypoCandidates(anyInt(), anyInt()))
+          .willReturn(List.of("금융"));
+      given(interestRepository.save(any())).willReturn(mock(Interest.class));
+      given(interestMapper.toResponse(any())).willReturn(mock(InterestResponse.class));
+
+      // when & then
+      assertThatCode(() -> interestService.create(new InterestCreateRequest("환경", List.of())))
+          .doesNotThrowAnyException();
     }
   }
 

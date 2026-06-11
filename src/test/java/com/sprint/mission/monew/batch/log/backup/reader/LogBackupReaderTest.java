@@ -39,6 +39,7 @@ class LogBackupReaderTest {
   @BeforeEach
   void setUp() {
     ReflectionTestUtils.setField(reader, "logGroup", "test-log-group");
+    ReflectionTestUtils.setField(reader, "logStreamPrefix", "test-log-prefix");
   }
 
   @Nested
@@ -92,6 +93,7 @@ class LogBackupReaderTest {
       ArgumentCaptor<FilterLogEventsRequest> reqCaptor =
           ArgumentCaptor.forClass(FilterLogEventsRequest.class);
       verify(cloudWatchLogsClient, times(2)).filterLogEvents(reqCaptor.capture());
+      assertThat(reqCaptor.getAllValues().get(0).logStreamNamePrefix()).isEqualTo("test-log-prefix");
       assertThat(reqCaptor.getAllValues().get(0).nextToken()).isNull();
       assertThat(reqCaptor.getAllValues().get(1).nextToken()).isEqualTo("token123");
     }

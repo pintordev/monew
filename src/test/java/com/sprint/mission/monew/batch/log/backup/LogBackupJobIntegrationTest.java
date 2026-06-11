@@ -35,7 +35,7 @@ import software.amazon.awssdk.services.s3.S3Client;
 import software.amazon.awssdk.services.s3.model.NoSuchKeyException;
 import software.amazon.awssdk.services.s3.model.PutObjectRequest;
 
-@SpringBootTest(properties = {"monew.log-group=test-log-group"})
+@SpringBootTest(properties = {"monew.log-group=test-log-group", "monew.log-stream-prefix=test-log-prefix"})
 @ActiveProfiles("test")
 class LogBackupJobIntegrationTest {
 

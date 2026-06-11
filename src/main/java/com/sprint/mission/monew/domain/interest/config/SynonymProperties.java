@@ -1,4 +1,4 @@
-package com.sprint.mission.monew.common.config;
+package com.sprint.mission.monew.domain.interest.config;
 
 import java.util.List;
 import java.util.Set;

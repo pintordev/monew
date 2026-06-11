@@ -10,7 +10,7 @@ import static org.mockito.BDDMockito.given;
 import static org.mockito.BDDMockito.then;
 import static org.mockito.Mockito.mock;
 
-import com.sprint.mission.monew.common.config.SynonymProperties;
+import com.sprint.mission.monew.domain.interest.config.SynonymProperties;
 import com.sprint.mission.monew.common.dto.CursorPageResponse;
 import com.sprint.mission.monew.common.dto.SortDirection;
 import com.sprint.mission.monew.domain.interest.dto.InterestCreateRequest;

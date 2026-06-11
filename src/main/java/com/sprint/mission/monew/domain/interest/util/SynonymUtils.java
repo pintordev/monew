@@ -1,6 +1,6 @@
 package com.sprint.mission.monew.domain.interest.util;
 
-import com.sprint.mission.monew.common.config.SynonymProperties;
+import com.sprint.mission.monew.domain.interest.config.SynonymProperties;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Comparator;

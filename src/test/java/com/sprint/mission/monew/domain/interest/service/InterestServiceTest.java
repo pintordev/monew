@@ -10,7 +10,7 @@ import static org.mockito.BDDMockito.given;
 import static org.mockito.BDDMockito.then;
 import static org.mockito.Mockito.mock;
 
-import com.sprint.mission.monew.common.config.StopwordProperties;
+import com.sprint.mission.monew.common.config.SynonymProperties;
 import com.sprint.mission.monew.common.dto.CursorPageResponse;
 import com.sprint.mission.monew.common.dto.SortDirection;
 import com.sprint.mission.monew.domain.interest.dto.InterestCreateRequest;
@@ -25,6 +25,7 @@ import com.sprint.mission.monew.domain.interest.mapper.InterestMapper;
 import com.sprint.mission.monew.domain.interest.repository.InterestRepository;
 import java.util.List;
 import java.util.Optional;
+import java.util.Set;
 import java.util.UUID;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
@@ -49,9 +50,26 @@ class InterestServiceTest {
   InterestMapper interestMapper;
 
   @Spy
-  StopwordProperties stopwordProperties = new StopwordProperties(
-      List.of("뉴스", "소식", "정보", "동향", "이슈", "분석", "전망", "트렌드", "현황", "리뷰"),
-      List.of("관련", "최신", "주요", "핵심")
+  SynonymProperties synonymProperties = new SynonymProperties(
+      List.of(
+          Set.of("뉴스", "소식", "속보", "단신"),
+          Set.of("정보", "동향", "현황", "상황"),
+          Set.of("분석", "전망", "예측"),
+          Set.of("트렌드", "흐름"),
+          Set.of("이슈", "리뷰", "점검", "검토"),
+          Set.of("이야기", "얘기", "스토리"),
+          Set.of("기술", "테크"),
+          Set.of("산업", "업계", "섹터"),
+          Set.of("시장", "마켓"),
+          Set.of("정책", "규제", "법안", "제도"),
+          Set.of("사태", "사건", "사고", "논란", "갈등"),
+          Set.of("건강", "보건", "헬스케어")
+      ),
+      List.of(
+          Set.of("최신", "최근", "요즘"),
+          Set.of("주요", "핵심", "관련", "중요"),
+          Set.of("첨단", "차세대", "미래")
+      )
   );
 
   @Nested
@@ -91,7 +109,8 @@ class InterestServiceTest {
           .willReturn(List.of("ai뉴스"));
 
       // when & then
-      assertThatThrownBy(() -> interestService.create(new InterestCreateRequest("AI 뉴스", List.of())))
+      assertThatThrownBy(
+          () -> interestService.create(new InterestCreateRequest("AI 뉴스", List.of())))
           .isInstanceOf(InterestAlreadyExistsException.class);
     }
 
@@ -104,7 +123,8 @@ class InterestServiceTest {
           .willReturn(List.of("반도체"));
 
       // when & then
-      assertThatThrownBy(() -> interestService.create(new InterestCreateRequest("반도쳬", List.of())))
+      assertThatThrownBy(
+          () -> interestService.create(new InterestCreateRequest("반도쳬", List.of())))
           .isInstanceOf(InterestAlreadyExistsException.class);
     }
 
@@ -124,29 +144,62 @@ class InterestServiceTest {
     }
 
     @Test
-    @DisplayName("suffix 제거 후 동일하면 차단한다")
-    void suffix_제거_후_동일하면_차단() {
-      // given — "AI소식" 등록 시도, DB에 "AI뉴스" 존재
+    @DisplayName("같은 suffix 그룹이면 차단한다")
+    void 같은_suffix_그룹이면_차단() {
+      // given — "AI소식" 등록 시도, DB에 "AI뉴스" 존재 (둘 다 보도 그룹 → ai_S0 동일)
       given(interestRepository.existsByName("AI소식")).willReturn(false);
       given(interestRepository.findTypoCandidates(anyInt(), anyInt())).willReturn(List.of());
       given(interestRepository.findNamesByTokens(anyList())).willReturn(List.of("AI뉴스"));
 
       // when & then
-      assertThatThrownBy(() -> interestService.create(new InterestCreateRequest("AI소식", List.of())))
+      assertThatThrownBy(
+          () -> interestService.create(new InterestCreateRequest("AI소식", List.of())))
           .isInstanceOf(InterestAlreadyExistsException.class);
     }
 
     @Test
-    @DisplayName("prefix 제거 후 동일하면 차단한다")
-    void prefix_제거_후_동일하면_차단() {
-      // given — "관련AI" 등록 시도, DB에 "AI" 존재 (관련 prefix 제거 후 "ai" 동일)
+    @DisplayName("같은 prefix 그룹이면 차단한다")
+    void 같은_prefix_그룹이면_차단() {
+      // given — "관련AI" 등록 시도, DB에 "핵심AI" 존재 (둘 다 중요도 그룹 → P1_ai 동일)
       given(interestRepository.existsByName("관련AI")).willReturn(false);
       given(interestRepository.findTypoCandidates(anyInt(), anyInt())).willReturn(List.of());
-      given(interestRepository.findNamesByTokens(anyList())).willReturn(List.of("AI"));
+      given(interestRepository.findNamesByTokens(anyList())).willReturn(List.of("핵심AI"));
 
       // when & then
-      assertThatThrownBy(() -> interestService.create(new InterestCreateRequest("관련AI", List.of())))
+      assertThatThrownBy(
+          () -> interestService.create(new InterestCreateRequest("관련AI", List.of())))
           .isInstanceOf(InterestAlreadyExistsException.class);
+    }
+
+    @Test
+    @DisplayName("다른 suffix 그룹이면 통과한다")
+    void 다른_suffix_그룹이면_통과() {
+      // given — "AI분석" 등록 시도, DB에 "AI뉴스" 존재 (분석=S2, 보도=S0 → 다른 그룹)
+      given(interestRepository.existsByName("AI분석")).willReturn(false);
+      given(interestRepository.findTypoCandidates(anyInt(), anyInt())).willReturn(List.of());
+      given(interestRepository.findNamesByTokens(anyList())).willReturn(List.of("AI뉴스"));
+      given(interestRepository.save(any())).willReturn(mock(Interest.class));
+      given(interestMapper.toResponse(any())).willReturn(mock(InterestResponse.class));
+
+      // when & then
+      assertThatCode(
+          () -> interestService.create(new InterestCreateRequest("AI분석", List.of())))
+          .doesNotThrowAnyException();
+    }
+
+    @Test
+    @DisplayName("pure 키워드는 decorated 이름과 공존할 수 있다")
+    void pure_키워드는_decorated와_공존한다() {
+      // given — "AI" 등록 시도, DB에 "AI뉴스" 존재 (AI는 pure → canonical 불일치)
+      given(interestRepository.existsByName("AI")).willReturn(false);
+      given(interestRepository.findTypoCandidates(anyInt(), anyInt())).willReturn(List.of());
+      given(interestRepository.findNamesByTokens(anyList())).willReturn(List.of("AI뉴스"));
+      given(interestRepository.save(any())).willReturn(mock(Interest.class));
+      given(interestMapper.toResponse(any())).willReturn(mock(InterestResponse.class));
+
+      // when & then
+      assertThatCode(() -> interestService.create(new InterestCreateRequest("AI", List.of())))
+          .doesNotThrowAnyException();
     }
   }
 

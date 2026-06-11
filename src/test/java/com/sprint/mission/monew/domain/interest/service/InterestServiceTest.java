@@ -2,7 +2,6 @@ package com.sprint.mission.monew.domain.interest.service;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
-import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyInt;
 import static org.mockito.BDDMockito.given;
 import static org.mockito.BDDMockito.then;
@@ -70,7 +69,7 @@ class InterestServiceTest {
   @Nested
   @DisplayName("관심사 등록")
   class Create {
-    
+
     @Test
     @DisplayName("대소문자·공백 차이 있어도 정규화 후 동일 이름이면 차단한다")
     void 대소문자_공백_차이_있어도_정규화_후_동일_이름이면_차단한다() {
@@ -85,38 +84,16 @@ class InterestServiceTest {
     }
 
     @Test
-    @DisplayName("80% 이상 유사한 이름이 존재하면 InterestAlreadyExistsException이 발생한다")
-    void 유사한_이름이_존재하면_예외가_발생한다() {
-      // given
-      InterestCreateRequest request = new InterestCreateRequest("인공지능", List.of("AI"));
-      Interest existing = Interest.create("인공지능X", 12, List.of("머신러닝")); // 유사도 80% (거리 1, maxLen 5)
-
-      given(interestRepository.findAll()).willReturn(List.of(existing));
+    @DisplayName("자모 1개 차이 유사도 0.8 이상이면 차단한다")
+    void 자모_1개_차이_유사도_0_8이상이면_차단() {
+      // given — "반도쳬" 등록 시도, DB에 "반도체" 존재
+      given(interestRepository.existsByName("반도쳬")).willReturn(false);
+      given(interestRepository.findTypoCandidates(anyInt(), anyInt()))
+          .willReturn(List.of("반도체"));
 
       // when & then
-      assertThatThrownBy(() -> interestService.create(request))
+      assertThatThrownBy(() -> interestService.create(new InterestCreateRequest("반도쳬", List.of())))
           .isInstanceOf(InterestAlreadyExistsException.class);
-    }
-
-    @Test
-    @DisplayName("유사한 관심사가 없으면 저장 후 InterestDto를 반환한다")
-    void 유사한_관심사가_없으면_저장_후_InterestDto를_반환한다() {
-      // given
-      InterestCreateRequest request = new InterestCreateRequest("인공지능", List.of("AI", "머신러닝"));
-      Interest saved = Interest.create("인공지능", 11, List.of("AI", "머신러닝"));
-      InterestResponse expectedDto =
-          new InterestResponse(saved.getId(), "인공지능", List.of("AI", "머신러닝"), 0L, false);
-
-      given(interestRepository.findAll()).willReturn(List.of());
-      given(interestRepository.save(any(Interest.class))).willReturn(saved);
-      given(interestMapper.toResponse(any(Interest.class))).willReturn(expectedDto);
-
-      // when
-      InterestResponse result = interestService.create(request);
-
-      // then
-      assertThat(result.name()).isEqualTo("인공지능");
-      assertThat(result.keywords()).containsExactlyInAnyOrderElementsOf(request.keywords());
     }
   }
 

@@ -556,4 +556,22 @@ class InterestRepositoryTest {
       keywordIds.forEach(id -> assertThat(em.find(InterestKeyword.class, id)).isNull());
     }
   }
+
+  @Nested
+  @DisplayName("오탈자 후보 조회 (jamo_length 범위)")
+  class FindTypoCandidates {
+
+    @Test
+    @DisplayName("jamo_length 범위 내 이름만 반환한다")
+    void jamo_length_범위_내_이름만_반환한다() {
+      // given
+      interestRepository.save(Interest.create("반도체", 7, List.of()));
+
+      // when
+      List<String> result = interestRepository.findTypoCandidates(6, 9);
+
+      // then
+      assertThat(result).contains("반도체");
+    }
+  }
 }

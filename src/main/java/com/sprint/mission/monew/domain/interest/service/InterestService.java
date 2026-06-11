@@ -16,7 +16,6 @@ import java.util.List;
 import java.util.Set;
 import java.util.UUID;
 import java.util.stream.Collectors;
-import java.util.stream.Stream;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
@@ -101,36 +100,27 @@ public class InterestService {
   }
 
   private String canonicalize(String token) {
-    for (int i = token.length(); i >= 1; i--) {
-      Integer si = synonymIndex.suffixGroupOf(token.substring(token.length() - i));
-      if (si != null) {
-        String core = token.substring(0, token.length() - i);
-        return stripAnyPrefix(core) + "_S" + si;
-      }
-    }
-    for (int i = token.length() - 1; i >= 1; i--) {
-      Integer pi = synonymIndex.prefixGroupOf(token.substring(0, i));
-      if (pi != null) {
-        return "P" + pi + "_" + token.substring(i);
-      }
-    }
-    return token;
+    return synonymIndex.matchSuffix(token)
+        .map(m -> {
+          String core = token.substring(0, token.length() - m.word().length());
+          return stripAnyPrefix(core) + "_S" + m.groupIndex();
+        })
+        .orElseGet(() -> synonymIndex.matchPrefix(token)
+            .map(m -> "P" + m.groupIndex() + "_" + token.substring(m.word().length()))
+            .orElse(token));
   }
 
   private String stripAnyPrefix(String core) {
-    for (int i = core.length() - 1; i >= 1; i--) {
-      if (synonymIndex.prefixGroupOf(core.substring(0, i)) != null) {
-        return core.substring(i);
-      }
-    }
-    return core;
+    return synonymIndex.matchPrefix(core)
+        .map(m -> core.substring(m.word().length()))
+        .orElse(core);
   }
 
   private double jaccardSimilarity(List<String> tokensA, List<String> tokensB) {
     Set<String> a = tokensA.stream().map(this::canonicalize).collect(Collectors.toSet());
     Set<String> b = tokensB.stream().map(this::canonicalize).collect(Collectors.toSet());
     long intersection = a.stream().filter(b::contains).count();
-    long union = Stream.concat(a.stream(), b.stream()).distinct().count();
+    long union = a.size() + b.size() - intersection;
     return union == 0 ? 1.0 : (double) intersection / union;
   }
 

@@ -26,6 +26,9 @@ public class LogBackupReader implements ItemReader<LogContent> {
   @Value("${monew.log-group}")
   private String logGroup;
 
+  @Value("${monew.log-stream-prefix}")
+  private String logStreamPrefix;
+
   private LocalDate date;
   private long startTime;
   private long endTime;
@@ -50,6 +53,7 @@ public class LogBackupReader implements ItemReader<LogContent> {
     while (!done) {
       FilterLogEventsRequest.Builder requestBuilder = FilterLogEventsRequest.builder()
           .logGroupName(logGroup)
+          .logStreamNamePrefix(logStreamPrefix)
           .startTime(startTime)
           .endTime(endTime);
       if (nextToken != null) {

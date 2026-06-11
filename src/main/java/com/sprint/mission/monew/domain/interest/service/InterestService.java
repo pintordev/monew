@@ -10,7 +10,7 @@ import com.sprint.mission.monew.domain.interest.exception.InterestAlreadyExistsE
 import com.sprint.mission.monew.domain.interest.exception.InterestNotFoundException;
 import com.sprint.mission.monew.domain.interest.mapper.InterestMapper;
 import com.sprint.mission.monew.domain.interest.repository.InterestRepository;
-import java.util.List;
+import java.text.Normalizer;
 import java.util.UUID;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -32,15 +32,27 @@ public class InterestService {
 
   @Transactional
   public InterestResponse create(InterestCreateRequest request) {
-    log.debug("관심사 생성 시작 | name={}", request.name());
-    List<Interest> existingInterests = interestRepository.findAll();
-    boolean hasSimilar =
-        existingInterests.stream()
-            .anyMatch(existing -> similarity(request.name(), existing.getName()) >= 0.8);
-    if (hasSimilar) {
-      throw InterestAlreadyExistsException.withName(request.name());
+    String name = request.name();
+    log.debug("관심사 생성 시작 | name={}", name);
+
+    if (interestRepository.existsByName(name)) {
+      throw InterestAlreadyExistsException.withName(name);
     }
-    Interest saved = interestRepository.save(Interest.create(request.name(), 0, request.keywords()));
+
+    String normalized = normalize(name);
+    int jamoLen = normalized.length();
+    int minJamo = (int) Math.ceil(jamoLen * 0.8);
+    int maxJamo = (int) Math.floor(jamoLen / 0.8);
+
+    boolean typoMatch = interestRepository.findTypoCandidates(minJamo, maxJamo)
+        .stream()
+        .anyMatch(existing -> levenshteinSimilarity(normalized, normalize(existing)) >= 0.8);
+
+    if (typoMatch) {
+      throw InterestAlreadyExistsException.withName(name);
+    }
+
+    Interest saved = interestRepository.save(Interest.create(name, jamoLen, request.keywords()));
     log.info("관심사 생성 완료 | interestId={}, name={}", saved.getId(), saved.getName());
     return interestMapper.toResponse(saved);
   }
@@ -64,15 +76,20 @@ public class InterestService {
     log.info("관심사 물리 삭제 완료 | interestId={}", id);
   }
 
-  private double similarity(String a, String b) {
+  private String normalize(String s) {
+    return Normalizer.normalize(s.trim().toLowerCase(), Normalizer.Form.NFD)
+        .replaceAll("\\s+", "");
+  }
+
+  private double levenshteinSimilarity(String a, String b) {
     int maxLen = Math.max(a.length(), b.length());
     if (maxLen == 0) {
       return 1.0;
     }
-    return 1.0 - (double) levenshteinDistance(a, b) / maxLen;
+    return 1.0 - (double) levenshtein(a, b) / maxLen;
   }
 
-  private int levenshteinDistance(String a, String b) {
+  private int levenshtein(String a, String b) {
     int[] prev = new int[b.length() + 1];
     for (int j = 0; j <= b.length(); j++) {
       prev[j] = j;

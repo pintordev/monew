@@ -139,13 +139,13 @@ class InterestServiceTest {
     @Test
     @DisplayName("prefix 제거 후 동일하면 차단한다")
     void prefix_제거_후_동일하면_차단() {
-      // given — "최신AI뉴스" 등록 시도, DB에 "AI뉴스" 존재 (최신 prefix + 뉴스 suffix 제거 후 "ai" 동일)
-      given(interestRepository.existsByName("최신AI뉴스")).willReturn(false);
+      // given — "관련AI" 등록 시도, DB에 "AI" 존재 (관련 prefix 제거 후 "ai" 동일)
+      given(interestRepository.existsByName("관련AI")).willReturn(false);
       given(interestRepository.findTypoCandidates(anyInt(), anyInt())).willReturn(List.of());
-      given(interestRepository.findNamesByTokens(anyList())).willReturn(List.of("AI뉴스"));
+      given(interestRepository.findNamesByTokens(anyList())).willReturn(List.of("AI"));
 
       // when & then
-      assertThatThrownBy(() -> interestService.create(new InterestCreateRequest("최신AI뉴스", List.of())))
+      assertThatThrownBy(() -> interestService.create(new InterestCreateRequest("관련AI", List.of())))
           .isInstanceOf(InterestAlreadyExistsException.class);
     }
   }

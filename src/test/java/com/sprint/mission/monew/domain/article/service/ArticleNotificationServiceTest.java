@@ -14,6 +14,7 @@ import com.sprint.mission.monew.domain.interest.repository.dto.InterestSubscribe
 import java.time.Instant;
 import java.util.List;
 import java.util.UUID;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
@@ -34,6 +35,11 @@ class ArticleNotificationServiceTest {
   SubscriptionRepository subscriptionRepository;
   @Mock
   ApplicationEventPublisher eventPublisher;
+
+  @BeforeEach
+  void setUp() {
+    // MockitoExtension이 @BeforeEach마다 mock을 재생성하므로 상태 공유 없음
+  }
 
   @Nested
   @DisplayName("notifyNewArticles")

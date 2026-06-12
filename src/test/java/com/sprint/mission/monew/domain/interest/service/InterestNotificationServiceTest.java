@@ -3,6 +3,7 @@ package com.sprint.mission.monew.domain.interest.service;
 import static org.mockito.ArgumentMatchers.anyList;
 import static org.mockito.BDDMockito.given;
 import static org.mockito.BDDMockito.then;
+import static org.mockito.Mockito.lenient;
 import static org.mockito.Mockito.mock;
 
 import com.sprint.mission.monew.domain.article.repository.ArticleInterestRepository;
@@ -84,13 +85,30 @@ class InterestNotificationServiceTest {
       // then
       then(notificationService).shouldHaveNoInteractions();
     }
+
+    @Test
+    @DisplayName("구독자가 없는 관심사는 알림을 생성하지 않는다")
+    void 구독자가_없는_관심사는_알림을_생성하지_않는다() {
+      // given
+      Instant since = Instant.now();
+      UUID interestId = UUID.randomUUID();
+      InterestArticleCount count = interestArticleCount(interestId, "인공지능", 3L);
+      given(articleInterestRepository.countByInterestSince(since)).willReturn(List.of(count));
+      given(subscriptionRepository.findSubscribersByInterestIds(anyList())).willReturn(List.of());
+
+      // when
+      interestNotificationService.notifyNewArticles(since);
+
+      // then
+      then(notificationService).shouldHaveNoInteractions();
+    }
   }
 
   private InterestArticleCount interestArticleCount(UUID interestId, String name, long count) {
     InterestArticleCount c = mock(InterestArticleCount.class);
     given(c.getInterestId()).willReturn(interestId);
-    given(c.getInterestName()).willReturn(name);
-    given(c.getArticleCount()).willReturn(count);
+    lenient().when(c.getInterestName()).thenReturn(name);
+    lenient().when(c.getArticleCount()).thenReturn(count);
     return c;
   }
 

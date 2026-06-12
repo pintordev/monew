@@ -85,5 +85,26 @@ class ArticleInterestRepositoryTest {
       assertThat(countMap.get(interestA.getId())).isEqualTo(2L);
       assertThat(countMap.get(interestB.getId())).isEqualTo(1L);
     }
+
+    @Test
+    @DisplayName("since 이후 기사가 없으면 빈 목록을 반환한다")
+    void since_이후_기사가_없으면_빈_목록을_반환한다() {
+      // given — since를 미래로 설정해 저장된 기사가 범위 밖이 되도록
+      Instant since = Instant.now().plusSeconds(60);
+
+      Interest interest = interestRepository.save(Interest.create("인공지능", List.of("AI")));
+      Article a1 = articleRepository.save(
+          Article.create(ArticleSource.NAVER, "https://ex.com/1", "AI 기사", Instant.now(), "요약"));
+      articleInterestRepository.save(ArticleInterest.create(a1, interest));
+
+      em.flush();
+      em.clear();
+
+      // when
+      List<InterestArticleCount> result = articleInterestRepository.countByInterestSince(since);
+
+      // then
+      assertThat(result).isEmpty();
+    }
   }
 }

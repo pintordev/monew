@@ -593,6 +593,19 @@ class InterestRepositoryTest {
   class FindNamesByTokens {
 
     @Test
+    @DisplayName("빈 토큰 목록이면 DB 조회 없이 빈 목록을 반환한다")
+    void 빈_토큰_목록이면_빈_목록을_반환한다() {
+      // given
+      interestRepository.save(Interest.create("AI 뉴스", 6, List.of()));
+
+      // when
+      List<String> result = interestRepository.findNamesByTokens(List.of());
+
+      // then — 빈 리스트 조기반환(line 37), 전체 조회 없음
+      assertThat(result).isEmpty();
+    }
+
+    @Test
     @DisplayName("토큰 중 하나라도 포함되면 반환한다")
     void 토큰_중_하나라도_포함되면_반환한다() {
       // given

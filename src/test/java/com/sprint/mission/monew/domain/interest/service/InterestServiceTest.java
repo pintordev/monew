@@ -9,6 +9,7 @@ import static org.mockito.ArgumentMatchers.anyList;
 import static org.mockito.BDDMockito.given;
 import static org.mockito.BDDMockito.then;
 import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.never;
 
 import com.sprint.mission.monew.domain.interest.config.SynonymProperties;
 import com.sprint.mission.monew.common.dto.CursorPageResponse;
@@ -100,6 +101,35 @@ class InterestServiceTest {
   @Nested
   @DisplayName("관심사 등록")
   class Create {
+
+    @Test
+    @DisplayName("이미 존재하는 이름으로 등록 시 유사도 검사 없이 즉시 예외를 던진다")
+    void 이미_존재하는_이름으로_등록_시_즉시_예외를_던진다() {
+      // given
+      given(interestRepository.existsByName("인공지능")).willReturn(true);
+
+      // when & then
+      assertThatThrownBy(
+          () -> interestService.create(new InterestCreateRequest("인공지능", List.of())))
+          .isInstanceOf(InterestAlreadyExistsException.class);
+      then(interestRepository).should(never()).findTypoCandidates(anyInt(), anyInt());
+    }
+
+    @Test
+    @DisplayName("공백만으로 이루어진 이름은 동의어 검사를 건너뛴다")
+    void 공백만으로_이루어진_이름은_동의어_검사를_건너뛴다() {
+      // given — "   " → splitRaw 결과 empty → synonymMatch short-circuit → findNamesByTokens 미호출
+      given(interestRepository.existsByName("   ")).willReturn(false);
+      given(interestRepository.findTypoCandidates(anyInt(), anyInt())).willReturn(List.of());
+      given(interestRepository.save(any())).willReturn(mock(Interest.class));
+      given(interestMapper.toResponse(any())).willReturn(mock(InterestResponse.class));
+
+      // when & then
+      assertThatCode(
+          () -> interestService.create(new InterestCreateRequest("   ", List.of())))
+          .doesNotThrowAnyException();
+      then(interestRepository).should(never()).findNamesByTokens(anyList());
+    }
 
     @Test
     @DisplayName("대소문자·공백 차이 있어도 정규화 후 동일 이름이면 차단한다")

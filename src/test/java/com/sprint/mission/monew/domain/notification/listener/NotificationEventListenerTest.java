@@ -91,5 +91,22 @@ class NotificationEventListenerTest {
       then(notificationService).should()
           .createArticleNotifications(subscriberIds, message, ResourceType.ARTICLE, resourceId);
     }
+
+    @Test
+    @DisplayName("알림 생성 실패 시 예외를 전파하지 않는다")
+    void 알림_생성_실패_시_예외를_전파하지_않는다() {
+      // given
+      UUID resourceId = UUID.randomUUID();
+      List<UUID> subscriberIds = List.of(UUID.randomUUID());
+      ArticleNotificationEvent event =
+          new ArticleNotificationEvent(subscriberIds, "메시지", ResourceType.ARTICLE, resourceId);
+      willThrow(new RuntimeException("DB 오류"))
+          .given(notificationService)
+          .createArticleNotifications(subscriberIds, "메시지", ResourceType.ARTICLE, resourceId);
+
+      // when & then
+      assertThatCode(() -> notificationEventListener.handleArticleNotification(event))
+          .doesNotThrowAnyException();
+    }
   }
 }

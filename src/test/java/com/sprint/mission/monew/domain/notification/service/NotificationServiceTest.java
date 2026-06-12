@@ -188,5 +188,16 @@ NotificationServiceTest {
                                           && n.getResourceType() == ResourceType.ARTICLE
                                           && n.getResourceId().equals(resourceId))));
     }
+
+    @Test
+    @DisplayName("수신자 목록이 비어 있으면 saveAll을 호출하지 않는다")
+    void 수신자_목록이_비어_있으면_saveAll을_호출하지_않는다() {
+      // when
+      notificationService.createArticleNotifications(
+          List.of(), "메시지", ResourceType.ARTICLE, UUID.randomUUID());
+
+      // then
+      then(notificationRepository).shouldHaveNoInteractions();
+    }
   }
 }

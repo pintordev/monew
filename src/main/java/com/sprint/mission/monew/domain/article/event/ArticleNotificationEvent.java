@@ -1,9 +1,11 @@
 package com.sprint.mission.monew.domain.article.event;
 
+import com.sprint.mission.monew.domain.notification.entity.ResourceType;
 import java.util.List;
 import java.util.UUID;
 
 public record ArticleNotificationEvent(
-    UUID interestId,
+    List<UUID> subscriberIds,
     String message,
-    List<UUID> subscriberIds) {}
+    ResourceType resourceType,
+    UUID resourceId) {}

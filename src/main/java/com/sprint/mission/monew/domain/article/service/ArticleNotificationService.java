@@ -5,6 +5,7 @@ import com.sprint.mission.monew.domain.article.repository.ArticleInterestReposit
 import com.sprint.mission.monew.domain.article.repository.dto.InterestArticleCount;
 import com.sprint.mission.monew.domain.interest.repository.SubscriptionRepository;
 import com.sprint.mission.monew.domain.interest.repository.dto.InterestSubscriber;
+import com.sprint.mission.monew.domain.notification.entity.ResourceType;
 import org.springframework.context.ApplicationEventPublisher;
 import java.time.Instant;
 import java.util.List;
@@ -48,7 +49,7 @@ public class ArticleNotificationService {
       if (subscriberIds.isEmpty()) continue;
       String message = "[" + count.getInterestName() + "]와 관련된 기사가 "
           + count.getArticleCount() + "건 등록되었습니다.";
-      eventPublisher.publishEvent(new ArticleNotificationEvent(count.getInterestId(), message, subscriberIds));
+      eventPublisher.publishEvent(new ArticleNotificationEvent(subscriberIds, message, ResourceType.INTEREST, count.getInterestId()));
     }
 
     long totalMatches = counts.stream().mapToLong(InterestArticleCount::getArticleCount).sum();

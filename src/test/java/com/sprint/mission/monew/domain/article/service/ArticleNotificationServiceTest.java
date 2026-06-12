@@ -7,6 +7,7 @@ import static org.mockito.Mockito.mock;
 
 import com.sprint.mission.monew.domain.article.event.ArticleNotificationEvent;
 import com.sprint.mission.monew.domain.article.repository.ArticleInterestRepository;
+import com.sprint.mission.monew.domain.notification.entity.ResourceType;
 import com.sprint.mission.monew.domain.article.repository.dto.InterestArticleCount;
 import com.sprint.mission.monew.domain.interest.repository.SubscriptionRepository;
 import com.sprint.mission.monew.domain.interest.repository.dto.InterestSubscriber;
@@ -66,10 +67,10 @@ class ArticleNotificationServiceTest {
       // then — A는 2건/구독자 2명, B는 1건/구독자 1명
       then(eventPublisher).should()
           .publishEvent(new ArticleNotificationEvent(
-              interestAId, "[인공지능]와 관련된 기사가 2건 등록되었습니다.", List.of(u1, u2)));
+              List.of(u1, u2), "[인공지능]와 관련된 기사가 2건 등록되었습니다.", ResourceType.INTEREST, interestAId));
       then(eventPublisher).should()
           .publishEvent(new ArticleNotificationEvent(
-              interestBId, "[경제]와 관련된 기사가 1건 등록되었습니다.", List.of(u3)));
+              List.of(u3), "[경제]와 관련된 기사가 1건 등록되었습니다.", ResourceType.INTEREST, interestBId));
     }
 
     @Test

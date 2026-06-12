@@ -5,7 +5,7 @@ import java.util.List;
 import java.util.UUID;
 
 public record ArticleNotificationEvent(
-    List<UUID> subscriberIds,
+    List<UUID> recipientIds,
     String message,
     ResourceType resourceType,
     UUID resourceId) {}

@@ -204,7 +204,6 @@ CREATE TABLE IF NOT EXISTS notifications
     resource_id   UUID                     NOT NULL,
     confirmed_at  TIMESTAMP WITH TIME ZONE,
     created_at    TIMESTAMP WITH TIME ZONE NOT NULL,
-    updated_at    TIMESTAMP WITH TIME ZONE,
     PRIMARY KEY (id),
     FOREIGN KEY (user_id) REFERENCES users (id) ON DELETE SET NULL
 );

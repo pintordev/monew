@@ -49,7 +49,7 @@ public class ArticleNotificationService {
       if (subscriberIds.isEmpty()) continue;
       String message = "[" + count.getInterestName() + "]와 관련된 기사가 "
           + count.getArticleCount() + "건 등록되었습니다.";
-      eventPublisher.publishEvent(new ArticleNotificationEvent(subscriberIds, message, ResourceType.INTEREST, count.getInterestId()));
+      eventPublisher.publishEvent(new ArticleNotificationEvent(subscriberIds, message, ResourceType.ARTICLE, count.getInterestId()));
     }
 
     long totalMatches = counts.stream().mapToLong(InterestArticleCount::getArticleCount).sum();

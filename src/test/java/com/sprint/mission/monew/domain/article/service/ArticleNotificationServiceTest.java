@@ -67,10 +67,10 @@ class ArticleNotificationServiceTest {
       // then — A는 2건/구독자 2명, B는 1건/구독자 1명
       then(eventPublisher).should()
           .publishEvent(new ArticleNotificationEvent(
-              List.of(u1, u2), "[인공지능]와 관련된 기사가 2건 등록되었습니다.", ResourceType.INTEREST, interestAId));
+              List.of(u1, u2), "[인공지능]와 관련된 기사가 2건 등록되었습니다.", ResourceType.ARTICLE, interestAId));
       then(eventPublisher).should()
           .publishEvent(new ArticleNotificationEvent(
-              List.of(u3), "[경제]와 관련된 기사가 1건 등록되었습니다.", ResourceType.INTEREST, interestBId));
+              List.of(u3), "[경제]와 관련된 기사가 1건 등록되었습니다.", ResourceType.ARTICLE, interestBId));
     }
 
     @Test

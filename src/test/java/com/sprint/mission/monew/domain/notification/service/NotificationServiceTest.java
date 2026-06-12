@@ -68,7 +68,7 @@ NotificationServiceTest {
       // given
       UUID notificationId = UUID.randomUUID();
       Notification notification =
-          Notification.create(userId, "알림", ResourceType.INTEREST, UUID.randomUUID());
+          Notification.create(userId, "알림", ResourceType.ARTICLE, UUID.randomUUID());
       given(notificationRepository.findByIdAndUserIdAndConfirmedAtIsNull(notificationId, userId))
           .willReturn(Optional.of(notification));
 
@@ -171,7 +171,7 @@ NotificationServiceTest {
           .willAnswer(invocation -> invocation.getArgument(0));
 
       // when
-      notificationService.createArticleNotifications(recipientIds, message, ResourceType.INTEREST, resourceId);
+      notificationService.createArticleNotifications(recipientIds, message, ResourceType.ARTICLE, resourceId);
 
       // then — 구독자 수만큼 저장되고 전달받은 메시지를 그대로 저장한다
       then(notificationRepository)
@@ -185,7 +185,7 @@ NotificationServiceTest {
                               .allMatch(
                                   n ->
                                       n.getContent().equals(message)
-                                          && n.getResourceType() == ResourceType.INTEREST
+                                          && n.getResourceType() == ResourceType.ARTICLE
                                           && n.getResourceId().equals(resourceId))));
     }
   }

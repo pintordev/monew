@@ -45,7 +45,7 @@ public class NotificationService {
     }
     List<Notification> notifications =
         recipientIds.stream()
-            .map(uid -> Notification.create(uid, message, ResourceType.INTEREST, resourceId))
+            .map(uid -> Notification.create(uid, message, ResourceType.ARTICLE, resourceId))
             .toList();
     List<Notification> saved = notificationRepository.saveAll(notifications);
     log.info("기사 등록 알림 생성 완료 | interestId={}, recipientCount={}", resourceId, saved.size());

@@ -82,14 +82,14 @@ class NotificationEventListenerTest {
       List<UUID> subscriberIds = List.of(UUID.randomUUID(), UUID.randomUUID());
       String message = "[인공지능]와 관련된 기사가 3건 등록되었습니다.";
       ArticleNotificationEvent event =
-          new ArticleNotificationEvent(subscriberIds, message, ResourceType.INTEREST, resourceId);
+          new ArticleNotificationEvent(subscriberIds, message, ResourceType.ARTICLE, resourceId);
 
       // when
       notificationEventListener.handleArticleNotification(event);
 
       // then
       then(notificationService).should()
-          .createArticleNotifications(subscriberIds, message, ResourceType.INTEREST, resourceId);
+          .createArticleNotifications(subscriberIds, message, ResourceType.ARTICLE, resourceId);
     }
   }
 }

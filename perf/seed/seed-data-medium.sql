@@ -6,7 +6,7 @@
 --
 -- 실행:
 --   docker compose -f perf/docker-compose.yml up -d postgres
---   psql "postgresql://monew:monew@localhost:5432/monew" -f perf/seed/seed-data-medium.sql
+--   psql "postgresql://monew:monew@localhost:5433/monew" -f perf/seed/seed-data-medium.sql
 --
 -- 재실행 주의: email/source_url이 i 기반 결정값이라 빈 DB에서 1회만 실행한다.
 --   다시 채우려면 아래 정리문을 먼저 수동 실행(주석 해제):
@@ -20,16 +20,17 @@
 SELECT setseed(0.42);
 
 -- ── 1. 유저 1만 ────────────────────────────────────────────────
--- password: 유효한 BCrypt 형식 해시 1개를 전 유저가 공유한다.
---   대량 시드에서 1만 번 BCrypt 해싱은 느리기만 하고 의미 없어, 고정 해시 재사용이 업계 표준.
---   측정 엔드포인트는 Monew-Request-User-ID 헤더로 인증해 비밀번호를 검증하지 않으므로 값 자체는 무의미(NOT NULL 충족용).
---   로그인 "성공"까지 측정할 일이 생기면 그때만 BCryptPasswordEncoder로 만든 '알려진 평문'의 해시로 교체한다.
+-- password: '알려진 평문'의 BCrypt 해시 1개를 전 유저가 공유한다.
+--   k6가 setup()에서 실제 로그인(POST /api/users/login)으로 세션 토큰을 발급받아 인증을 통과하므로,
+--   비밀번호 평문을 알아야 로그인이 된다. 전 유저 공통 평문 = "loadtest1234" (의 bcrypt 해시).
+--   1만 번 BCrypt 해싱은 느리기만 하고 의미 없어, 고정 해시 재사용이 업계 표준.
+--   해시 교체 시: htpasswd -bnBC 10 "" <평문>  또는  new BCryptPasswordEncoder().encode("<평문>") 로 생성.
 \echo '[seed] 1/4 users 1만 적재...'
 INSERT INTO users (id, email, nickname, password, email_verified, created_at)
 SELECT gen_random_uuid(),
        'user' || i || '@load.test',
        'loaduser' || i,
-       '$2a$10$N9qo8uLOickgx2ZMRZoMyeIjZAgcfl7p92ldGxad68LJZdL17lhWy', -- 고정 placeholder 해시 (검증 안 함)
+       '$2a$10$Cc9bd37qy3urqOSDzYYg8eCDP8eatPT0APr8H9DsbYRG.SbjcSGpi', -- bcrypt("loadtest1234") — 전 유저 공통 평문
        true,
        now()
 FROM generate_series(1, 10000) AS s(i);

@@ -14,6 +14,7 @@ import java.time.Instant;
 import java.util.List;
 import java.util.UUID;
 import org.junit.jupiter.api.DisplayName;
+import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
@@ -32,38 +33,43 @@ class InterestNotificationServiceTest {
   @Mock
   NotificationService notificationService;
 
-  @Test
-  @DisplayName("신규 기사를 관심사별로 집계해 구독자당 알림 1건을 생성한다")
-  void 신규_기사를_관심사별로_집계해_구독자당_알림_1건을_생성한다() {
-    // given — 관심사 A에 기사 2건, 관심사 B에 기사 1건
-    Instant since = Instant.now();
-    UUID interestAId = UUID.randomUUID();
-    UUID interestBId = UUID.randomUUID();
+  @Nested
+  @DisplayName("notifyNewArticles")
+  class NotifyNewArticles {
 
-    InterestArticleCount countA = interestArticleCount(interestAId, "인공지능", 2L);
-    InterestArticleCount countB = interestArticleCount(interestBId, "경제", 1L);
-    given(articleInterestRepository.countByInterestSince(since))
-        .willReturn(List.of(countA, countB));
+    @Test
+    @DisplayName("신규 기사를 관심사별로 집계해 구독자당 알림 1건을 생성한다")
+    void 신규_기사를_관심사별로_집계해_구독자당_알림_1건을_생성한다() {
+      // given — 관심사 A에 기사 2건, 관심사 B에 기사 1건
+      Instant since = Instant.now();
+      UUID interestAId = UUID.randomUUID();
+      UUID interestBId = UUID.randomUUID();
 
-    UUID u1 = UUID.randomUUID();
-    UUID u2 = UUID.randomUUID();
-    UUID u3 = UUID.randomUUID();
-    given(subscriptionRepository.findSubscribersByInterestIds(anyList()))
-        .willReturn(List.of(
-            subscriber(interestAId, u1),
-            subscriber(interestAId, u2),
-            subscriber(interestBId, u3)));
+      InterestArticleCount countA = interestArticleCount(interestAId, "인공지능", 2L);
+      InterestArticleCount countB = interestArticleCount(interestBId, "경제", 1L);
+      given(articleInterestRepository.countByInterestSince(since))
+          .willReturn(List.of(countA, countB));
 
-    // when
-    interestNotificationService.notifyNewArticles(since);
+      UUID u1 = UUID.randomUUID();
+      UUID u2 = UUID.randomUUID();
+      UUID u3 = UUID.randomUUID();
+      InterestSubscriber s1 = subscriber(interestAId, u1);
+      InterestSubscriber s2 = subscriber(interestAId, u2);
+      InterestSubscriber s3 = subscriber(interestBId, u3);
+      given(subscriptionRepository.findSubscribersByInterestIds(anyList()))
+          .willReturn(List.of(s1, s2, s3));
 
-    // then — A는 2건/구독자 2명, B는 1건/구독자 1명
-    then(notificationService).should()
-        .createArticleNotifications(
-            interestAId, "[인공지능]와 관련된 기사가 2건 등록되었습니다.", List.of(u1, u2));
-    then(notificationService).should()
-        .createArticleNotifications(
-            interestBId, "[경제]와 관련된 기사가 1건 등록되었습니다.", List.of(u3));
+      // when
+      interestNotificationService.notifyNewArticles(since);
+
+      // then — A는 2건/구독자 2명, B는 1건/구독자 1명
+      then(notificationService).should()
+          .createArticleNotifications(
+              interestAId, "[인공지능]와 관련된 기사가 2건 등록되었습니다.", List.of(u1, u2));
+      then(notificationService).should()
+          .createArticleNotifications(
+              interestBId, "[경제]와 관련된 기사가 1건 등록되었습니다.", List.of(u3));
+    }
   }
 
   private InterestArticleCount interestArticleCount(UUID interestId, String name, long count) {

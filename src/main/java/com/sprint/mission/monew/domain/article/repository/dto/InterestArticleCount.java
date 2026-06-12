@@ -1,4 +1,4 @@
-package com.sprint.mission.monew.domain.interest.repository.dto;
+package com.sprint.mission.monew.domain.article.repository.dto;
 
 import java.util.UUID;
 

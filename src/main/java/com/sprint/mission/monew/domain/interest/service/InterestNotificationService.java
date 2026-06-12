@@ -1,8 +1,8 @@
 package com.sprint.mission.monew.domain.interest.service;
 
 import com.sprint.mission.monew.domain.article.repository.ArticleInterestRepository;
+import com.sprint.mission.monew.domain.article.repository.dto.InterestArticleCount;
 import com.sprint.mission.monew.domain.interest.repository.SubscriptionRepository;
-import com.sprint.mission.monew.domain.interest.repository.dto.InterestArticleCount;
 import com.sprint.mission.monew.domain.interest.repository.dto.InterestSubscriber;
 import com.sprint.mission.monew.domain.notification.service.NotificationService;
 import java.time.Instant;
@@ -44,14 +44,13 @@ public class InterestNotificationService {
     for (InterestArticleCount count : counts) {
       List<UUID> subscriberIds =
           subscribersByInterest.getOrDefault(count.getInterestId(), List.of());
-      if (!subscriberIds.isEmpty()) {
-        String message = "[" + count.getInterestName() + "]와 관련된 기사가 "
-            + count.getArticleCount() + "건 등록되었습니다.";
-        notificationService.createArticleNotifications(
-            count.getInterestId(), message, subscriberIds);
-      }
+      if (subscriberIds.isEmpty()) continue;
+      String message = "[" + count.getInterestName() + "]와 관련된 기사가 "
+          + count.getArticleCount() + "건 등록되었습니다.";
+      notificationService.createArticleNotifications(count.getInterestId(), message, subscriberIds);
     }
 
-    log.info("배치 기사 알림 집계 완료: 매칭 관심사={}개", counts.size());
+    long totalArticles = counts.stream().mapToLong(InterestArticleCount::getArticleCount).sum();
+    log.info("배치 기사 알림 집계 완료: 신규 기사={}건, 매칭 관심사={}개", totalArticles, counts.size());
   }
 }

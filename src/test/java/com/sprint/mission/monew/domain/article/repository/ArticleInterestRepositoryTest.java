@@ -9,7 +9,7 @@ import com.sprint.mission.monew.domain.article.entity.ArticleInterest;
 import com.sprint.mission.monew.domain.article.entity.ArticleSource;
 import com.sprint.mission.monew.domain.interest.entity.Interest;
 import com.sprint.mission.monew.domain.interest.repository.InterestRepository;
-import com.sprint.mission.monew.domain.interest.repository.dto.InterestArticleCount;
+import com.sprint.mission.monew.domain.article.repository.dto.InterestArticleCount;
 import jakarta.persistence.EntityManager;
 import java.time.Instant;
 import java.util.List;

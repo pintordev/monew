@@ -1,7 +1,7 @@
 package com.sprint.mission.monew.domain.article.repository;
 
 import com.sprint.mission.monew.domain.article.entity.ArticleInterest;
-import com.sprint.mission.monew.domain.interest.repository.dto.InterestArticleCount;
+import com.sprint.mission.monew.domain.article.repository.dto.InterestArticleCount;
 import java.time.Instant;
 import java.util.List;
 import java.util.UUID;
@@ -17,7 +17,7 @@ public interface ArticleInterestRepository extends JpaRepository<ArticleInterest
              COUNT(ai)        AS articleCount
       FROM ArticleInterest ai
       JOIN ai.article a
-      WHERE a.createdAt >= :since
+      WHERE a.createdAt > :since
         AND a.deletedAt IS NULL
       GROUP BY ai.interest.id, ai.interest.name
       """)

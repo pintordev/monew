@@ -3,12 +3,11 @@ package com.sprint.mission.monew.domain.interest.service;
 import static org.mockito.ArgumentMatchers.anyList;
 import static org.mockito.BDDMockito.given;
 import static org.mockito.BDDMockito.then;
-import static org.mockito.Mockito.lenient;
 import static org.mockito.Mockito.mock;
 
 import com.sprint.mission.monew.domain.article.repository.ArticleInterestRepository;
+import com.sprint.mission.monew.domain.article.repository.dto.InterestArticleCount;
 import com.sprint.mission.monew.domain.interest.repository.SubscriptionRepository;
-import com.sprint.mission.monew.domain.interest.repository.dto.InterestArticleCount;
 import com.sprint.mission.monew.domain.interest.repository.dto.InterestSubscriber;
 import com.sprint.mission.monew.domain.notification.service.NotificationService;
 import java.time.Instant;
@@ -92,7 +91,8 @@ class InterestNotificationServiceTest {
       // given
       Instant since = Instant.now();
       UUID interestId = UUID.randomUUID();
-      InterestArticleCount count = interestArticleCount(interestId, "인공지능", 3L);
+      InterestArticleCount count = mock(InterestArticleCount.class);
+      given(count.getInterestId()).willReturn(interestId);
       given(articleInterestRepository.countByInterestSince(since)).willReturn(List.of(count));
       given(subscriptionRepository.findSubscribersByInterestIds(anyList())).willReturn(List.of());
 
@@ -107,8 +107,8 @@ class InterestNotificationServiceTest {
   private InterestArticleCount interestArticleCount(UUID interestId, String name, long count) {
     InterestArticleCount c = mock(InterestArticleCount.class);
     given(c.getInterestId()).willReturn(interestId);
-    lenient().when(c.getInterestName()).thenReturn(name);
-    lenient().when(c.getArticleCount()).thenReturn(count);
+    given(c.getInterestName()).willReturn(name);
+    given(c.getArticleCount()).willReturn(count);
     return c;
   }
 

@@ -1,5 +1,6 @@
 package com.sprint.mission.monew.batch.comment.cleanup.config;
 
+import com.sprint.mission.monew.batch.comment.cleanup.listener.CommentCleanupJobListener;
 import com.sprint.mission.monew.batch.comment.cleanup.reader.CommentCleanupReader;
 import com.sprint.mission.monew.batch.comment.cleanup.listener.CommentCleanupStepListener;
 import com.sprint.mission.monew.batch.comment.cleanup.writer.CommentCleanupWriter;
@@ -13,6 +14,8 @@ import org.springframework.batch.core.step.builder.StepBuilder;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.dao.DataAccessException;
+import org.springframework.dao.TransientDataAccessException;
 import org.springframework.transaction.PlatformTransactionManager;
 
 @Configuration
@@ -22,6 +25,7 @@ public class CommentCleanupJobConfig {
   private final JobRepository jobRepository;
   private final PlatformTransactionManager transactionManager;
 
+  private final CommentCleanupJobListener commentCleanupJobListener;
   private final CommentCleanupReader commentCleanupReader;
   private final CommentCleanupWriter commentCleanupWriter;
   private final CommentCleanupStepListener commentCleanupStepListener;
@@ -32,6 +36,7 @@ public class CommentCleanupJobConfig {
   @Bean(name = "commentCleanupJob")
   public Job commentCleanupJob() {
     return new JobBuilder("commentCleanupJob", jobRepository)
+        .listener(commentCleanupJobListener)
         .start(commentCleanupStep()).build();
   }
 

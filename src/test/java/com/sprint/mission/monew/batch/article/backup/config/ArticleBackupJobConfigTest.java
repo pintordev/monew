@@ -4,9 +4,11 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.mockito.Mockito.mock;
 
+import com.sprint.mission.monew.batch.article.backup.listener.ArticleBackupJobListener;
 import com.sprint.mission.monew.batch.article.backup.listener.ArticleBackupStepListener;
 import com.sprint.mission.monew.batch.article.backup.reader.ArticleBackupReader;
 import com.sprint.mission.monew.batch.article.backup.writer.ArticleBackupWriter;
+import com.sprint.mission.monew.batch.common.listener.SkipLoggingListener;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
@@ -29,16 +31,20 @@ class ArticleBackupJobConfigTest {
     @DisplayName("Job, Step 생성 성공")
     void job_step_생성_성공() {
       // given
+      ArticleBackupJobListener jobListener = mock(ArticleBackupJobListener.class);
+      SkipLoggingListener skipLoggingListener = mock(SkipLoggingListener.class);
       ArticleBackupReader reader = mock(ArticleBackupReader.class);
       ArticleBackupWriter writer = mock(ArticleBackupWriter.class);
-      ArticleBackupStepListener listener = mock(ArticleBackupStepListener.class);
+      ArticleBackupStepListener stepListener = mock(ArticleBackupStepListener.class);
 
       ArticleBackupJobConfig config = new ArticleBackupJobConfig(
           jobRepository,
           transactionManager,
+          jobListener,
+          skipLoggingListener,
           reader,
           writer,
-          listener
+          stepListener
       );
 
       // when

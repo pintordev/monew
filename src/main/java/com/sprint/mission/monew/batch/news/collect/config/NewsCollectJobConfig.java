@@ -1,6 +1,8 @@
 package com.sprint.mission.monew.batch.news.collect.config;
 
+import com.sprint.mission.monew.batch.common.listener.SkipLoggingListener;
 import com.sprint.mission.monew.batch.news.collect.dto.NewsCollectItem;
+import com.sprint.mission.monew.batch.news.collect.listener.NewsCollectJobListener;
 import com.sprint.mission.monew.batch.news.collect.listener.NewsCollectStepListener;
 import com.sprint.mission.monew.batch.news.collect.reader.NewsCollectReader;
 import com.sprint.mission.monew.batch.news.collect.writer.NewsCollectWriter;
@@ -13,7 +15,10 @@ import org.springframework.batch.core.step.builder.StepBuilder;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.dao.DataIntegrityViolationException;
+import org.springframework.dao.TransientDataAccessException;
 import org.springframework.transaction.PlatformTransactionManager;
+import org.springframework.web.client.HttpClientErrorException;
 
 @Configuration
 @RequiredArgsConstructor
@@ -22,6 +27,7 @@ public class NewsCollectJobConfig {
   private final JobRepository jobRepository;
   private final PlatformTransactionManager transactionManager;
 
+  private final NewsCollectJobListener newsCollectJobListener;
   private final NewsCollectReader newsCollectReader;
   private final NewsCollectWriter newsCollectWriter;
   private final NewsCollectStepListener newsCollectStepListener;
@@ -32,6 +38,7 @@ public class NewsCollectJobConfig {
   @Bean(name = "newsCollectJob")
   public Job newsCollectJob() {
     return new JobBuilder("newsCollectJob", jobRepository)
+        .listener(newsCollectJobListener)
         .start(newsCollectStep()).build();
   }
 

@@ -1,11 +1,15 @@
 package com.sprint.mission.monew.batch.log.backup.config;
 
+import com.sprint.mission.monew.batch.common.listener.SkipLoggingListener;
+import com.sprint.mission.monew.batch.log.backup.exception.LogBackupFailedException;
+import com.sprint.mission.monew.batch.log.backup.listener.LogBackupJobListener;
 import com.sprint.mission.monew.batch.log.backup.listener.LogBackupStepListener;
 import com.sprint.mission.monew.batch.log.backup.processor.LogBackupProcessor;
 import com.sprint.mission.monew.batch.log.backup.reader.LogBackupReader;
 import com.sprint.mission.monew.batch.log.backup.writer.LogBackupWriter;
 import com.sprint.mission.monew.batch.log.backup.dto.LogContent;
 import com.sprint.mission.monew.batch.log.backup.dto.UploadPayload;
+import java.io.IOException;
 import lombok.RequiredArgsConstructor;
 import org.springframework.batch.core.Job;
 import org.springframework.batch.core.Step;
@@ -15,7 +19,9 @@ import org.springframework.batch.core.step.builder.StepBuilder;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.dao.TransientDataAccessException;
 import org.springframework.transaction.PlatformTransactionManager;
+import software.amazon.awssdk.core.exception.SdkException;
 
 @Configuration
 @RequiredArgsConstructor
@@ -24,6 +30,8 @@ public class LogBackupJobConfig {
   private final JobRepository jobRepository;
   private final PlatformTransactionManager transactionManager;
 
+  private final LogBackupJobListener logBackupJobListener;
+  private final SkipLoggingListener skipLoggingListener;
   private final LogBackupReader logBackupReader;
   private final LogBackupProcessor logBackupProcessor;
   private final LogBackupWriter logBackupWriter;
@@ -35,6 +43,7 @@ public class LogBackupJobConfig {
   @Bean(name = "logBackupJob")
   public Job logBackupJob() {
     return new JobBuilder("logBackupJob", jobRepository)
+        .listener(logBackupJobListener)
         .start(logBackupStep())
         .build();
   }
@@ -46,6 +55,14 @@ public class LogBackupJobConfig {
         .reader(logBackupReader)
         .processor(logBackupProcessor)
         .writer(logBackupWriter)
+        .faultTolerant()
+        .skip(LogBackupFailedException.class)
+        .noSkip(OutOfMemoryError.class)
+        .skipLimit(10)
+        .retryLimit(3)
+        .retry(TransientDataAccessException.class)
+        .retry(LogBackupFailedException.class)
+        .listener(skipLoggingListener)
         .listener(logBackupStepListener)
         .build();
   }

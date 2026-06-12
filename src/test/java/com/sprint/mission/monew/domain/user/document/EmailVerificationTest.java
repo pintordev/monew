@@ -1,4 +1,4 @@
-package com.sprint.mission.monew.domain.user.entity;
+package com.sprint.mission.monew.domain.user.document;
 
 import static org.assertj.core.api.Assertions.assertThat;
 

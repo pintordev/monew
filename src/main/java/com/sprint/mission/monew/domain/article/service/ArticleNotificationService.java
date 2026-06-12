@@ -1,4 +1,4 @@
-package com.sprint.mission.monew.domain.interest.service;
+package com.sprint.mission.monew.domain.article.service;
 
 import com.sprint.mission.monew.domain.article.repository.ArticleInterestRepository;
 import com.sprint.mission.monew.domain.article.repository.dto.InterestArticleCount;
@@ -19,7 +19,7 @@ import org.springframework.transaction.annotation.Transactional;
 @Service
 @RequiredArgsConstructor
 @Transactional(readOnly = true)
-public class InterestNotificationService {
+public class ArticleNotificationService {
 
   private final ArticleInterestRepository articleInterestRepository;
   private final SubscriptionRepository subscriptionRepository;

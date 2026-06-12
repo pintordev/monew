@@ -1,7 +1,7 @@
 package com.sprint.mission.monew.batch.news.collect.listener;
 
 import com.sprint.mission.monew.batch.news.collect.metrics.NewsCollectMetrics;
-import com.sprint.mission.monew.domain.interest.service.InterestNotificationService;
+import com.sprint.mission.monew.domain.article.service.ArticleNotificationService;
 import java.time.Duration;
 import java.time.ZoneOffset;
 import lombok.RequiredArgsConstructor;
@@ -17,7 +17,7 @@ import org.springframework.stereotype.Component;
 public class NewsCollectJobListener implements JobExecutionListener {
 
   private final NewsCollectMetrics newsCollectMetrics;
-  private final InterestNotificationService interestNotificationService;
+  private final ArticleNotificationService articleNotificationService;
 
   @Override
   public void beforeJob(JobExecution jobExecution) {
@@ -35,7 +35,7 @@ public class NewsCollectJobListener implements JobExecutionListener {
       newsCollectMetrics.markSuccess();
       // 전체 성공 시 알림 발행 시작
       try {
-        interestNotificationService.notifyNewArticles(jobExecution.getCreateTime().toInstant(ZoneOffset.UTC));
+        articleNotificationService.notifyNewArticles(jobExecution.getCreateTime().toInstant(ZoneOffset.UTC));
       } catch (Exception e) {
         log.error("기사 알림 생성 실패", e);
       }

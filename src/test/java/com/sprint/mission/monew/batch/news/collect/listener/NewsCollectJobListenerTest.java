@@ -11,6 +11,7 @@ import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 import com.sprint.mission.monew.batch.news.collect.metrics.NewsCollectMetrics;
+import com.sprint.mission.monew.domain.article.service.ArticleNotificationService;
 import java.time.Duration;
 import java.time.LocalDateTime;
 import java.util.List;
@@ -31,6 +32,9 @@ public class NewsCollectJobListenerTest {
 
   @Mock
   NewsCollectMetrics newsCollectMetrics;
+  
+  @Mock
+  ArticleNotificationService articleNotificationService;
 
   @InjectMocks
   NewsCollectJobListener listener;
@@ -75,6 +79,7 @@ public class NewsCollectJobListenerTest {
       given(jobExecution.getStartTime()).willReturn(null);
       given(jobExecution.getEndTime()).willReturn(end);
       given(jobExecution.getStatus()).willReturn(BatchStatus.COMPLETED);
+      given(jobExecution.getCreateTime()).willReturn(LocalDateTime.of(2026, 6, 10, 9, 0, 0));
 
       // when
       listener.afterJob(jobExecution);
@@ -92,6 +97,7 @@ public class NewsCollectJobListenerTest {
       given(jobExecution.getStartTime()).willReturn(start);
       given(jobExecution.getEndTime()).willReturn(null);
       given(jobExecution.getStatus()).willReturn(BatchStatus.COMPLETED);
+      given(jobExecution.getCreateTime()).willReturn(LocalDateTime.of(2026, 6, 10, 9, 0, 0));
 
       // when
       listener.afterJob(jobExecution);
@@ -153,6 +159,7 @@ public class NewsCollectJobListenerTest {
 
       when(jobExecution.getStartTime()).thenReturn(start);
       when(jobExecution.getEndTime()).thenReturn(end);
+      when(jobExecution.getCreateTime()).thenReturn(LocalDateTime.of(2026, 6, 10, 9, 0, 0));
 
       // when
       listener.afterJob(jobExecution);

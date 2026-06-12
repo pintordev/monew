@@ -1,4 +1,4 @@
-package com.sprint.mission.monew.domain.interest.service;
+package com.sprint.mission.monew.domain.article.service;
 
 import static org.mockito.ArgumentMatchers.anyList;
 import static org.mockito.BDDMockito.given;
@@ -22,10 +22,10 @@ import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
 @ExtendWith(MockitoExtension.class)
-class InterestNotificationServiceTest {
+class ArticleNotificationServiceTest {
 
   @InjectMocks
-  InterestNotificationService interestNotificationService;
+  ArticleNotificationService articleNotificationService;
   @Mock
   ArticleInterestRepository articleInterestRepository;
   @Mock
@@ -60,7 +60,7 @@ class InterestNotificationServiceTest {
           .willReturn(List.of(s1, s2, s3));
 
       // when
-      interestNotificationService.notifyNewArticles(since);
+      articleNotificationService.notifyNewArticles(since);
 
       // then — A는 2건/구독자 2명, B는 1건/구독자 1명
       then(notificationService).should()
@@ -79,7 +79,7 @@ class InterestNotificationServiceTest {
       given(articleInterestRepository.countByInterestSince(since)).willReturn(List.of());
 
       // when
-      interestNotificationService.notifyNewArticles(since);
+      articleNotificationService.notifyNewArticles(since);
 
       // then
       then(subscriptionRepository).shouldHaveNoInteractions();
@@ -98,7 +98,7 @@ class InterestNotificationServiceTest {
       given(subscriptionRepository.findSubscribersByInterestIds(anyList())).willReturn(List.of());
 
       // when
-      interestNotificationService.notifyNewArticles(since);
+      articleNotificationService.notifyNewArticles(since);
 
       // then
       then(notificationService).shouldHaveNoInteractions();

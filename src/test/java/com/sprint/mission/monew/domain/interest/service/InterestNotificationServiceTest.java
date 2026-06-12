@@ -70,6 +70,20 @@ class InterestNotificationServiceTest {
           .createArticleNotifications(
               interestBId, "[경제]와 관련된 기사가 1건 등록되었습니다.", List.of(u3));
     }
+
+    @Test
+    @DisplayName("신규 기사가 없으면 아무 알림도 생성하지 않는다")
+    void 신규_기사가_없으면_아무_알림도_생성하지_않는다() {
+      // given
+      Instant since = Instant.now();
+      given(articleInterestRepository.countByInterestSince(since)).willReturn(List.of());
+
+      // when
+      interestNotificationService.notifyNewArticles(since);
+
+      // then
+      then(notificationService).shouldHaveNoInteractions();
+    }
   }
 
   private InterestArticleCount interestArticleCount(UUID interestId, String name, long count) {

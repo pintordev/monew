@@ -89,7 +89,7 @@ class NotificationEventListenerTest {
 
       // then
       then(notificationService).should()
-          .createArticleNotifications(resourceId, message, subscriberIds);
+          .createArticleNotifications(subscriberIds, message, ResourceType.INTEREST, resourceId);
     }
   }
 }

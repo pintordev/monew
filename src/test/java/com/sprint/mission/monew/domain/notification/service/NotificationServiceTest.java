@@ -164,14 +164,14 @@ NotificationServiceTest {
     @DisplayName("전달받은 메시지로 구독자 수만큼 알림이 saveAll로 저장된다")
     void 전달받은_메시지로_구독자_수만큼_알림이_saveAll로_저장된다() {
       // given
-      UUID interestId = UUID.randomUUID();
+      UUID resourceId = UUID.randomUUID();
       String message = "[인공지능]와 관련된 기사가 5건 등록되었습니다.";
-      List<UUID> subscriberIds = List.of(UUID.randomUUID(), UUID.randomUUID(), UUID.randomUUID());
+      List<UUID> recipientIds = List.of(UUID.randomUUID(), UUID.randomUUID(), UUID.randomUUID());
       given(notificationRepository.saveAll(any()))
           .willAnswer(invocation -> invocation.getArgument(0));
 
       // when
-      notificationService.createArticleNotifications(interestId, message, subscriberIds);
+      notificationService.createArticleNotifications(recipientIds, message, ResourceType.INTEREST, resourceId);
 
       // then — 구독자 수만큼 저장되고 전달받은 메시지를 그대로 저장한다
       then(notificationRepository)
@@ -179,14 +179,14 @@ NotificationServiceTest {
           .saveAll(
               argThat(
                   notifications ->
-                      ((List<?>) notifications).size() == subscriberIds.size()
+                      ((List<?>) notifications).size() == recipientIds.size()
                           && ((List<com.sprint.mission.monew.domain.notification.entity.Notification>) notifications)
                               .stream()
                               .allMatch(
                                   n ->
                                       n.getContent().equals(message)
                                           && n.getResourceType() == ResourceType.INTEREST
-                                          && n.getResourceId().equals(interestId))));
+                                          && n.getResourceId().equals(resourceId))));
     }
   }
 }

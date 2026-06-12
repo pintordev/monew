@@ -106,5 +106,28 @@ class ArticleInterestRepositoryTest {
       // then
       assertThat(result).isEmpty();
     }
+
+    @Test
+    @DisplayName("삭제된 기사는 집계에서 제외한다")
+    void 삭제된_기사는_집계에서_제외한다() {
+      // given
+      Instant since = Instant.now().minusSeconds(5);
+
+      Interest interest = interestRepository.save(Interest.create("인공지능", List.of("AI")));
+      Article deleted = articleRepository.save(
+          Article.create(ArticleSource.NAVER, "https://ex.com/1", "AI 기사", Instant.now(), "요약"));
+      deleted.softDelete();
+      articleRepository.save(deleted);
+      articleInterestRepository.save(ArticleInterest.create(deleted, interest));
+
+      em.flush();
+      em.clear();
+
+      // when
+      List<InterestArticleCount> result = articleInterestRepository.countByInterestSince(since);
+
+      // then
+      assertThat(result).isEmpty();
+    }
   }
 }

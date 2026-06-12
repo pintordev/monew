@@ -1,10 +1,11 @@
 package com.sprint.mission.monew.domain.article.service;
 
+import com.sprint.mission.monew.domain.article.event.ArticleNotificationEvent;
 import com.sprint.mission.monew.domain.article.repository.ArticleInterestRepository;
 import com.sprint.mission.monew.domain.article.repository.dto.InterestArticleCount;
 import com.sprint.mission.monew.domain.interest.repository.SubscriptionRepository;
 import com.sprint.mission.monew.domain.interest.repository.dto.InterestSubscriber;
-import com.sprint.mission.monew.domain.notification.service.NotificationService;
+import org.springframework.context.ApplicationEventPublisher;
 import java.time.Instant;
 import java.util.List;
 import java.util.Map;
@@ -23,7 +24,7 @@ public class ArticleNotificationService {
 
   private final ArticleInterestRepository articleInterestRepository;
   private final SubscriptionRepository subscriptionRepository;
-  private final NotificationService notificationService;
+  private final ApplicationEventPublisher eventPublisher;
 
   @Transactional
   public void notifyNewArticles(Instant since) {
@@ -47,7 +48,7 @@ public class ArticleNotificationService {
       if (subscriberIds.isEmpty()) continue;
       String message = "[" + count.getInterestName() + "]와 관련된 기사가 "
           + count.getArticleCount() + "건 등록되었습니다.";
-      notificationService.createArticleNotifications(count.getInterestId(), message, subscriberIds);
+      eventPublisher.publishEvent(new ArticleNotificationEvent(count.getInterestId(), message, subscriberIds));
     }
 
     long totalMatches = counts.stream().mapToLong(InterestArticleCount::getArticleCount).sum();

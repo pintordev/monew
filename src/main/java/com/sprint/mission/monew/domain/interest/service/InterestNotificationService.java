@@ -50,7 +50,7 @@ public class InterestNotificationService {
       notificationService.createArticleNotifications(count.getInterestId(), message, subscriberIds);
     }
 
-    long totalArticles = counts.stream().mapToLong(InterestArticleCount::getArticleCount).sum();
-    log.info("배치 기사 알림 집계 완료: 신규 기사={}건, 매칭 관심사={}개", totalArticles, counts.size());
+    long totalMatches = counts.stream().mapToLong(InterestArticleCount::getArticleCount).sum();
+    log.info("배치 기사 알림 집계 완료: 관심사-기사 매칭={}건, 매칭 관심사={}개", totalMatches, counts.size());
   }
 }

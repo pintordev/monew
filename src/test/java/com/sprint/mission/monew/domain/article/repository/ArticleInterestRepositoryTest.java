@@ -81,9 +81,15 @@ class ArticleInterestRepositoryTest {
           .collect(Collectors.toMap(
               InterestArticleCount::getInterestId,
               InterestArticleCount::getArticleCount));
+      Map<UUID, String> nameMap = result.stream()
+          .collect(Collectors.toMap(
+              InterestArticleCount::getInterestId,
+              InterestArticleCount::getInterestName));
       assertThat(countMap).hasSize(2);
       assertThat(countMap.get(interestA.getId())).isEqualTo(2L);
       assertThat(countMap.get(interestB.getId())).isEqualTo(1L);
+      assertThat(nameMap.get(interestA.getId())).isEqualTo("인공지능");
+      assertThat(nameMap.get(interestB.getId())).isEqualTo("경제");
     }
 
     @Test
@@ -99,6 +105,27 @@ class ArticleInterestRepositoryTest {
 
       em.flush();
       em.clear();
+
+      // when
+      List<InterestArticleCount> result = articleInterestRepository.countByInterestSince(since);
+
+      // then
+      assertThat(result).isEmpty();
+    }
+
+    @Test
+    @DisplayName("createdAt이 since와 같은 기사는 집계에서 제외한다")
+    void createdAt이_since와_같은_기사는_집계에서_제외한다() {
+      // given
+      Interest interest = interestRepository.save(Interest.create("인공지능", List.of("AI")));
+      Article article = articleRepository.save(
+          Article.create(ArticleSource.NAVER, "https://ex.com/boundary", "AI 기사", Instant.now(), "요약"));
+      articleInterestRepository.save(ArticleInterest.create(article, interest));
+      em.flush();
+      em.clear();
+
+      // 저장된 createdAt을 정확히 읽어 since로 사용 (createdAt > since 조건: 같은 시각은 미포함)
+      Instant since = articleRepository.findById(article.getId()).orElseThrow().getCreatedAt();
 
       // when
       List<InterestArticleCount> result = articleInterestRepository.countByInterestSince(since);

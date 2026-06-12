@@ -82,6 +82,7 @@ class InterestNotificationServiceTest {
       interestNotificationService.notifyNewArticles(since);
 
       // then
+      then(subscriptionRepository).shouldHaveNoInteractions();
       then(notificationService).shouldHaveNoInteractions();
     }
 

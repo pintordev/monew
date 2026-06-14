@@ -27,6 +27,8 @@ public interface ArticleViewRepository extends JpaRepository<ArticleView, UUID> 
   List<ArticleView> findTop10ByUserIdAndArticleNotDeleted(
       @Param("userId") UUID userId, Pageable pageable);
 
+  int insertIfAbsent(UUID userId, UUID articleId);
+
   boolean existsByArticleIdAndUserId(UUID articleId, UUID userId);
 
   Optional<ArticleView> findByArticleIdAndUserId(UUID articleId, UUID userId);

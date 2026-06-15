@@ -7,10 +7,11 @@
 #   - **매번 다른 id**로 분산해야 한다. 같은 id만 반복하면 캐시 히트로 비현실적으로 빨라진다.
 #   → 미리 풀로 뽑아두고 k6에서 무작위로 골라 쓴다.
 #
-# 산출 파일(.gitignore 대상 — 스크립트만 커밋, csv는 환경 의존이라 추적 안 함):
-#   article_ids.csv   : articleId         (인기 기사 + 한산/일반 기사 혼합 → 변동성 관찰)
-#   comment_ids.csv   : commentId,articleId
-# (userId는 더 이상 추출하지 않는다 — k6 setup()이 로그인으로 세션 토큰을 발급받아 인증한다.)
+# 산출 파일(.gitignore 대상 — 스크립트만 커밋, 산출물은 환경 의존이라 추적 안 함):
+#   article_ids.csv                : articleId    (인기 기사 + 한산/일반 기사 혼합 → 변동성 관찰)
+#   comment_ids.csv                : commentId,articleId
+#   seed/user-seed-data.generated.js : globalThis.SEED_USERS=[...]  (R5 Mongo 시드 입력)
+# (k6 인증용 userId는 setup() 로그인으로 얻는다. 여기 유저 추출은 R5 Mongo 적재 전용이다.)
 #
 # 사용:
 #   docker compose -f perf/docker-compose.yml up -d postgres   # 시드 먼저(seed-data-medium.sql)
@@ -66,9 +67,32 @@ psql_csv "
   ORDER BY random() LIMIT $LIMIT
 " > "$OUT_DIR/comment_ids.csv"
 
+# ── 유저: R5(user-activities) Mongo 시드용 ───────────────────────
+# R5는 user1~user{N}@load.test 로 로그인해 자기 userId로 활동내역을 조회한다(perf/speed/read.js).
+# 그런데 seed-data-medium.sql은 PG users만 채우고 UserCreatedEvent를 발행하지 않아 Mongo
+# user_activities 문서가 없다 → R5가 404(측정 무효). 그래서 PG의 실제 userId/프로필을 뽑아
+# seed-mongo-medium.js 가 그대로 적재한다(_id는 PG UUID와 정확히 일치해야 findById가 맞는다).
+#
+# 산출: perf/seed/user-seed-data.generated.js — `globalThis.SEED_USERS=[...]` 형태의 JS.
+#   mongosh가 load()로 읽을 수 있게 CSV가 아니라 JS 리터럴로 떨군다(파싱 의존성 0).
+#   gitignore 대상(환경 의존·재생성 가능). 전 유저를 뽑아 LOGIN_USERS 값과 무관히 동작.
+SEED_DATA_FILE="$SCRIPT_DIR/seed/user-seed-data.generated.js"
+# void(...) 로 감싸 대입식이 값을 반환하지 않게 한다 — mongosh 를 stdin(REPL) 으로 쓸 때
+# 대입 결과(1만 건 배열)가 화면에 메아리치는 것을 막는다(기능엔 무관, 출력만 깔끔).
+psql "$DB_URL" -tAX -c "
+  SELECT 'void(globalThis.SEED_USERS=' || COALESCE(
+    json_agg(json_build_object(
+      'id', id, 'email', email, 'nickname', nickname,
+      'createdAtMs', (extract(epoch FROM created_at) * 1000)::bigint
+    ) ORDER BY email)::text, '[]') || ');'
+  FROM users WHERE deleted_at IS NULL
+" > "$SEED_DATA_FILE"
+
 # ── 결과 요약 ─────────────────────────────────────────────────
 echo "[extract] 완료:"
 for f in article_ids comment_ids; do
   printf '  %-16s %s 행\n' "$f.csv" "$(grep -c . "$OUT_DIR/$f.csv" || true)"
 done
+printf '  %-16s %s 유저\n' "user-seed-data" "$(grep -o '"id"' "$SEED_DATA_FILE" | wc -l | tr -d ' ')"
 echo "[extract] k6 스크립트가 이 csv들을 open() 한다. 시드를 다시 채웠으면 이 스크립트도 다시 실행할 것."
+echo "[extract] R5 측정 전: mongosh \"\$MONGODB_URI\" perf/seed/seed-mongo-medium.js 로 Mongo 적재."

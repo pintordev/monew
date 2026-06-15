@@ -7,6 +7,7 @@ import com.sprint.mission.monew.domain.notification.service.NotificationService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.context.event.EventListener;
+import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Component;
 import org.springframework.transaction.event.TransactionPhase;
 import org.springframework.transaction.event.TransactionalEventListener;
@@ -19,6 +20,7 @@ public class NotificationEventListener {
   private final NotificationService notificationService;
   private final NotificationMetrics notificationMetrics;
 
+  @Async("notificationExecutor")
   @TransactionalEventListener(phase = TransactionPhase.AFTER_COMMIT)
   public void handleCommentLiked(CommentLikedNotificationEvent event) {
     try {

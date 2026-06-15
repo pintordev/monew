@@ -67,6 +67,8 @@ perf/results/
 *_ids.csv
 k6/*.csv
 perf/*.csv
+# extract-ids.sh 가 생성하는 R5 Mongo 시드 입력 (실재 userId, 환경 의존 — 스크립트만 추적)
+perf/seed/*.generated.js
 # k6 summary-export 결과 (속도·부하·동시성) — 스크립트(.js)는 추적, 산출물(.json)만 무시
 perf/speed/*.json
 perf/load/*.json

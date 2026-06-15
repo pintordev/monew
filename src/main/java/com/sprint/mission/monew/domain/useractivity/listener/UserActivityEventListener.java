@@ -32,8 +32,16 @@ public class UserActivityEventListener {
   @TransactionalEventListener(phase = TransactionPhase.AFTER_COMMIT)
   public void handle(UserDeletedEvent event) {
     log.debug("UserActivity 익명화 | userId={}", event.userId());
-    userActivityMongoRepository.anonymize(event.userId());
-    userActivityMongoRepository.anonymizeCommentLikesByCommentUserId(event.userId());
+    try {
+      userActivityMongoRepository.anonymize(event.userId());
+    } catch (Exception e) {
+      log.error("UserActivity 익명화 실패 | userId={}", event.userId(), e);
+    }
+    try {
+      userActivityMongoRepository.anonymizeCommentLikesByCommentUserId(event.userId());
+    } catch (Exception e) {
+      log.error("댓글 좋아요 익명화 실패 | userId={}", event.userId(), e);
+    }
   }
 
   @Async("userActivityExecutor")
@@ -127,9 +135,21 @@ public class UserActivityEventListener {
   @TransactionalEventListener(phase = TransactionPhase.AFTER_COMMIT)
   public void handle(ArticleDeletedEvent event) {
     log.debug("기사 삭제 cascade | articleId={}", event.articleId());
-    userActivityMongoRepository.pullArticleViewsByArticleId(event.articleId());
-    userActivityMongoRepository.pullCommentsByArticleId(event.articleId());
-    userActivityMongoRepository.pullCommentLikesByArticleId(event.articleId());
+    try {
+      userActivityMongoRepository.pullArticleViewsByArticleId(event.articleId());
+    } catch (Exception e) {
+      log.error("기사 조회 기록 pull 실패 | articleId={}", event.articleId(), e);
+    }
+    try {
+      userActivityMongoRepository.pullCommentsByArticleId(event.articleId());
+    } catch (Exception e) {
+      log.error("기사 댓글 pull 실패 | articleId={}", event.articleId(), e);
+    }
+    try {
+      userActivityMongoRepository.pullCommentLikesByArticleId(event.articleId());
+    } catch (Exception e) {
+      log.error("기사 댓글 좋아요 pull 실패 | articleId={}", event.articleId(), e);
+    }
   }
 
   @Async("userActivityExecutor")

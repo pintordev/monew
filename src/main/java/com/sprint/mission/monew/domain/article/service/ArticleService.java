@@ -73,6 +73,7 @@ public class ArticleService {
     }
     ArticleView view = articleViewRepository.findByArticleIdAndUserId(articleId, userId)
         .orElseThrow(() -> ArticleNotFoundException.withId(articleId));
-    return articleViewMapper.toResponse(view, view.getArticle().getViewCount());
+    int currentViewCount = articleRepository.findViewCountById(articleId);
+    return articleViewMapper.toResponse(view, currentViewCount);
   }
 }

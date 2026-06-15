@@ -1,6 +1,7 @@
 package com.sprint.mission.monew.domain.useractivity.listener;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatCode;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.doThrow;
 import static org.mockito.Mockito.verify;
@@ -90,6 +91,20 @@ class UserActivityEventListenerTest {
       listener.handle(new UserDeletedEvent(userId));
 
       // then
+      verify(userActivityMongoRepository).anonymize(userId);
+      verify(userActivityMongoRepository).anonymizeCommentLikesByCommentUserId(userId);
+    }
+
+    @Test
+    @DisplayName("anonymizeCommentLikes가 예외를 던져도 핸들러 밖으로 예외가 전파되지 않는다")
+    void anonymizeCommentLikes_예외_시에도_핸들러_예외_전파_없음() {
+      // given
+      UUID userId = UUID.randomUUID();
+      doThrow(new RuntimeException("Mongo error"))
+          .when(userActivityMongoRepository).anonymizeCommentLikesByCommentUserId(userId);
+
+      // when & then
+      assertThatCode(() -> listener.handle(new UserDeletedEvent(userId))).doesNotThrowAnyException();
       verify(userActivityMongoRepository).anonymize(userId);
       verify(userActivityMongoRepository).anonymizeCommentLikesByCommentUserId(userId);
     }
@@ -358,6 +373,38 @@ class UserActivityEventListenerTest {
       listener.handle(new ArticleDeletedEvent(articleId));
 
       // then
+      verify(userActivityMongoRepository).pullArticleViewsByArticleId(articleId);
+      verify(userActivityMongoRepository).pullCommentsByArticleId(articleId);
+      verify(userActivityMongoRepository).pullCommentLikesByArticleId(articleId);
+    }
+
+    @Test
+    @DisplayName("pullCommentsByArticleId가 예외를 던져도 pullCommentLikesByArticleId는 계속 실행된다")
+    void pullComments_예외_시에도_pullCommentLikes는_계속_실행된다() {
+      // given
+      UUID articleId = UUID.randomUUID();
+      doThrow(new RuntimeException("Mongo error"))
+          .when(userActivityMongoRepository).pullCommentsByArticleId(articleId);
+
+      // when
+      listener.handle(new ArticleDeletedEvent(articleId));
+
+      // then
+      verify(userActivityMongoRepository).pullArticleViewsByArticleId(articleId);
+      verify(userActivityMongoRepository).pullCommentsByArticleId(articleId);
+      verify(userActivityMongoRepository).pullCommentLikesByArticleId(articleId);
+    }
+
+    @Test
+    @DisplayName("pullCommentLikesByArticleId가 예외를 던져도 핸들러 밖으로 예외가 전파되지 않는다")
+    void pullCommentLikes_예외_시에도_핸들러_예외_전파_없음() {
+      // given
+      UUID articleId = UUID.randomUUID();
+      doThrow(new RuntimeException("Mongo error"))
+          .when(userActivityMongoRepository).pullCommentLikesByArticleId(articleId);
+
+      // when & then
+      assertThatCode(() -> listener.handle(new ArticleDeletedEvent(articleId))).doesNotThrowAnyException();
       verify(userActivityMongoRepository).pullArticleViewsByArticleId(articleId);
       verify(userActivityMongoRepository).pullCommentsByArticleId(articleId);
       verify(userActivityMongoRepository).pullCommentLikesByArticleId(articleId);

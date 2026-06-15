@@ -324,17 +324,19 @@ class ArticleServiceTest {
       // given
       Article article = makeArticle(ArticleSource.NAVER);
       ArticleView view = ArticleView.create(requestUserId, article);
+      int freshViewCount = 3; // 경합 승자가 이미 올린 DB 최신값
       ArticleViewResponse dto = new ArticleViewResponse(
           view.getId(), requestUserId, view.getCreatedAt(),
           article.getId(), ArticleSource.NAVER, article.getSourceUrl(),
           article.getTitle(), article.getPublishDate(), article.getSummary(),
-          0, 0);
+          0, freshViewCount);
 
       given(articleRepository.findById(eq(article.getId()))).willReturn(Optional.of(article));
       given(articleViewRepository.insertIfAbsent(eq(requestUserId), eq(article.getId()))).willReturn(0);
       given(articleViewRepository.findByArticleIdAndUserId(eq(article.getId()), eq(requestUserId)))
           .willReturn(Optional.of(view));
-      given(articleViewMapper.toResponse(eq(view), eq(article.getViewCount()))).willReturn(dto);
+      given(articleRepository.findViewCountById(eq(article.getId()))).willReturn(freshViewCount);
+      given(articleViewMapper.toResponse(eq(view), eq(freshViewCount))).willReturn(dto);
 
       // when
       ArticleViewResponse result = articleService.registerView(article.getId(), requestUserId);
@@ -343,6 +345,7 @@ class ArticleServiceTest {
       assertThat(result).isEqualTo(dto);
       verify(articleViewRepository).insertIfAbsent(eq(requestUserId), eq(article.getId()));
       verify(articleRepository, never()).increaseViewCount(any());
+      verify(articleRepository).findViewCountById(eq(article.getId()));
       verify(articleViewRepository, never()).save(any());
     }
   }

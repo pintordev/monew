@@ -2,6 +2,7 @@ package com.sprint.mission.monew.domain.useractivity.listener;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.ArgumentMatchers.eq;
+import static org.mockito.Mockito.doThrow;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.verifyNoInteractions;
 
@@ -69,6 +70,21 @@ class UserActivityEventListenerTest {
     void UserDeletedEvent를_받으면_anonymize와_anonymizeCommentLikes를_호출한다() {
       // given
       UUID userId = UUID.randomUUID();
+
+      // when
+      listener.handle(new UserDeletedEvent(userId));
+
+      // then
+      verify(userActivityMongoRepository).anonymize(userId);
+      verify(userActivityMongoRepository).anonymizeCommentLikesByCommentUserId(userId);
+    }
+
+    @Test
+    @DisplayName("anonymize가 예외를 던져도 anonymizeCommentLikesByCommentUserId는 계속 실행된다")
+    void anonymize_예외_시에도_anonymizeCommentLikes는_계속_실행된다() {
+      // given
+      UUID userId = UUID.randomUUID();
+      doThrow(new RuntimeException("Mongo error")).when(userActivityMongoRepository).anonymize(userId);
 
       // when
       listener.handle(new UserDeletedEvent(userId));
@@ -320,6 +336,23 @@ class UserActivityEventListenerTest {
     void ArticleDeletedEvent를_받으면_cascade_pull_3개를_호출한다() {
       // given
       UUID articleId = UUID.randomUUID();
+
+      // when
+      listener.handle(new ArticleDeletedEvent(articleId));
+
+      // then
+      verify(userActivityMongoRepository).pullArticleViewsByArticleId(articleId);
+      verify(userActivityMongoRepository).pullCommentsByArticleId(articleId);
+      verify(userActivityMongoRepository).pullCommentLikesByArticleId(articleId);
+    }
+
+    @Test
+    @DisplayName("첫 번째 cascade pull이 예외를 던져도 나머지 pull은 계속 실행된다")
+    void 첫번째_cascade_pull_예외_시에도_나머지_pull은_계속_실행된다() {
+      // given
+      UUID articleId = UUID.randomUUID();
+      doThrow(new RuntimeException("Mongo error"))
+          .when(userActivityMongoRepository).pullArticleViewsByArticleId(articleId);
 
       // when
       listener.handle(new ArticleDeletedEvent(articleId));

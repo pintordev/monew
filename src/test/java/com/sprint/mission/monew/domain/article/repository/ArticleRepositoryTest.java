@@ -527,6 +527,25 @@ class ArticleRepositoryTest {
   }
 
   @Nested
+  @DisplayName("findViewCountById")
+  class FindViewCountById {
+
+    @Test
+    @DisplayName("기사의 초기 조회수는 0이다")
+    void 기사의_초기_조회수는_0이다() {
+      // given
+      Article article = articleRepository.save(
+          Article.create(ArticleSource.NAVER, "https://example.com/vc1", "기사", Instant.now(), null));
+
+      // when
+      int viewCount = articleRepository.findViewCountById(article.getId());
+
+      // then
+      assertThat(viewCount).isZero();
+    }
+  }
+
+  @Nested
   @DisplayName("findBySourceUrl")
   class FindBySourceUrl {
 

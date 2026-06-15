@@ -293,17 +293,19 @@ class ArticleServiceTest {
       // given
       Article article = makeArticle(ArticleSource.NAVER);
       ArticleView view = ArticleView.create(requestUserId, article);
+      int freshViewCount = 1;
       ArticleViewResponse dto = new ArticleViewResponse(
           view.getId(), requestUserId, view.getCreatedAt(),
           article.getId(), ArticleSource.NAVER, article.getSourceUrl(),
           article.getTitle(), article.getPublishDate(), article.getSummary(),
-          0, 1);
+          0, freshViewCount);
 
       given(articleRepository.findById(eq(article.getId()))).willReturn(Optional.of(article));
       given(articleViewRepository.insertIfAbsent(eq(requestUserId), eq(article.getId()))).willReturn(1);
       given(articleViewRepository.findByArticleIdAndUserId(eq(article.getId()), eq(requestUserId)))
           .willReturn(Optional.of(view));
-      given(articleViewMapper.toResponse(eq(view), eq(article.getViewCount()))).willReturn(dto);
+      given(articleRepository.findViewCountById(eq(article.getId()))).willReturn(freshViewCount);
+      given(articleViewMapper.toResponse(eq(view), eq(freshViewCount))).willReturn(dto);
 
       // when
       ArticleViewResponse result = articleService.registerView(article.getId(), requestUserId);
@@ -312,6 +314,7 @@ class ArticleServiceTest {
       assertThat(result).isEqualTo(dto);
       verify(articleViewRepository).insertIfAbsent(eq(requestUserId), eq(article.getId()));
       verify(articleRepository).increaseViewCount(eq(article.getId()));
+      verify(articleRepository).findViewCountById(eq(article.getId()));
       verify(articleViewRepository, never()).save(any());
     }
 

@@ -8,6 +8,7 @@ import com.sprint.mission.monew.domain.useractivity.document.UserActivity;
 import com.sprint.mission.monew.domain.useractivity.repository.UserActivityMongoRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Component;
 import org.springframework.transaction.event.TransactionPhase;
 import org.springframework.transaction.event.TransactionalEventListener;
@@ -19,6 +20,7 @@ public class UserActivityEventListener {
 
   private final UserActivityMongoRepository userActivityMongoRepository;
 
+  @Async("userActivityExecutor")
   @TransactionalEventListener(phase = TransactionPhase.AFTER_COMMIT)
   public void handle(UserCreatedEvent event) {
     log.debug("UserActivity 생성 | userId={}", event.userId());
@@ -26,6 +28,7 @@ public class UserActivityEventListener {
     userActivityMongoRepository.createUserActivity(userActivity);
   }
 
+  @Async("userActivityExecutor")
   @TransactionalEventListener(phase = TransactionPhase.AFTER_COMMIT)
   public void handle(UserDeletedEvent event) {
     log.debug("UserActivity 익명화 | userId={}", event.userId());
@@ -33,12 +36,14 @@ public class UserActivityEventListener {
     userActivityMongoRepository.anonymizeCommentLikesByCommentUserId(event.userId());
   }
 
+  @Async("userActivityExecutor")
   @TransactionalEventListener(phase = TransactionPhase.AFTER_COMMIT)
   public void handle(UserNicknameUpdatedEvent event) {
     log.debug("UserActivity 닉네임 업데이트 | userId={}", event.userId());
     userActivityMongoRepository.updateNickname(event.userId(), event.nickname());
   }
 
+  @Async("userActivityExecutor")
   @TransactionalEventListener(phase = TransactionPhase.AFTER_COMMIT)
   public void handle(SubscriptionCreatedEvent event) {
     log.debug("구독 push | userId={}, interestId={}", event.userId(), event.interestId());
@@ -53,12 +58,14 @@ public class UserActivityEventListener {
     userActivityMongoRepository.pushSubscription(event.userId(), subscription);
   }
 
+  @Async("userActivityExecutor")
   @TransactionalEventListener(phase = TransactionPhase.AFTER_COMMIT)
   public void handle(SubscriptionCancelledEvent event) {
     log.debug("구독 pull | userId={}, interestId={}", event.userId(), event.interestId());
     userActivityMongoRepository.pullSubscription(event.userId(), event.interestId());
   }
 
+  @Async("userActivityExecutor")
   @TransactionalEventListener(phase = TransactionPhase.AFTER_COMMIT)
   public void handle(CommentCreatedEvent event) {
     log.debug("댓글 push | userId={}, commentId={}", event.userId(), event.commentId());
@@ -69,18 +76,21 @@ public class UserActivityEventListener {
     userActivityMongoRepository.pushComment(event.userId(), comment);
   }
 
+  @Async("userActivityExecutor")
   @TransactionalEventListener(phase = TransactionPhase.AFTER_COMMIT)
   public void handle(CommentUpdatedEvent event) {
     log.debug("댓글 content 업데이트 | commentId={}", event.commentId());
     userActivityMongoRepository.updateCommentContent(event.commentId(), event.content());
   }
 
+  @Async("userActivityExecutor")
   @TransactionalEventListener(phase = TransactionPhase.AFTER_COMMIT)
   public void handle(CommentDeletedEvent event) {
     log.debug("댓글 pull | authorId={}, commentId={}", event.authorId(), event.commentId());
     userActivityMongoRepository.pullComment(event.authorId(), event.commentId());
   }
 
+  @Async("userActivityExecutor")
   @TransactionalEventListener(phase = TransactionPhase.AFTER_COMMIT)
   public void handle(CommentLikedEvent event) {
     log.debug("댓글 좋아요 push | userId={}, commentId={}", event.userId(), event.commentId());
@@ -93,12 +103,14 @@ public class UserActivityEventListener {
     userActivityMongoRepository.pushCommentLike(event.userId(), commentLike);
   }
 
+  @Async("userActivityExecutor")
   @TransactionalEventListener(phase = TransactionPhase.AFTER_COMMIT)
   public void handle(CommentLikeRemovedEvent event) {
     log.debug("댓글 좋아요 pull | userId={}, commentId={}", event.userId(), event.commentId());
     userActivityMongoRepository.pullCommentLike(event.userId(), event.commentId());
   }
 
+  @Async("userActivityExecutor")
   @TransactionalEventListener(phase = TransactionPhase.AFTER_COMMIT)
   public void handle(ArticleViewedEvent event) {
     log.debug("기사 조회 push | userId={}, articleId={}", event.userId(), event.articleId());
@@ -111,6 +123,7 @@ public class UserActivityEventListener {
     userActivityMongoRepository.pushArticleView(event.userId(), articleView);
   }
 
+  @Async("userActivityExecutor")
   @TransactionalEventListener(phase = TransactionPhase.AFTER_COMMIT)
   public void handle(ArticleDeletedEvent event) {
     log.debug("기사 삭제 cascade | articleId={}", event.articleId());
@@ -119,6 +132,7 @@ public class UserActivityEventListener {
     userActivityMongoRepository.pullCommentLikesByArticleId(event.articleId());
   }
 
+  @Async("userActivityExecutor")
   @TransactionalEventListener(phase = TransactionPhase.AFTER_COMMIT)
   public void handle(InterestDeletedEvent event) {
     log.debug("관심사 삭제 cascade | interestId={}", event.interestId());
